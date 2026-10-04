@@ -836,7 +836,6 @@
     // REGISTRERING, IMPORT & EKSPORT (BACKUP) & TMDb API
     // ==========================================
     
-    // NY EKSPORT-FUNKSJON: Laster ned samlingen som CSV
     function eksporterTilCSV() {
       if (!innloggetBruker) return;
       
@@ -848,7 +847,6 @@
       
       const eksportData = mineData.map(item => {
         let eksportObj = { ...item };
-        // Fiks formateringslisten for Excel (fra ['Blu-ray', '4K'] til "Blu-ray / 4K")
         if (Array.isArray(eksportObj.format)) {
             eksportObj.format = eksportObj.format.join(' / ');
         }
@@ -856,7 +854,6 @@
       });
 
       const csv = Papa.unparse(eksportData);
-      // Legger til "\ufeff" (BOM) for at Excel skal lese æ, ø, å perfekt
       const blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1029,7 +1026,7 @@
     }
 
     // ==========================================
-    // CSV IMPORT
+    // NY OG TRYGG CSV IMPORT (Med bolk-opplasting og unike ID-er)
     // ==========================================
     function importerCSV(event) {
       const filer = event.target.files; 
@@ -1038,40 +1035,43 @@
       let nyeItemsArray = [];
       let filAntall = filer.length;
       let fullførteFiler = 0;
+      
+      // Vi bruker Date.now() og teller oppover (+1) for hver film. Da blir ID-en alltid unik!
+      let baseId = Date.now();
 
       Array.from(filer).forEach(fil => {
         Papa.parse(fil, {
           header: true, skipEmptyLines: true,
           complete: function(results) {
-            results.data.forEach((row) => {
+            results.data.forEach((row, index) => {
               const erFilm = row.hasOwnProperty('Disc format') || row.hasOwnProperty('Title') || (row['Kategori'] && row['Kategori'].toLowerCase() === 'film');
+              
               let nyItem = { 
-                id: Date.now() + Math.floor(Math.random() * 100000), 
+                id: baseId + index + (fullførteFiler * 100000), 
                 eier: innloggetBruker, 
-                synlighet: 'standard',
-                status: row['Status'] || row['status'] || 'Har',
+                kategori: erFilm ? 'film' : 'tegneserie',
+                strekkode: '',
+                tittel: erFilm ? (row['Title'] || row['Tittel'] || 'Ukjent') : (row['Navn'] || row['Tittel'] || ((row['Bladserie']||'') + ' #' + (row['nr']||row['Nummer']||''))),
+                tittel_eng: erFilm ? (row['Orignal title'] || row['Tittel_eng'] || row['Original title'] || '') : '',
+                tittel_orig: '',
+                aar: row['Year'] || row['År'] || row['år'] || '',
                 lagret: row['Location'] || row['Lagret'] || '',
+                status: row['Status'] || row['status'] || 'Har',
+                synlighet: 'standard',
                 tilstand: row['Tilstand'] || row['Condition'] || 'Ok',
                 kommentar: row['Comment'] || row['Commentar'] || row['Kommentar'] || '',
-                verdi: row['Verdi'] || row['Value'] || ''
+                imdb: erFilm ? (row['Link to IMDb'] || row['IMDb/Link'] || row['imdb'] || '') : '',
+                verdi: row['Verdi'] || row['Value'] || '',
+                sjanger: erFilm ? (row['Genre'] || row['Sjanger'] || '') : '',
+                rating: '',
+                format: [],
+                bladserie: erFilm ? '' : (row['Bladserie'] || ''),
+                nr: erFilm ? '' : (row['nr'] || row['Nummer'] || '')
               };
               
               if (erFilm) {
-                nyItem.kategori = 'film';
-                nyItem.tittel = row['Title'] || row['Tittel'] || 'Ukjent';
-                nyItem.tittel_eng = row['Orignal title'] || row['Tittel_eng'] || row['Original title'] || '';
-                nyItem.tittel_orig = '';
-                nyItem.sjanger = row['Genre'] || row['Sjanger'] || '';
-                nyItem.aar = row['Year'] || row['År'] || '';
-                nyItem.imdb = row['Link to IMDb'] || row['IMDb/Link'] || row['imdb'] || '';
                 let fmt = row['Disc format'] || row['Format'] || '';
                 nyItem.format = fmt ? fmt.split('/').map(f => f.trim()) : [];
-              } else {
-                nyItem.kategori = 'tegneserie';
-                nyItem.bladserie = row['Bladserie'] || '';
-                nyItem.nr = row['nr'] || row['Nummer'] || '';
-                nyItem.tittel = row['Navn'] || row['Tittel'] || nyItem.bladserie + " #" + nyItem.nr;
-                nyItem.aar = row['år'] || row['År'] || '';
               }
               
               database.unshift(nyItem);
@@ -1080,12 +1080,33 @@
             
             fullførteFiler++;
             if (fullførteFiler === filAntall) {
-                supabaseDb.from('samlerbase_data').insert(nyeItemsArray).then(({error}) => {
-                    if(error) console.error("Feil ved bulk-import", error);
-                });
-                document.getElementById('eieFilter').value = 'min_alle';
-                utforSok(); 
-                alert("Importert ferdig! La til " + nyeItemsArray.length + " gjenstander i skyen.");
+                
+                // Vis at vi jobber
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.querySelector('#loadingOverlay h2').innerText = "Lagrer filmer i skyen...";
+                
+                // Laster opp i trygge små bolker (300) i tilfelle du har en kjempestor samling
+                async function lastOppIbolker() {
+                    let feilSjekk = null;
+                    const batchSize = 300;
+                    for (let i = 0; i < nyeItemsArray.length; i += batchSize) {
+                        const batch = nyeItemsArray.slice(i, i + batchSize);
+                        const svar = await supabaseDb.from('samlerbase_data').insert(batch);
+                        if (svar.error) feilSjekk = svar.error;
+                    }
+
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    
+                    if(feilSjekk) {
+                        console.error("Feil ved bulk-import", feilSjekk);
+                        alert("FEIL: Klarte ikke lagre til skyen. Supabase sier: " + feilSjekk.message);
+                    } else {
+                        document.getElementById('eieFilter').value = 'min_alle';
+                        utforSok();
+                        alert("Importert ferdig! La til " + nyeItemsArray.length + " gjenstander trygt i skyen.");
+                    }
+                }
+                lastOppIbolker();
             }
           }
         });
