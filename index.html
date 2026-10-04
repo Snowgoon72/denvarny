@@ -158,7 +158,7 @@
   <div id="endreModal" class="hidden fixed inset-0 bg-black/85 z-[65] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">✏️️ Rediger objekt</h2>
+        <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">✏ Rediger objekt</h2>
         <button onclick="lukkEndreModal()" class="text-slate-400 hover:text-white font-bold">✕</button>
       </div>
       <form id="skjemaEndre" onsubmit="lagreEndring(event)" class="space-y-3 text-xs">
@@ -1003,7 +1003,7 @@
         let linkUrl = item.imdb ? item.imdb : `https://www.google.com/search?q=${encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'))}`;
 
         let infoHtml = item.kategori === 'film' 
-            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ')} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
+            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ') : ''} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
             : `<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
 
         rad.innerHTML = `
