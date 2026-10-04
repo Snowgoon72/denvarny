@@ -546,21 +546,45 @@
     const supabaseDb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // ==========================================
-    // INITIALISERING (HENT FRA SKYEN VED START)
+    // NY MOTOR: HENTER ABSOLUTT ALT FRA SKYEN
     // ==========================================
-    async function startApp() {
-        try {
-            const svarProfil = await supabaseDb.from('samlerbase_profiler').select('*');
-            if (svarProfil.data) {
-                svarProfil.data.forEach(p => {
-                    profiler[p.brukernavn] = p;
-                });
+    async function hentAlleFraSkyen(tabell) {
+        let altInnhold = [];
+        let start = 0;
+        let step = 999;
+        let merData = true;
+
+        while (merData) {
+            let spoerring = supabaseDb.from(tabell).select('*');
+            if (tabell === 'samlerbase_data') spoerring = spoerring.order('id', { ascending: false });
+            spoerring = spoerring.range(start, start + step);
+            
+            const { data, error } = await spoerring;
+
+            if (error) {
+                console.error("Feil ved henting fra " + tabell, error);
+                break;
             }
 
-            const svarData = await supabaseDb.from('samlerbase_data').select('*').order('id', { ascending: false });
-            if (svarData.data) {
-                database = svarData.data;
+            if (data && data.length > 0) {
+                altInnhold = altInnhold.concat(data);
+                start += step + 1;
             }
+            
+            if (!data || data.length <= step) {
+                merData = false;
+            }
+        }
+        return altInnhold;
+    }
+
+    async function startApp() {
+        try {
+            const profilerData = await hentAlleFraSkyen('samlerbase_profiler');
+            profilerData.forEach(p => { profiler[p.brukernavn] = p; });
+
+            database = await hentAlleFraSkyen('samlerbase_data');
+            
         } catch (error) {
             console.error("Feil ved tilkobling til skyen:", error);
             alert("Kunne ikke koble til skydatabasen. Prøv å laste siden på nytt.");
@@ -1117,10 +1141,9 @@
                         alert("FEIL: Klarte ikke lagre til skyen. Supabase sier: " + feilSjekk.message);
                     } else {
                         document.querySelector('#loadingInnhold h2').innerText = "Synkroniserer med skyen...";
-                        const svarData = await supabaseDb.from('samlerbase_data').select('*').order('id', { ascending: false });
-                        if (svarData.data) {
-                            database = svarData.data;
-                        }
+                        
+                        // NYHET: Hent absolutt alt tilbake fra skyen via den nye motoren!
+                        database = await hentAlleFraSkyen('samlerbase_data');
 
                         document.getElementById('loadingOverlay').classList.add('hidden');
                         document.getElementById('eieFilter').value = 'min_alle';
@@ -1251,7 +1274,8 @@
           return; 
       }
 
-      elementer.slice(0, 200).forEach(item => {
+      // Viser nå opptil 2000 elementer om gangen i listen (økt fra 200 for store samlinger)
+      elementer.slice(0, 2000).forEach(item => {
         const rad = document.createElement('div');
         const eierIkke = item.status === 'Har ikke';
         const erMin = item.eier === innloggetBruker;
