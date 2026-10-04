@@ -3,15 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samlerregister - Sosial Samling, Verdi & Redigering</title>
+  <title>Samlerregister - Skyversjon (Supabase)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- SUPABASE BIBLIOTEK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
+  <!-- LASTE-SKJERM MENS VI KOBLE TIL SKYEN -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center p-4">
+    <div class="text-center">
+      <span class="text-6xl animate-bounce block mb-4">☁️</span>
+      <h2 class="text-2xl font-black text-amber-500">Kobler til skyen...</h2>
+      <p class="text-slate-400 mt-2">Henter samlinger fra Supabase</p>
+    </div>
+  </div>
+
   <!-- INNLOGGINGS-MODAL -->
-  <div id="loginModal" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-4">
+  <div id="loginModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[100] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 max-w-sm w-full shadow-2xl relative overflow-hidden">
       <div class="text-center mb-6">
         <span class="text-4xl">📚</span>
@@ -83,7 +94,6 @@
         <button type="submit" class="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-3 rounded-lg mt-2 transition">Send passord</button>
         <p class="text-center text-sm text-slate-400 mt-4"><button type="button" onclick="byttTilLoggInn()" class="text-slate-300 hover:text-white underline">Tilbake til innlogging</button></p>
       </form>
-
     </div>
   </div>
 
@@ -144,7 +154,6 @@
         </div>
       </form>
 
-      <!-- FARESONE (SLETTING) -->
       <div class="mt-4 pt-4 border-t border-rose-900/50 space-y-2">
         <h3 class="font-bold text-rose-500 text-xs uppercase tracking-wider mb-2 flex items-center gap-1">⚠️ Faresone</h3>
         <button type="button" onclick="slettMinSamling()" class="w-full bg-slate-900 hover:bg-rose-950 text-rose-400 border border-rose-900/50 text-xs font-bold py-2.5 rounded-lg transition">Slett hele min samling</button>
@@ -154,7 +163,7 @@
     </div>
   </div>
 
-  <!-- REDIGERINGS-MODAL (FOR MANUELL OPPDATERING AV OBJEKT) -->
+  <!-- REDIGERINGS-MODAL -->
   <div id="endreModal" class="hidden fixed inset-0 bg-black/85 z-[65] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
       <div class="flex justify-between items-center mb-4">
@@ -349,6 +358,7 @@
   <main class="max-w-6xl mx-auto px-4 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
+      <!-- VENSTRE KOLONNE: SKJEMA -->
       <div class="space-y-6">
         <section class="bg-slate-950 p-5 rounded-xl border border-slate-800 h-fit shadow-xl">
           <h2 class="text-lg font-bold mb-4 text-amber-400" id="skjemaTittel">Registrer ny film</h2>
@@ -488,6 +498,7 @@
         </section>
       </div>
 
+      <!-- HØYRE KOLONNE: LISTE -->
       <section class="lg:col-span-2">
         <h2 class="text-lg font-bold mb-3 flex flex-wrap items-center justify-between gap-3">
           <span>Oversikt <span id="filterTekst" class="text-amber-500 font-medium text-sm ml-2">- Mitt: Vis alt</span></span>
@@ -506,18 +517,45 @@
   </main>
 
   <script>
+    // ==========================================
+    // GRUNNLEGGENDE VARIABLER & SUPABASE OPPTSETT
+    // ==========================================
     let aktivKategori = 'film';
     let innloggetBruker = localStorage.getItem('samler_bruker');
+    let profiler = {};
+    let database = [];
+
+    // Nøkler til TMDb og Supabase
     const tmdbToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0M2NhNDRmZTU1ODMxMTc1ZTVlMDdjNTQyYjIzZmI1NyIsIm5iZiI6MTc5MTExNjQ3Mi4zNDA5OTk4LCJzdWIiOiI2YWMyNDRiODg5ZDIzZWIzMzY1YWQ2MDQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.fxTQiASGDiRj4ibLHYP_rc9KSWbT3xZJS1pkFy11jLw"; 
+    const supabaseUrl = "https://wlmeevxwzrxvvcpchfyh.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbWVldnh3enJ4dnZjcGNoZnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMjY4MjQsImV4cCI6MjEwNjcwMjgyNH0.8DF7iBxqvKm0WNzmiVzwfSSLjS7XdYFwr5Aq4oKdOgE";
+    const supabaseDb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    let profiler = JSON.parse(localStorage.getItem('samlerbase_profiler')) || {
-        'Sander_99': { land: 'Sverige', spraak: 'Svensk', info: 'Samler på 4K sci-fi', standardSynlighet: 'offentlig', passord: 'demo', epost: 'sander@demo.no' },
-        'Kompis1': { land: 'Norge', spraak: 'Norsk', info: 'Disney-samler', standardSynlighet: 'offentlig', passord: 'demo', epost: 'kompis@demo.no' }
-    };
-    
-    let database = JSON.parse(localStorage.getItem('samlerbase_data')) || [];
+    // ==========================================
+    // INITIALISERING (HENT FRA SKYEN VED START)
+    // ==========================================
+    async function startApp() {
+        try {
+            // Hent Profiler
+            const { data: pData } = await supabaseDb.from('samlerbase_profiler').select('*');
+            if (pData) pData.forEach(p => profiler[p.brukernavn] = p);
 
-    // --- INNLOGGING, REGISTRERING & GLEMT PASSORD ---
+            // Hent Objekter
+            const { data: dData } = await supabaseDb.from('samlerbase_data').select('*').order('id', { ascending: false });
+            if (dData) database = dData;
+        } catch (error) {
+            console.error("Feil ved tilkobling til skyen:", error);
+            alert("Kunne ikke koble til skydatabasen. Prøv å laste siden på nytt.");
+        } finally {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            velgKategori('film'); 
+            sjekkInnlogging();
+        }
+    }
+
+    // ==========================================
+    // INNLOGGING, REGISTRERING & GLEMT PASSORD
+    // ==========================================
     function byttTilRegistrering() { 
       document.getElementById('skjemaLoggInn').classList.add('hidden'); 
       document.getElementById('skjemaGlemtPassord').classList.add('hidden'); 
@@ -540,29 +578,62 @@
     }
 
     function sjekkInnlogging() {
-      if (!innloggetBruker) { document.getElementById('loginModal').classList.remove('hidden'); } 
-      else { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker; utforSok(); }
+      if (!innloggetBruker) { 
+          document.getElementById('loginModal').classList.remove('hidden'); 
+      } else { 
+          document.getElementById('loginModal').classList.add('hidden'); 
+          document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker; 
+          utforSok(); 
+      }
     }
     
-    function loggInn(e) { 
+    async function loggInn(e) { 
       e.preventDefault(); 
       const forsokNavn = document.getElementById('loginBrukernavn').value.trim();
       const forsokPassord = document.getElementById('loginPassord').value;
-      if (!profiler[forsokNavn] && forsokNavn !== 'Jørn') { alert("Fant ikke denne brukeren. Velg 'Opprett konto' for å registrere deg."); return; }
-      if (profiler[forsokNavn] && profiler[forsokNavn].passord && profiler[forsokNavn].passord !== forsokPassord) { alert("Feil passord!"); return; }
-      if (!profiler[forsokNavn]) { profiler[forsokNavn] = { info: '', land: 'Norge', spraak: 'Norsk', standardSynlighet: 'offentlig', passord: forsokPassord, epost: '' }; localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler)); }
-      innloggetBruker = forsokNavn; localStorage.setItem('samler_bruker', innloggetBruker); sjekkInnlogging(); 
+      
+      let funnetBruker = Object.keys(profiler).find(navn => navn.toLowerCase() === forsokNavn.toLowerCase());
+      
+      if (!funnetBruker) {
+         funnetBruker = forsokNavn;
+         const nyProfil = { 
+             brukernavn: funnetBruker,
+             info: '', 
+             land: 'Norge', 
+             spraak: 'Norsk', 
+             standardSynlighet: 'offentlig', 
+             passord: forsokPassord, 
+             epost: '' 
+         }; 
+         profiler[funnetBruker] = nyProfil;
+         // Send til skyen i bakgrunnen
+         supabaseDb.from('samlerbase_profiler').insert([nyProfil]).then();
+      } else {
+         if (profiler[funnetBruker].passord && profiler[funnetBruker].passord !== forsokPassord) { 
+             alert("Feil passord! Prøv på nytt, eller bruk et annet brukernavn for å lage en ny profil."); 
+             return; 
+         }
+      }
+
+      innloggetBruker = funnetBruker; 
+      localStorage.setItem('samler_bruker', innloggetBruker); 
+      sjekkInnlogging(); 
     }
     
-    function registrerBruker(e) {
+    async function registrerBruker(e) {
       e.preventDefault();
       const nyttNavn = document.getElementById('regBrukernavn').value.trim();
       const passord = document.getElementById('regPassord').value;
       const epost = document.getElementById('regEpost').value.trim().toLowerCase();
       
-      if (profiler[nyttNavn] || nyttNavn === 'Jørn') { alert("Brukernavn er tatt. Velg et annet."); return; }
+      let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
+      if (eksisterer) { 
+          alert("Brukernavn er tatt. Velg et annet."); 
+          return; 
+      }
       
-      profiler[nyttNavn] = { 
+      const nyProfil = { 
+        brukernavn: nyttNavn,
         info: '', 
         land: document.getElementById('regLand').value.trim() || 'Norge', 
         spraak: document.getElementById('regSpraak').value, 
@@ -570,8 +641,14 @@
         passord: passord,
         epost: epost
       };
-      localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler));
-      innloggetBruker = nyttNavn; localStorage.setItem('samler_bruker', innloggetBruker); document.getElementById('skjemaRegistrer').reset(); sjekkInnlogging();
+      
+      profiler[nyttNavn] = nyProfil;
+      await supabaseDb.from('samlerbase_profiler').insert([nyProfil]);
+      
+      innloggetBruker = nyttNavn; 
+      localStorage.setItem('samler_bruker', innloggetBruker); 
+      document.getElementById('skjemaRegistrer').reset(); 
+      sjekkInnlogging();
     }
     
     function sendGlemtPassord(e) {
@@ -587,49 +664,82 @@
       }
       
       if (brukerFunnet) {
-        alert(`SIMULERING AV E-POST:\n\nEn e-post har blitt "sendt" til ${epostSok} med instruksjoner for å tilbakestille passordet.\n\n(Når vi kobler appen til en ekte skydatabase som Supabase senere, vil denne funksjonen sende en faktisk e-post via serveren!)`);
+        alert(`SIMULERING AV E-POST:\n\nEn e-post har blitt "sendt" til ${epostSok} med instruksjoner for å tilbakestille passordet.\n\n(For å sende ekte mail må appen senere kobles til en e-post server)`);
         byttTilLoggInn();
       } else {
         alert("Fant ingen bruker med denne e-postadressen.");
       }
     }
 
-    function loggUt() { localStorage.removeItem('samler_bruker'); innloggetBruker = null; document.getElementById('loginBrukernavn').value = ''; document.getElementById('loginPassord').value = ''; byttTilLoggInn(); sjekkInnlogging(); }
+    function loggUt() { 
+        localStorage.removeItem('samler_bruker'); 
+        innloggetBruker = null; 
+        document.getElementById('loginBrukernavn').value = ''; 
+        document.getElementById('loginPassord').value = ''; 
+        byttTilLoggInn(); 
+        sjekkInnlogging(); 
+    }
     
-    // --- PROFIL ---
+    // ==========================================
+    // PROFIL OG SLETTING
+    // ==========================================
     function aapneProfil() {
       let minProfil = profiler[innloggetBruker];
-      document.getElementById('profilBrukernavn').value = innloggetBruker; document.getElementById('profilPassord').value = ''; 
+      document.getElementById('profilBrukernavn').value = innloggetBruker; 
+      document.getElementById('profilPassord').value = ''; 
       document.getElementById('profilEpost').value = minProfil.epost || '';
-      document.getElementById('profilInfo').value = minProfil.info || ''; document.getElementById('profilLand').value = minProfil.land || '';
-      document.getElementById('profilSpraak').value = minProfil.spraak || 'Norsk'; document.getElementById('profilSynlighet').value = minProfil.standardSynlighet || 'offentlig';
+      document.getElementById('profilInfo').value = minProfil.info || ''; 
+      document.getElementById('profilLand').value = minProfil.land || '';
+      document.getElementById('profilSpraak').value = minProfil.spraak || 'Norsk'; 
+      document.getElementById('profilSynlighet').value = minProfil.standardSynlighet || 'offentlig';
       document.getElementById('profilModal').classList.remove('hidden');
     }
     
-    function lagreProfil(e) {
+    async function lagreProfil(e) {
       e.preventDefault();
       let gammeltNavn = innloggetBruker;
       let nyttNavn = document.getElementById('profilBrukernavn').value.trim();
       let nyttPassord = document.getElementById('profilPassord').value;
+      
+      // Hvis brukernavnet endres
       if (nyttNavn !== gammeltNavn) {
-          if (profiler[nyttNavn]) { alert("Brukernavnet er allerede i bruk av en annen!"); return; }
+          let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
+          if (eksisterer) { alert("Brukernavnet er allerede i bruk av en annen!"); return; }
+          
+          // Oppdater lokalt
           database.forEach(item => { if (item.eier === gammeltNavn) item.eier = nyttNavn; });
-          localStorage.setItem('samlerbase_data', JSON.stringify(database));
-          profiler[nyttNavn] = profiler[gammeltNavn]; delete profiler[gammeltNavn]; innloggetBruker = nyttNavn; localStorage.setItem('samler_bruker', innloggetBruker);
+          profiler[nyttNavn] = profiler[gammeltNavn]; 
+          profiler[nyttNavn].brukernavn = nyttNavn;
+          delete profiler[gammeltNavn]; 
+          innloggetBruker = nyttNavn; 
+          localStorage.setItem('samler_bruker', innloggetBruker);
+
+          // Oppdater i Skyen (Rekkefølgen er viktig)
+          await supabaseDb.from('samlerbase_profiler').insert([profiler[nyttNavn]]); // Lag ny
+          await supabaseDb.from('samlerbase_data').update({ eier: nyttNavn }).eq('eier', gammeltNavn); // Flytt eierskap
+          await supabaseDb.from('samlerbase_profiler').delete().eq('brukernavn', gammeltNavn); // Slett gammel
       }
+      
       if (nyttPassord !== "") profiler[innloggetBruker].passord = nyttPassord;
       
       profiler[innloggetBruker].epost = document.getElementById('profilEpost').value.trim().toLowerCase();
-      profiler[innloggetBruker].info = document.getElementById('profilInfo').value.trim(); profiler[innloggetBruker].land = document.getElementById('profilLand').value.trim();
-      profiler[innloggetBruker].spraak = document.getElementById('profilSpraak').value; profiler[innloggetBruker].standardSynlighet = document.getElementById('profilSynlighet').value;
-      localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler)); document.getElementById('profilModal').classList.add('hidden'); sjekkInnlogging(); utforSok();
+      profiler[innloggetBruker].info = document.getElementById('profilInfo').value.trim(); 
+      profiler[innloggetBruker].land = document.getElementById('profilLand').value.trim();
+      profiler[innloggetBruker].spraak = document.getElementById('profilSpraak').value; 
+      profiler[innloggetBruker].standardSynlighet = document.getElementById('profilSynlighet').value;
+      
+      // Skyv endringene til skyen (brukernavn er uendret hvis vi kom hit uten name-change)
+      supabaseDb.from('samlerbase_profiler').update(profiler[innloggetBruker]).eq('brukernavn', innloggetBruker).then();
+      
+      document.getElementById('profilModal').classList.add('hidden'); 
+      sjekkInnlogging(); 
+      utforSok();
     }
 
-    // --- SLETTING AV SAMLING OG PROFIL ---
     function slettMinSamling() {
-      if(confirm("⚠️ ER DU HELT SIKKER?\n\nDette vil slette alle filmer og tegneserier i din samling permanent. Dette kan ikke angres!")) {
+      if(confirm("⚠ ER DU HELT SIKKER?\n\nDette vil slette alle filmer og tegneserier i din samling permanent. Dette kan ikke angres!")) {
         database = database.filter(item => item.eier !== innloggetBruker);
-        localStorage.setItem('samlerbase_data', JSON.stringify(database));
+        supabaseDb.from('samlerbase_data').delete().eq('eier', innloggetBruker).then(); // Slett i skyen
         utforSok();
         alert("Hele samlingen din er nå slettet.");
       }
@@ -638,10 +748,11 @@
     function slettMinProfil() {
       if(confirm("🚨 ADVARSEL: SLETT PROFIL 🚨\n\nEr du sikker på at du vil slette profilen din permanent? \n\nDette vil OGSÅ slette hele samlingen din!")) {
         database = database.filter(item => item.eier !== innloggetBruker);
-        localStorage.setItem('samlerbase_data', JSON.stringify(database));
-        
         delete profiler[innloggetBruker];
-        localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler));
+        
+        // Slett alt i skyen
+        supabaseDb.from('samlerbase_data').delete().eq('eier', innloggetBruker).then();
+        supabaseDb.from('samlerbase_profiler').delete().eq('brukernavn', innloggetBruker).then();
         
         document.getElementById('profilModal').classList.add('hidden');
         loggUt(); 
@@ -649,7 +760,9 @@
       }
     }
 
-    // --- REDIGERING AV EKSISTERENDE OBJEKT ---
+    // ==========================================
+    // REDIGERING AV EKSISTERENDE OBJEKT
+    // ==========================================
     function apneEndreModal(id) {
       const item = database.find(i => i.id === id);
       if (!item) return;
@@ -666,7 +779,7 @@
       document.getElementById('endreSynlighet').value = item.synlighet || 'standard';
       document.getElementById('endreKommentar').value = item.kommentar || '';
 
-      const erFilm = item.kategori === 'film';
+      const erFilm = (item.kategori === 'film');
       document.getElementById('endreFilmSeksjon').classList.toggle('hidden', !erFilm);
       document.getElementById('endreTegneserieSeksjon').classList.toggle('hidden', erFilm);
 
@@ -714,37 +827,69 @@
       }
 
       database[index] = item;
-      localStorage.setItem('samlerbase_data', JSON.stringify(database));
+      
+      // Optimistisk UI oppdatering (rask på skjermen, lagrer i bakgrunnen)
+      supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then();
+      
       lukkEndreModal();
       utforSok();
     }
 
-    // --- REGISTRERING, IMPORT & TMDb API ---
+    // ==========================================
+    // REGISTRERING, IMPORT & TMDb API
+    // ==========================================
     function startAutoRegistrering(metode) {
-      document.getElementById('hovedSkjema').reset(); document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.getElementById('hovedSkjema').reset(); 
+      document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
       if (metode === 'strekkode') {
-        document.getElementById('skannerModal').classList.remove('hidden'); skannerInstans = new Html5Qrcode("scannerReader");
-        skannerInstans.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (decodedText) => { stoppSkanner(); simulerApiOppslag(decodedText); }, (err) => {}).catch(err => { stoppSkanner(); });
-      } else if (metode === 'bilde') { document.getElementById('bildeInput').click();
-      } else if (metode === 'tittel') { const sok = prompt("Skriv inn film-tittel (TMDb-søk):"); if (sok) simulerApiOppslag(sok);
-      } else if (metode === 'hylle') { document.getElementById('hylleInput').click(); 
-      } else if (metode === 'csv') { document.getElementById('csvInput').click(); }
+        document.getElementById('skannerModal').classList.remove('hidden'); 
+        skannerInstans = new Html5Qrcode("scannerReader");
+        skannerInstans.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: { width: 250, height: 150 } }, 
+            (decodedText) => { stoppSkanner(); simulerApiOppslag(decodedText); }, 
+            (err) => {}
+        ).catch(err => { stoppSkanner(); });
+      } else if (metode === 'bilde') { 
+          document.getElementById('bildeInput').click();
+      } else if (metode === 'tittel') { 
+          const sok = prompt("Skriv inn film-tittel (TMDb-søk):"); 
+          if (sok) simulerApiOppslag(sok);
+      } else if (metode === 'hylle') { 
+          document.getElementById('hylleInput').click(); 
+      } else if (metode === 'csv') { 
+          document.getElementById('csvInput').click(); 
+      }
     }
     
-    function stoppSkanner() { if (skannerInstans) skannerInstans.stop().then(() => { skannerInstans.clear(); }).catch(()=>{}); document.getElementById('skannerModal').classList.add('hidden'); }
+    function stoppSkanner() { 
+        if (skannerInstans) {
+            skannerInstans.stop().then(() => { skannerInstans.clear(); }).catch(()=>{}); 
+        }
+        document.getElementById('skannerModal').classList.add('hidden'); 
+    }
+    
     function simulerBildeAnalyse() { setTimeout(() => { simulerApiOppslag("Terminator"); }, 500); }
 
     async function simulerApiOppslag(sokeord) {
-      if (aktivKategori !== 'film') { alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); return; }
+      if (aktivKategori !== 'film') { 
+          alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); 
+          return; 
+      }
+      
       const options = { method: 'GET', headers: { accept: 'application/json', Authorization: `Bearer ${tmdbToken}` } };
       const sokUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(sokeord)}&language=no-NO`;
 
       try {
-        const response = await fetch(sokUrl, options); const data = await response.json();
+        const response = await fetch(sokUrl, options); 
+        const data = await response.json();
+        
         if (data.results && data.results.length > 0) {
           const film = data.results[0];
           const detaljerUrl = `https://api.themoviedb.org/3/movie/${film.id}?language=no-NO`;
-          const detaljResponse = await fetch(detaljerUrl, options); const detaljer = await detaljResponse.json();
+          const detaljResponse = await fetch(detaljerUrl, options); 
+          const detaljer = await detaljResponse.json();
 
           document.getElementById('feltTittel').value = film.title || "";
           document.getElementById('feltTittelOrig').value = film.original_title || "";
@@ -764,6 +909,7 @@
        const itemIndex = database.findIndex(i => i.id === id);
        if (itemIndex === -1) return;
        const item = database[itemIndex];
+       
        if (item.kategori !== 'film') { alert("Dette fungerer kun for filmer."); return; }
 
        const options = { method: 'GET', headers: { accept: 'application/json', Authorization: `Bearer ${tmdbToken}` } };
@@ -773,6 +919,7 @@
        try {
          const response = await fetch(sokUrl, options);
          const data = await response.json();
+         
          if (data.results && data.results.length > 0) {
             const film = data.results[0];
             const detaljerUrl = `https://api.themoviedb.org/3/movie/${film.id}?language=no-NO`;
@@ -783,12 +930,11 @@
             item.tittel_eng = detaljer.title || film.title || item.tittel_eng;
             if(!item.aar) item.aar = film.release_date ? film.release_date.substring(0, 4) : item.aar;
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
-            
             if (detaljer.imdb_id) item.imdb = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
 
             database[itemIndex] = item;
-            localStorage.setItem('samlerbase_data', JSON.stringify(database));
+            supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); // Lagre i skyen optimistisk
             utforSok();
             alert(`Suksess! Oppdaterte info, rating og sjanger for "${film.title}".`);
          } else { alert(`Fant ingen treff for "${item.tittel}" på TMDb.`); }
@@ -797,6 +943,7 @@
 
     async function masseOppdaterTMDb() {
       if(!innloggetBruker) return;
+      
       const filmerAOppdatere = database.filter(i => i.eier === innloggetBruker && i.kategori === 'film' && !i.rating);
       if(filmerAOppdatere.length === 0) { alert("Alle filmene dine har allerede rating og info registrert!"); return; }
       if(!confirm(`Fant ${filmerAOppdatere.length} filmer som mangler rating og detaljer. Vil du la appen søke opp og fylle inn for alle automatisk via TMDb nå?`)) return;
@@ -813,6 +960,7 @@
           let renTittel = item.tittel.replace(/[^\w\sæøåÆØÅ]/g, ' '); 
           let yearQuery = item.aar ? `&primary_release_year=${item.aar}` : '';
           const sokUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(renTittel)}&language=no-NO${yearQuery}`;
+          
           const response = await fetch(sokUrl, options);
           const data = await response.json();
 
@@ -828,6 +976,9 @@
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
+            
+            // Oppdater hver film direkte til skyen mens vi går (trygt og hindrer tap ved brudd)
+            supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then();
             oppdatert++;
           }
         } catch (e) { console.log("Feil ved oppdatering av " + item.tittel); }
@@ -835,17 +986,22 @@
         knapp.innerText = `⏳ Arbeider... (${oppdatert}/${filmerAOppdatere.length})`;
       }
 
-      localStorage.setItem('samlerbase_data', JSON.stringify(database));
       utforSok();
       knapp.innerText = "🤖 Auto-fyll info (TMDb)";
       knapp.disabled = false;
       alert(`Ferdig! Fant og oppdaterte detaljer for ${oppdatert} av ${filmerAOppdatere.length} filmer.`);
     }
 
-    // --- CSV IMPORT ---
+    // ==========================================
+    // CSV IMPORT
+    // ==========================================
     function importerCSV(event) {
-      const filer = event.target.files; if (!filer.length) return;
-      let importertAntall = 0, filAntall = filer.length, fullførteFiler = 0;
+      const filer = event.target.files; 
+      if (!filer.length) return;
+      
+      let nyeItemsArray = [];
+      let filAntall = filer.length;
+      let fullførteFiler = 0;
 
       Array.from(filer).forEach(fil => {
         Papa.parse(fil, {
@@ -854,14 +1010,16 @@
             results.data.forEach((row) => {
               const erFilm = row.hasOwnProperty('Disc format') || row.hasOwnProperty('Title') || (row['Kategori'] && row['Kategori'].toLowerCase() === 'film');
               let nyItem = { 
-                id: Date.now() + Math.random(),
-                eier: innloggetBruker, synlighet: 'standard',
+                id: Date.now() + Math.floor(Math.random() * 100000), // Mer unik ID for rask import
+                eier: innloggetBruker, 
+                synlighet: 'standard',
                 status: row['Status'] || row['status'] || 'Har',
                 lagret: row['Location'] || row['Lagret'] || '',
                 tilstand: row['Tilstand'] || row['Condition'] || 'Ok',
                 kommentar: row['Comment'] || row['Commentar'] || row['Kommentar'] || '',
                 verdi: row['Verdi'] || row['Value'] || ''
               };
+              
               if (erFilm) {
                 nyItem.kategori = 'film';
                 nyItem.tittel = row['Title'] || row['Tittel'] || 'Ukjent';
@@ -879,14 +1037,20 @@
                 nyItem.tittel = row['Navn'] || row['Tittel'] || `${nyItem.bladserie} #${nyItem.nr}`;
                 nyItem.aar = row['år'] || row['År'] || '';
               }
+              
               database.unshift(nyItem);
-              importertAntall++;
+              nyeItemsArray.push(nyItem);
             });
+            
             fullførteFiler++;
             if (fullførteFiler === filAntall) {
-                localStorage.setItem('samlerbase_data', JSON.stringify(database));
+                // Sende hele pakken i ett sveip til skyen
+                supabaseDb.from('samlerbase_data').insert(nyeItemsArray).then(({error}) => {
+                    if(error) console.error("Klarte ikke å lagre bulk-import til skyen", error);
+                });
                 document.getElementById('eieFilter').value = 'min_alle';
-                utforSok(); alert(`Importert ferdig! La til ${importertAntall} gjenstander i din profil.`);
+                utforSok(); 
+                alert(`Importert ferdig! La til ${nyeItemsArray.length} gjenstander i skyen.`);
             }
           }
         });
@@ -894,7 +1058,9 @@
       event.target.value = ''; 
     }
 
-    // --- HYLLESCANNER ---
+    // ==========================================
+    // HYLLESCANNER
+    // ==========================================
     let bulkGjenstander = [];
     function simulerHylleAnalyse() {
       document.getElementById('hylleInput').value = ''; 
@@ -917,22 +1083,53 @@
             : `<div class="grid grid-cols-2 gap-2 mt-2"><input type="text" id="bulkSerie_${index}" value="${item.serie||''}" placeholder="Serie" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white"><input type="text" id="bulkNr_${index}" value="${item.nr||''}" placeholder="Nr" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white"></div>`;
         html += `<div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex flex-col" id="bulkRow_${index}"><div class="flex justify-between items-center gap-2"><input type="text" id="bulkTittel_${index}" value="${item.tittel}" class="font-bold bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-amber-400 w-full"><button onclick="document.getElementById('bulkRow_${index}').remove()" class="text-rose-400 text-xs px-2 py-1 bg-rose-950 rounded border border-rose-900 shrink-0">✕ Slett</button></div>${felterHtml}</div>`;
       });
-      document.getElementById('hylleListe').innerHTML = html; document.getElementById('hylleModal').classList.remove('hidden');
+      document.getElementById('hylleListe').innerHTML = html; 
+      document.getElementById('hylleModal').classList.remove('hidden');
     }
+    
     function lukkHylleModal() { document.getElementById('hylleModal').classList.add('hidden'); }
+    
     function lagreHylleTilDatabase() {
+      let objekterForSkyen = [];
       bulkGjenstander.forEach((item, index) => {
         if (document.getElementById(`bulkRow_${index}`)) {
-          const ny = { id: Date.now() + index, eier: innloggetBruker, kategori: aktivKategori, tittel: document.getElementById(`bulkTittel_${index}`).value, tittel_eng: item.eng, tittel_orig: item.orig, status: 'Har', synlighet: 'standard', tilstand: 'Ok', kommentar: '', verdi: '' };
-          if (aktivKategori === 'film') { ny.aar = document.getElementById(`bulkAar_${index}`).value; ny.format = [document.getElementById(`bulkFormat_${index}`).value]; ny.sjanger = item.sjanger; } 
-          else { ny.bladserie = document.getElementById(`bulkSerie_${index}`).value; ny.nr = document.getElementById(`bulkNr_${index}`).value; ny.aar = item.aar; }
+          const ny = { 
+              id: Date.now() + index, 
+              eier: innloggetBruker, 
+              kategori: aktivKategori, 
+              tittel: document.getElementById(`bulkTittel_${index}`).value, 
+              tittel_eng: item.eng, 
+              tittel_orig: item.orig, 
+              status: 'Har', 
+              synlighet: 'standard', 
+              tilstand: 'Ok', 
+              kommentar: '', 
+              verdi: '' 
+          };
+          if (aktivKategori === 'film') { 
+              ny.aar = document.getElementById(`bulkAar_${index}`).value; 
+              ny.format = [document.getElementById(`bulkFormat_${index}`).value]; 
+              ny.sjanger = item.sjanger; 
+          } else { 
+              ny.bladserie = document.getElementById(`bulkSerie_${index}`).value; 
+              ny.nr = document.getElementById(`bulkNr_${index}`).value; 
+              ny.aar = item.aar; 
+          }
           database.unshift(ny);
+          objekterForSkyen.push(ny);
         }
       });
-      localStorage.setItem('samlerbase_data', JSON.stringify(database)); lukkHylleModal(); document.getElementById('eieFilter').value = 'min_alle'; utforSok();
+      
+      supabaseDb.from('samlerbase_data').insert(objekterForSkyen).then(); // Send i bulk
+      
+      lukkHylleModal(); 
+      document.getElementById('eieFilter').value = 'min_alle'; 
+      utforSok();
     }
 
-    // --- LISTEVISNING, SØK & SORTERING ---
+    // ==========================================
+    // LISTEVISNING, SØK & SORTERING
+    // ==========================================
     function velgKategori(kat) {
       aktivKategori = kat;
       document.getElementById('filmFelter').classList.toggle('hidden', kat !== 'film');
@@ -945,7 +1142,9 @@
 
       const sorteringElement = document.getElementById('sorteringFilt').options;
       for (let i = 0; i < sorteringElement.length; i++) {
-        if (sorteringElement[i].value === 'sjanger_serie') sorteringElement[i].text = kat === 'film' ? 'Sjanger' : 'Serie';
+        if (sorteringElement[i].value === 'sjanger_serie') {
+            sorteringElement[i].text = kat === 'film' ? 'Sjanger' : 'Serie';
+        }
       }
       utforSok();
     }
@@ -958,7 +1157,10 @@
       document.getElementById('totalVerdi').innerText = totalVerdi.toLocaleString('no-NO');
 
       container.innerHTML = '';
-      if (elementer.length === 0) { container.innerHTML = '<p class="text-slate-500 text-center py-6 text-sm">Fant ingenting her.</p>'; return; }
+      if (elementer.length === 0) { 
+          container.innerHTML = '<p class="text-slate-500 text-center py-6 text-sm">Fant ingenting her.</p>'; 
+          return; 
+      }
 
       elementer.slice(0, 200).forEach(item => {
         const rad = document.createElement('div');
@@ -1003,7 +1205,7 @@
         let linkUrl = item.imdb ? item.imdb : `https://www.google.com/search?q=${encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'))}`;
 
         let infoHtml = item.kategori === 'film' 
-            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ') : ''} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
+            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ')} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
             : `<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
 
         rad.innerHTML = `
@@ -1064,15 +1266,31 @@
         if (sortFilt === 'nyeste') return b.id - a.id;
         
         let valA = '', valB = '';
-        if (sortFilt === 'tittel') { valA = (a.tittel||'').toLowerCase(); valB = (b.tittel||'').toLowerCase(); } 
-        else if (sortFilt === 'tittel_eng') { valA = (a.tittel_eng || a.tittel || '').toLowerCase(); valB = (b.tittel_eng || b.tittel || '').toLowerCase(); } 
-        else if (sortFilt === 'tittel_orig') { valA = (a.tittel_orig || a.tittel || '').toLowerCase(); valB = (b.tittel_orig || b.tittel || '').toLowerCase(); } 
-        else if (sortFilt === 'sjanger_serie') { valA = aktivKategori === 'film' ? (a.sjanger||'').toLowerCase() : (a.bladserie||'').toLowerCase(); valB = aktivKategori === 'film' ? (b.sjanger||'').toLowerCase() : (b.bladserie||'').toLowerCase(); } 
-        else if (sortFilt === 'lagret') { valA = (a.lagret||'').toLowerCase(); valB = (b.lagret||'').toLowerCase(); } 
-        else if (sortFilt === 'eier') { valA = (a.eier||'').toLowerCase(); valB = (b.eier||'').toLowerCase(); }
-        else if (sortFilt === 'verdi_hoy') return (Number(b.verdi) || 0) - (Number(a.verdi) || 0);
-        else if (sortFilt === 'verdi_lav') return (Number(a.verdi) || 0) - (Number(b.verdi) || 0);
-        else if (sortFilt === 'rating') return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        if (sortFilt === 'tittel') { 
+            valA = (a.tittel||'').toLowerCase(); 
+            valB = (b.tittel||'').toLowerCase(); 
+        } else if (sortFilt === 'tittel_eng') { 
+            valA = (a.tittel_eng || a.tittel || '').toLowerCase(); 
+            valB = (b.tittel_eng || b.tittel || '').toLowerCase(); 
+        } else if (sortFilt === 'tittel_orig') { 
+            valA = (a.tittel_orig || a.tittel || '').toLowerCase(); 
+            valB = (b.tittel_orig || b.tittel || '').toLowerCase(); 
+        } else if (sortFilt === 'sjanger_serie') { 
+            valA = aktivKategori === 'film' ? (a.sjanger||'').toLowerCase() : (a.bladserie||'').toLowerCase(); 
+            valB = aktivKategori === 'film' ? (b.sjanger||'').toLowerCase() : (b.bladserie||'').toLowerCase(); 
+        } else if (sortFilt === 'lagret') { 
+            valA = (a.lagret||'').toLowerCase(); 
+            valB = (b.lagret||'').toLowerCase(); 
+        } else if (sortFilt === 'eier') { 
+            valA = (a.eier||'').toLowerCase(); 
+            valB = (b.eier||'').toLowerCase(); 
+        } else if (sortFilt === 'verdi_hoy') {
+            return (Number(b.verdi) || 0) - (Number(a.verdi) || 0);
+        } else if (sortFilt === 'verdi_lav') {
+            return (Number(a.verdi) || 0) - (Number(b.verdi) || 0);
+        } else if (sortFilt === 'rating') {
+            return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        }
 
         if (valA < valB) return -1;
         if (valA > valB) return 1;
@@ -1087,26 +1305,50 @@
       const valgteFormater = Array.from(document.querySelectorAll('#formatValg input[type="checkbox"]:checked')).map(cb => cb.value);
 
       const ny = {
-        id: Date.now(), eier: innloggetBruker, kategori: aktivKategori,
-        strekkode: document.getElementById('feltStrekkode').value, tittel: document.getElementById('feltTittel').value,
-        tittel_eng: document.getElementById('feltTittelEng').value, tittel_orig: document.getElementById('feltTittelOrig').value,
-        aar: document.getElementById('feltAar').value, lagret: document.getElementById('feltLagret').value,
-        status: document.getElementById('feltStatus').value, synlighet: document.getElementById('feltSynlighet').value,
-        tilstand: document.getElementById('feltTilstand').value, kommentar: document.getElementById('feltKommentar').value,
-        imdb: document.getElementById('feltImdb').value, verdi: document.getElementById('feltVerdi').value
+        id: Date.now(), 
+        eier: innloggetBruker, 
+        kategori: aktivKategori,
+        strekkode: document.getElementById('feltStrekkode').value, 
+        tittel: document.getElementById('feltTittel').value,
+        tittel_eng: document.getElementById('feltTittelEng').value, 
+        tittel_orig: document.getElementById('feltTittelOrig').value,
+        aar: document.getElementById('feltAar').value, 
+        lagret: document.getElementById('feltLagret').value,
+        status: document.getElementById('feltStatus').value, 
+        synlighet: document.getElementById('feltSynlighet').value,
+        tilstand: document.getElementById('feltTilstand').value, 
+        kommentar: document.getElementById('feltKommentar').value,
+        imdb: document.getElementById('feltImdb').value, 
+        verdi: document.getElementById('feltVerdi').value
       };
 
-      if (aktivKategori === 'film') { ny.sjanger = document.getElementById('feltSjanger').value; ny.rating = document.getElementById('feltRating').value; ny.format = valgteFormater; } 
-      else { ny.bladserie = document.getElementById('feltBladserie').value; ny.nr = document.getElementById('feltNummer').value; }
+      if (aktivKategori === 'film') { 
+          ny.sjanger = document.getElementById('feltSjanger').value; 
+          ny.rating = document.getElementById('feltRating').value; 
+          ny.format = valgteFormater; 
+      } else { 
+          ny.bladserie = document.getElementById('feltBladserie').value; 
+          ny.nr = document.getElementById('feltNummer').value; 
+      }
 
-      database.unshift(ny); localStorage.setItem('samlerbase_data', JSON.stringify(database));
-      document.getElementById('hovedSkjema').reset(); document.getElementById('feltSynlighet').value = 'standard';
+      database.unshift(ny); 
+      supabaseDb.from('samlerbase_data').insert([ny]).then(); // Send optimistisk til skyen
+      
+      document.getElementById('hovedSkjema').reset(); 
+      document.getElementById('feltSynlighet').value = 'standard';
       document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.getElementById('eieFilter').value = 'min_alle'; utforSok();
+      document.getElementById('eieFilter').value = 'min_alle'; 
+      utforSok();
     }
 
-    function slettElement(id) { database = database.filter(i => i.id !== id); localStorage.setItem('samlerbase_data', JSON.stringify(database)); utforSok(); }
-    velgKategori('film'); sjekkInnlogging();
+    function slettElement(id) { 
+        database = database.filter(i => i.id !== id); 
+        supabaseDb.from('samlerbase_data').delete().eq('id', id).then(); // Slett i skyen
+        utforSok(); 
+    }
+    
+    // START APPEN NÅR SIDEN LASTER
+    window.onload = startApp;
   </script>
 </body>
 </html>
