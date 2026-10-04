@@ -503,6 +503,8 @@
         <h2 class="text-lg font-bold mb-3 flex flex-wrap items-center justify-between gap-3">
           <span>Oversikt <span id="filterTekst" class="text-amber-500 font-medium text-sm ml-2">- Mitt: Vis alt</span></span>
           <div class="flex items-center gap-4 text-right">
+            <!-- NY BACKUP KNAPP -->
+            <button onclick="eksporterTilCSV()" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/40 text-[11px] font-bold px-3 py-1.5 rounded border border-emerald-500/50 transition">💾 Backup (CSV)</button>
             <button id="btnMasseOppdater" onclick="masseOppdaterTMDb()" class="bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/40 text-[11px] font-bold px-3 py-1.5 rounded border border-indigo-500/50 transition">🤖 Auto-fyll info (TMDb)</button>
             <div>
               <span class="text-sm font-medium text-slate-400"><span id="antallTreff">0</span> treff</span>
@@ -831,8 +833,43 @@
     }
 
     // ==========================================
-    // REGISTRERING, IMPORT & TMDb API
+    // REGISTRERING, IMPORT & EKSPORT (BACKUP) & TMDb API
     // ==========================================
+    
+    // NY EKSPORT-FUNKSJON: Laster ned samlingen som CSV
+    function eksporterTilCSV() {
+      if (!innloggetBruker) return;
+      
+      const mineData = database.filter(item => item.eier === innloggetBruker);
+      if (mineData.length === 0) {
+        alert("Du har ingen gjenstander å eksportere ennå.");
+        return;
+      }
+      
+      const eksportData = mineData.map(item => {
+        let eksportObj = { ...item };
+        // Fiks formateringslisten for Excel (fra ['Blu-ray', '4K'] til "Blu-ray / 4K")
+        if (Array.isArray(eksportObj.format)) {
+            eksportObj.format = eksportObj.format.join(' / ');
+        }
+        return eksportObj;
+      });
+
+      const csv = Papa.unparse(eksportData);
+      // Legger til "\ufeff" (BOM) for at Excel skal lese æ, ø, å perfekt
+      const blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      
+      let dato = new Date().toISOString().slice(0, 10);
+      link.setAttribute("download", "samlerbase_backup_" + innloggetBruker + "_" + dato + ".csv");
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     function startAutoRegistrering(metode) {
       document.getElementById('hovedSkjema').reset(); 
       document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
