@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samlerregister - Sosial Samling & Alle Formater</title>
+  <title>Samlerregister - Sortering og Masseimport</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -135,19 +135,35 @@
         </div>
       </div>
 
-      <div class="flex items-center space-x-2 w-full">
-        <input type="text" id="sokeFelt" oninput="utforSok()" placeholder="Søk (tittel, sjanger, kommentar)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
-        <select id="eieFilter" onchange="utforSok()" class="bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer max-w-[200px]">
-          <optgroup label="Min Samling">
-            <option value="min_alle">Mitt: Vis alt</option>
-            <option value="min_har">Mitt: Kun eide</option>
-            <option value="min_mangler">Mitt: Ønskeliste</option>
-          </optgroup>
-          <optgroup label="Nettverk">
-            <option value="venner">Søk i venners samlinger</option>
-            <option value="globalt">Søk Globalt (Alle)</option>
-          </optgroup>
-        </select>
+      <!-- SØK OG SORTERING BAR -->
+      <div class="flex flex-col sm:flex-row items-center gap-2 w-full">
+        <input type="text" id="sokeFelt" oninput="utforSok()" placeholder="Søk (tittel, sjanger, kommentar)..." class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
+        
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <!-- Sortering Dropdown -->
+          <select id="sorteringFilt" onchange="utforSok()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none cursor-pointer">
+            <option value="nyeste">Nyeste først</option>
+            <option value="tittel">Tittel (Lokal)</option>
+            <option value="tittel_eng">Tittel (Engelsk)</option>
+            <option value="tittel_orig">Tittel (Original)</option>
+            <option value="sjanger_serie">Sjanger / Serie</option>
+            <option value="lagret">Lagringsplass</option>
+            <option value="eier">Eier</option>
+          </select>
+
+          <!-- Nettverks Filter -->
+          <select id="eieFilter" onchange="utforSok()" class="flex-1 sm:flex-none bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+            <optgroup label="Min Samling">
+              <option value="min_alle">Mitt: Vis alt</option>
+              <option value="min_har">Mitt: Kun eide</option>
+              <option value="min_mangler">Mitt: Ønskeliste</option>
+            </optgroup>
+            <optgroup label="Nettverk">
+              <option value="venner">Søk i venners samlinger</option>
+              <option value="globalt">Søk Globalt (Alle)</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
     </div>
   </header>
@@ -509,7 +525,7 @@
       utforSok();
     }
 
-    // --- LISTEVISNING OG SØK ---
+    // --- LISTEVISNING, SØK & SORTERING ---
     function velgKategori(kat) {
       aktivKategori = kat;
       document.getElementById('filmFelter').classList.toggle('hidden', kat !== 'film');
@@ -517,6 +533,14 @@
       document.getElementById('skjemaTittel').innerText = kat === 'film' ? 'Registrer ny film' : 'Registrer tegneserie';
       document.getElementById('btnTabFilm').className = kat === 'film' ? 'px-3 py-1 rounded-md bg-amber-500 text-slate-950 font-bold' : 'px-3 py-1 rounded-md text-slate-300 hover:text-white';
       document.getElementById('btnTabTegneserie').className = kat === 'tegneserie' ? 'px-3 py-1 rounded-md bg-amber-500 text-slate-950 font-bold' : 'px-3 py-1 rounded-md text-slate-300 hover:text-white';
+      
+      // Oppdater tekst i sorteringsdropdown avhengig av fane
+      const sorteringElement = document.getElementById('sorteringFilt').options;
+      for (let i = 0; i < sorteringElement.length; i++) {
+        if (sorteringElement[i].value === 'sjanger_serie') {
+          sorteringElement[i].text = kat === 'film' ? 'Sjanger' : 'Serie';
+        }
+      }
       utforSok();
     }
 
@@ -575,6 +599,7 @@
       if(!innloggetBruker) return;
       const q = document.getElementById('sokeFelt').value.toLowerCase();
       const filt = document.getElementById('eieFilter').value;
+      const sortFilt = document.getElementById('sorteringFilt').value;
       const filterTekstFelt = document.getElementById('filterTekst');
 
       if (filt === 'min_alle') filterTekstFelt.innerText = "- Mitt: Vis alt";
@@ -583,7 +608,8 @@
       else if (filt === 'venner') filterTekstFelt.innerText = "- Nettverk: Venners samlinger";
       else if (filt === 'globalt') filterTekstFelt.innerText = "- Nettverk: Globalt søk";
 
-      const filtrert = database.filter(item => {
+      // 1. Filtrering
+      let filtrert = database.filter(item => {
         if (item.kategori !== aktivKategori) return false;
         if (filt === 'min_alle' && item.eier !== innloggetBruker) return false;
         if (filt === 'min_har' && (item.eier !== innloggetBruker || item.status !== 'Har')) return false;
@@ -599,6 +625,37 @@
         const fritekst = ((item.tittel||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
         return fritekst.includes(q);
       });
+
+      // 2. Sortering
+      filtrert.sort((a, b) => {
+        if (sortFilt === 'nyeste') return b.id - a.id;
+        
+        let valA = '', valB = '';
+        if (sortFilt === 'tittel') { 
+            valA = (a.tittel||'').toLowerCase(); 
+            valB = (b.tittel||'').toLowerCase(); 
+        } else if (sortFilt === 'tittel_eng') { 
+            valA = (a.tittel_eng || a.tittel || '').toLowerCase(); 
+            valB = (b.tittel_eng || b.tittel || '').toLowerCase(); 
+        } else if (sortFilt === 'tittel_orig') { 
+            valA = (a.tittel_orig || a.tittel || '').toLowerCase(); 
+            valB = (b.tittel_orig || b.tittel || '').toLowerCase(); 
+        } else if (sortFilt === 'sjanger_serie') { 
+            valA = aktivKategori === 'film' ? (a.sjanger||'').toLowerCase() : (a.bladserie||'').toLowerCase();
+            valB = aktivKategori === 'film' ? (b.sjanger||'').toLowerCase() : (b.bladserie||'').toLowerCase();
+        } else if (sortFilt === 'lagret') { 
+            valA = (a.lagret||'').toLowerCase(); 
+            valB = (b.lagret||'').toLowerCase(); 
+        } else if (sortFilt === 'eier') { 
+            valA = (a.eier||'').toLowerCase(); 
+            valB = (b.eier||'').toLowerCase(); 
+        }
+
+        if (valA < valB) return -1;
+        if (valA > valB) return 1;
+        return 0;
+      });
+
       tegnListe(filtrert);
     }
 
