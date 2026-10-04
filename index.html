@@ -19,6 +19,7 @@
         <p id="modalUndertekst" class="text-slate-400 text-sm mt-1">Logg inn for å se din og venners samling</p>
       </div>
 
+      <!-- SKJEMA 1: LOGG INN -->
       <form id="skjemaLoggInn" onsubmit="loggInn(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn</label>
@@ -29,13 +30,22 @@
           <input type="password" id="loginPassord" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Logg inn</button>
-        <p class="text-center text-sm text-slate-400 mt-4">Ny her? <button type="button" onclick="byttTilRegistrering()" class="text-amber-500 font-bold hover:underline">Opprett konto</button></p>
+        
+        <div class="text-center mt-4 space-y-2">
+          <p class="text-xs"><button type="button" onclick="byttTilGlemtPassord()" class="text-slate-400 hover:text-white underline transition">Glemt passord?</button></p>
+          <p class="text-sm text-slate-400 border-t border-slate-800 pt-3">Ny her? <button type="button" onclick="byttTilRegistrering()" class="text-amber-500 font-bold hover:underline">Opprett konto</button></p>
+        </div>
       </form>
 
+      <!-- SKJEMA 2: REGISTRERING -->
       <form id="skjemaRegistrer" onsubmit="registrerBruker(event)" class="space-y-4 hidden">
         <div>
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg et Brukernavn</label>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn</label>
           <input type="text" id="regBrukernavn" required placeholder="F.eks. Jørn99" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">E-postadresse</label>
+          <input type="email" id="regEpost" required placeholder="din@epost.no" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg passord</label>
@@ -64,15 +74,26 @@
           </select>
         </div>
         <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Registrer meg</button>
-        <p class="text-center text-sm text-slate-400 mt-4">Har du allerede konto? <button type="button" onclick="byttTilLoggInn()" class="text-amber-500 font-bold hover:underline">Logg inn</button></p>
+        <p class="text-center text-sm text-slate-400 mt-4">Allerede konto? <button type="button" onclick="byttTilLoggInn()" class="text-amber-500 font-bold hover:underline">Logg inn</button></p>
       </form>
+
+      <!-- SKJEMA 3: GLEMT PASSORD -->
+      <form id="skjemaGlemtPassord" onsubmit="sendGlemtPassord(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Skriv inn din E-post</label>
+          <input type="email" id="glemtEpostFelt" required placeholder="din@epost.no" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none" />
+        </div>
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-3 rounded-lg mt-2 transition">Send passord</button>
+        <p class="text-center text-sm text-slate-400 mt-4"><button type="button" onclick="byttTilLoggInn()" class="text-slate-300 hover:text-white underline">Tilbake til innlogging</button></p>
+      </form>
+
     </div>
   </div>
 
   <!-- PROFIL-MODAL -->
   <div id="profilModal" class="hidden fixed inset-0 bg-black/80 z-[60] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]">
-      <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">⚙️ Min Profil</h2>
+      <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">⚙️️ Min Profil</h2>
       
       <form onsubmit="lagreProfil(event)" class="space-y-4 text-sm">
         <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-3">
@@ -80,6 +101,10 @@
           <div>
             <label class="block text-slate-400 mb-1 font-semibold">Brukernavn</label>
             <input type="text" id="profilBrukernavn" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1 font-semibold">E-postadresse</label>
+            <input type="email" id="profilEpost" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" />
           </div>
           <div>
             <label class="block text-slate-400 mb-1 font-semibold">Nytt passord (La stå tomt for å beholde)</label>
@@ -488,12 +513,35 @@
     let innloggetBruker = localStorage.getItem('samler_bruker');
     const tmdbToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0M2NhNDRmZTU1ODMxMTc1ZTVlMDdjNTQyYjIzZmI1NyIsIm5iZiI6MTc5MTExNjQ3Mi4zNDA5OTk4LCJzdWIiOiI2YWMyNDRiODg5ZDIzZWIzMzY1YWQ2MDQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.fxTQiASGDiRj4ibLHYP_rc9KSWbT3xZJS1pkFy11jLw"; 
 
-    let profiler = JSON.parse(localStorage.getItem('samlerbase_profiler')) || {};
+    let profiler = JSON.parse(localStorage.getItem('samlerbase_profiler')) || {
+        'Sander_99': { land: 'Sverige', spraak: 'Svensk', info: 'Samler på 4K sci-fi', standardSynlighet: 'offentlig', passord: 'demo', epost: 'sander@demo.no' },
+        'Kompis1': { land: 'Norge', spraak: 'Norsk', info: 'Disney-samler', standardSynlighet: 'offentlig', passord: 'demo', epost: 'kompis@demo.no' }
+    };
+    
     let database = JSON.parse(localStorage.getItem('samlerbase_data')) || [];
 
-    // --- INNLOGGING & REGISTRERING ---
-    function byttTilRegistrering() { document.getElementById('skjemaLoggInn').classList.add('hidden'); document.getElementById('skjemaRegistrer').classList.remove('hidden'); document.getElementById('modalUndertekst').innerText = 'Opprett en ny profil for å komme i gang'; }
-    function byttTilLoggInn() { document.getElementById('skjemaRegistrer').classList.add('hidden'); document.getElementById('skjemaLoggInn').classList.remove('hidden'); document.getElementById('modalUndertekst').innerText = 'Logg inn for å se din og venners samling'; }
+    // --- INNLOGGING, REGISTRERING & GLEMT PASSORD ---
+    function byttTilRegistrering() { 
+      document.getElementById('skjemaLoggInn').classList.add('hidden'); 
+      document.getElementById('skjemaGlemtPassord').classList.add('hidden'); 
+      document.getElementById('skjemaRegistrer').classList.remove('hidden'); 
+      document.getElementById('modalUndertekst').innerText = 'Opprett en ny profil for å komme i gang'; 
+    }
+    
+    function byttTilLoggInn() { 
+      document.getElementById('skjemaRegistrer').classList.add('hidden'); 
+      document.getElementById('skjemaGlemtPassord').classList.add('hidden'); 
+      document.getElementById('skjemaLoggInn').classList.remove('hidden'); 
+      document.getElementById('modalUndertekst').innerText = 'Logg inn for å se din og venners samling'; 
+    }
+    
+    function byttTilGlemtPassord() {
+      document.getElementById('skjemaLoggInn').classList.add('hidden');
+      document.getElementById('skjemaRegistrer').classList.add('hidden');
+      document.getElementById('skjemaGlemtPassord').classList.remove('hidden');
+      document.getElementById('modalUndertekst').innerText = 'Fyll inn e-post for å gjenopprette passordet';
+    }
+
     function sjekkInnlogging() {
       if (!innloggetBruker) { document.getElementById('loginModal').classList.remove('hidden'); } 
       else { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker; utforSok(); }
@@ -505,7 +553,7 @@
       const forsokPassord = document.getElementById('loginPassord').value;
       if (!profiler[forsokNavn] && forsokNavn !== 'Jørn') { alert("Fant ikke denne brukeren. Velg 'Opprett konto' for å registrere deg."); return; }
       if (profiler[forsokNavn] && profiler[forsokNavn].passord && profiler[forsokNavn].passord !== forsokPassord) { alert("Feil passord!"); return; }
-      if (!profiler[forsokNavn]) { profiler[forsokNavn] = { info: '', land: 'Norge', spraak: 'Norsk', standardSynlighet: 'offentlig', passord: forsokPassord }; localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler)); }
+      if (!profiler[forsokNavn]) { profiler[forsokNavn] = { info: '', land: 'Norge', spraak: 'Norsk', standardSynlighet: 'offentlig', passord: forsokPassord, epost: '' }; localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler)); }
       innloggetBruker = forsokNavn; localStorage.setItem('samler_bruker', innloggetBruker); sjekkInnlogging(); 
     }
     
@@ -513,18 +561,49 @@
       e.preventDefault();
       const nyttNavn = document.getElementById('regBrukernavn').value.trim();
       const passord = document.getElementById('regPassord').value;
+      const epost = document.getElementById('regEpost').value.trim().toLowerCase();
+      
       if (profiler[nyttNavn] || nyttNavn === 'Jørn') { alert("Brukernavn er tatt. Velg et annet."); return; }
-      profiler[nyttNavn] = { info: '', land: document.getElementById('regLand').value.trim() || 'Norge', spraak: document.getElementById('regSpraak').value, standardSynlighet: document.getElementById('regSynlighet').value, passord: passord };
+      
+      profiler[nyttNavn] = { 
+        info: '', 
+        land: document.getElementById('regLand').value.trim() || 'Norge', 
+        spraak: document.getElementById('regSpraak').value, 
+        standardSynlighet: document.getElementById('regSynlighet').value, 
+        passord: passord,
+        epost: epost
+      };
       localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler));
       innloggetBruker = nyttNavn; localStorage.setItem('samler_bruker', innloggetBruker); document.getElementById('skjemaRegistrer').reset(); sjekkInnlogging();
     }
     
+    function sendGlemtPassord(e) {
+      e.preventDefault();
+      const epostSok = document.getElementById('glemtEpostFelt').value.trim().toLowerCase();
+      let brukerFunnet = false;
+      
+      for (const [brukernavn, profilData] of Object.entries(profiler)) {
+        if (profilData.epost && profilData.epost.toLowerCase() === epostSok) {
+          brukerFunnet = true;
+          break;
+        }
+      }
+      
+      if (brukerFunnet) {
+        alert(`SIMULERING AV E-POST:\n\nEn e-post har blitt "sendt" til ${epostSok} med instruksjoner for å tilbakestille passordet.\n\n(Når vi kobler appen til en ekte skydatabase som Supabase senere, vil denne funksjonen sende en faktisk e-post via serveren!)`);
+        byttTilLoggInn();
+      } else {
+        alert("Fant ingen bruker med denne e-postadressen.");
+      }
+    }
+
     function loggUt() { localStorage.removeItem('samler_bruker'); innloggetBruker = null; document.getElementById('loginBrukernavn').value = ''; document.getElementById('loginPassord').value = ''; byttTilLoggInn(); sjekkInnlogging(); }
     
     // --- PROFIL ---
     function aapneProfil() {
       let minProfil = profiler[innloggetBruker];
       document.getElementById('profilBrukernavn').value = innloggetBruker; document.getElementById('profilPassord').value = ''; 
+      document.getElementById('profilEpost').value = minProfil.epost || '';
       document.getElementById('profilInfo').value = minProfil.info || ''; document.getElementById('profilLand').value = minProfil.land || '';
       document.getElementById('profilSpraak').value = minProfil.spraak || 'Norsk'; document.getElementById('profilSynlighet').value = minProfil.standardSynlighet || 'offentlig';
       document.getElementById('profilModal').classList.remove('hidden');
@@ -542,6 +621,8 @@
           profiler[nyttNavn] = profiler[gammeltNavn]; delete profiler[gammeltNavn]; innloggetBruker = nyttNavn; localStorage.setItem('samler_bruker', innloggetBruker);
       }
       if (nyttPassord !== "") profiler[innloggetBruker].passord = nyttPassord;
+      
+      profiler[innloggetBruker].epost = document.getElementById('profilEpost').value.trim().toLowerCase();
       profiler[innloggetBruker].info = document.getElementById('profilInfo').value.trim(); profiler[innloggetBruker].land = document.getElementById('profilLand').value.trim();
       profiler[innloggetBruker].spraak = document.getElementById('profilSpraak').value; profiler[innloggetBruker].standardSynlighet = document.getElementById('profilSynlighet').value;
       localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler)); document.getElementById('profilModal').classList.add('hidden'); sjekkInnlogging(); utforSok();
