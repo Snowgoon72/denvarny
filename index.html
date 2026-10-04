@@ -3,28 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samlerregister - Sosial Samling & CSV-import</title>
+  <title>Samlerregister - Sosial Samling & Registrering</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
-  <!-- INNLOGGINGS-MODAL -->
+  <!-- INNLOGGING OG REGISTRERING -->
   <div id="loginModal" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-4">
-    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 max-w-sm w-full shadow-2xl">
+    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 max-w-sm w-full shadow-2xl relative overflow-hidden">
+      
       <div class="text-center mb-6">
         <span class="text-4xl">📚</span>
         <h2 class="text-2xl font-black text-amber-500 mt-2">Samlerbasen</h2>
-        <p class="text-slate-400 text-sm mt-1">Logg inn for å se din og venners samling</p>
+        <p id="modalUndertekst" class="text-slate-400 text-sm mt-1">Logg inn for å se din og venners samling</p>
       </div>
-      <form onsubmit="loggInn(event)" class="space-y-4">
+
+      <!-- LOGG INN SKJEMA -->
+      <form id="skjemaLoggInn" onsubmit="loggInn(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn</label>
           <input type="text" id="loginBrukernavn" required placeholder="F.eks. Jørn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Logg inn</button>
+        <p class="text-center text-sm text-slate-400 mt-4">Ny her? <button type="button" onclick="byttTilRegistrering()" class="text-amber-500 font-bold hover:underline">Opprett konto</button></p>
       </form>
+
+      <!-- REGISTRER SKJEMA (Skjult som standard) -->
+      <form id="skjemaRegistrer" onsubmit="registrerBruker(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg et Brukernavn</label>
+          <input type="text" id="regBrukernavn" required placeholder="F.eks. Jørn99" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Land</label>
+            <input type="text" id="regLand" placeholder="Norge" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Språk</label>
+            <select id="regSpraak" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none">
+              <option value="Norsk">Norsk</option>
+              <option value="Svensk">Svensk</option>
+              <option value="Dansk">Dansk</option>
+              <option value="Engelsk">Engelsk</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Synlighet</label>
+          <select id="regSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none">
+            <option value="offentlig">Offentlig profil</option>
+            <option value="privat">Privat profil</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Registrer meg</button>
+        <p class="text-center text-sm text-slate-400 mt-4">Har du allerede konto? <button type="button" onclick="byttTilLoggInn()" class="text-amber-500 font-bold hover:underline">Logg inn</button></p>
+      </form>
+      
     </div>
   </div>
 
@@ -53,7 +90,7 @@
           </div>
         </div>
         <div>
-          <label class="block text-slate-400 mb-1 font-semibold">Standard synlighet</label>
+          <label class="block text-slate-400 mb-1 font-semibold">Standard synlighet for hele samlingen</label>
           <select id="profilSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none">
             <option value="offentlig">Offentlig (Alle kan se mine gjenstander)</option>
             <option value="privat">Privat (Kun jeg kan se mine gjenstander)</option>
@@ -261,25 +298,97 @@
     let aktivKategori = 'film';
     let innloggetBruker = localStorage.getItem('samler_bruker');
     
-    let profiler = JSON.parse(localStorage.getItem('samlerbase_profiler')) || {};
-    let database = JSON.parse(localStorage.getItem('samlerbase_data')) || [];
+    let profiler = JSON.parse(localStorage.getItem('samlerbase_profiler')) || {
+        'Sander_99': { land: 'Sverige', spraak: 'Svensk', info: 'Samler på 4K sci-fi', standardSynlighet: 'offentlig' },
+        'Kompis1': { land: 'Norge', spraak: 'Norsk', info: 'Disney-samler', standardSynlighet: 'offentlig' }
+    };
+    
+    let standardData = [
+      { id: 1, eier: 'Jørn', kategori: 'film', tittel: 'To på rømmen', tittel_eng: 'Tangled', tittel_orig: 'Tangled', sjanger: 'Animation / Comedy', format: ['Blu-ray', '3D'], aar: 2010, status: 'Har', synlighet: 'standard' },
+      { id: 4, eier: 'Sander_99', kategori: 'film', tittel: 'The Matrix', tittel_eng: 'The Matrix', tittel_orig: 'The Matrix', sjanger: 'Sci-Fi', format: ['4K UHD'], aar: 1999, status: 'Har', synlighet: 'offentlig' },
+      { id: 6, eier: 'Kompis1', kategori: 'tegneserie', tittel: 'Donald Duck & Co', bladserie: 'Donald', nr: '1', aar: 1948, status: 'Har', synlighet: 'standard' }
+    ];
 
-    // --- INNLOGGING & PROFIL ---
+    let database = JSON.parse(localStorage.getItem('samlerbase_data')) || standardData;
+
+    // --- INNLOGGING & REGISTRERING ---
+    function byttTilRegistrering() {
+      document.getElementById('skjemaLoggInn').classList.add('hidden');
+      document.getElementById('skjemaRegistrer').classList.remove('hidden');
+      document.getElementById('modalUndertekst').innerText = 'Opprett en ny profil for å komme i gang';
+    }
+
+    function byttTilLoggInn() {
+      document.getElementById('skjemaRegistrer').classList.add('hidden');
+      document.getElementById('skjemaLoggInn').classList.remove('hidden');
+      document.getElementById('modalUndertekst').innerText = 'Logg inn for å se din og venners samling';
+    }
+
     function sjekkInnlogging() {
-      if (!innloggetBruker) document.getElementById('loginModal').classList.remove('hidden');
-      else {
+      if (!innloggetBruker) {
+        document.getElementById('loginModal').classList.remove('hidden');
+      } else {
         document.getElementById('loginModal').classList.add('hidden');
         document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker;
-        if (!profiler[innloggetBruker]) {
-            profiler[innloggetBruker] = { info: '', land: '', spraak: 'Norsk', standardSynlighet: 'offentlig' };
-            localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler));
-        }
         utforSok();
       }
     }
-    function loggInn(e) { e.preventDefault(); innloggetBruker = document.getElementById('loginBrukernavn').value.trim(); localStorage.setItem('samler_bruker', innloggetBruker); sjekkInnlogging(); }
-    function loggUt() { localStorage.removeItem('samler_bruker'); innloggetBruker = null; document.getElementById('loginBrukernavn').value = ''; sjekkInnlogging(); }
+
+    function loggInn(e) { 
+      e.preventDefault(); 
+      const forsokNavn = document.getElementById('loginBrukernavn').value.trim();
+      
+      // I denne demoen lar vi Jørn logge inn selv om han ikke har opprettet profil for å unngå trøbbel for deg, 
+      // men nye brukere må registrere seg.
+      if (!profiler[forsokNavn] && forsokNavn !== 'Jørn' && forsokNavn !== 'Sander_99' && forsokNavn !== 'Kompis1') {
+         alert("Fant ikke denne brukeren. Velg 'Opprett konto' for å registrere deg.");
+         return;
+      }
+      
+      // Fallback for demo-brukere som ikke er i profil-listen
+      if (!profiler[forsokNavn]) {
+          profiler[forsokNavn] = { info: '', land: 'Norge', spraak: 'Norsk', standardSynlighet: 'offentlig' };
+          localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler));
+      }
+
+      innloggetBruker = forsokNavn; 
+      localStorage.setItem('samler_bruker', innloggetBruker); 
+      sjekkInnlogging(); 
+    }
+
+    function registrerBruker(e) {
+      e.preventDefault();
+      const nyttNavn = document.getElementById('regBrukernavn').value.trim();
+      
+      if (profiler[nyttNavn] || nyttNavn === 'Jørn') {
+         alert("Dette brukernavnet er dessverre allerede tatt. Velg et annet.");
+         return;
+      }
+
+      profiler[nyttNavn] = {
+         info: '',
+         land: document.getElementById('regLand').value.trim() || 'Norge',
+         spraak: document.getElementById('regSpraak').value,
+         standardSynlighet: document.getElementById('regSynlighet').value
+      };
+      localStorage.setItem('samlerbase_profiler', JSON.stringify(profiler));
+
+      innloggetBruker = nyttNavn;
+      localStorage.setItem('samler_bruker', innloggetBruker);
+      document.getElementById('skjemaRegistrer').reset();
+      sjekkInnlogging();
+      alert("Velkommen til Samlerbasen, " + nyttNavn + "!");
+    }
+
+    function loggUt() { 
+      localStorage.removeItem('samler_bruker'); 
+      innloggetBruker = null; 
+      document.getElementById('loginBrukernavn').value = ''; 
+      byttTilLoggInn(); // Sikre at innlogging vises neste gang
+      sjekkInnlogging(); 
+    }
     
+    // --- PROFIL ---
     function aapneProfil() {
       let minProfil = profiler[innloggetBruker];
       document.getElementById('profilInfo').value = minProfil.info || '';
