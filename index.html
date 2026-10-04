@@ -19,7 +19,6 @@
         <p id="modalUndertekst" class="text-slate-400 text-sm mt-1">Logg inn for å se din og venners samling</p>
       </div>
 
-      <!-- SKJEMA 1: LOGG INN -->
       <form id="skjemaLoggInn" onsubmit="loggInn(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn</label>
@@ -37,7 +36,6 @@
         </div>
       </form>
 
-      <!-- SKJEMA 2: REGISTRERING -->
       <form id="skjemaRegistrer" onsubmit="registrerBruker(event)" class="space-y-4 hidden">
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn</label>
@@ -77,7 +75,6 @@
         <p class="text-center text-sm text-slate-400 mt-4">Allerede konto? <button type="button" onclick="byttTilLoggInn()" class="text-amber-500 font-bold hover:underline">Logg inn</button></p>
       </form>
 
-      <!-- SKJEMA 3: GLEMT PASSORD -->
       <form id="skjemaGlemtPassord" onsubmit="sendGlemtPassord(event)" class="space-y-4 hidden">
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Skriv inn din E-post</label>
@@ -93,7 +90,7 @@
   <!-- PROFIL-MODAL -->
   <div id="profilModal" class="hidden fixed inset-0 bg-black/80 z-[60] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl overflow-y-auto max-h-[90vh]">
-      <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">⚙️️ Min Profil</h2>
+      <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">⚙ Min Profil</h2>
       
       <form onsubmit="lagreProfil(event)" class="space-y-4 text-sm">
         <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-3">
@@ -161,7 +158,7 @@
   <div id="endreModal" class="hidden fixed inset-0 bg-black/85 z-[65] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">✏️ Rediger objekt</h2>
+        <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">✏️️ Rediger objekt</h2>
         <button onclick="lukkEndreModal()" class="text-slate-400 hover:text-white font-bold">✕</button>
       </div>
       <form id="skjemaEndre" onsubmit="lagreEndring(event)" class="space-y-3 text-xs">
@@ -982,14 +979,18 @@
         let eierTekst = eierProfil.land ? `${item.eier} (${eierProfil.land})` : item.eier;
         const eierBadge = `<span title="${eierProfil.info || 'Ingen info'}" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700 flex items-center gap-1 w-fit cursor-help shrink-0">👤 ${eierTekst}</span>`;
 
-        let tittelString = `<span class="font-bold text-sm text-amber-400 group-hover:text-amber-300 transition">${item.tittel || 'Uten tittel'}</span>`;
-        if (item.tittel_eng && item.tittel_eng !== item.tittel) tittelString += ` <span class="text-[11px] text-slate-400 font-normal ml-1">/ ${item.tittel_eng}</span>`;
-        if (item.tittel_orig && item.tittel_orig !== item.tittel_eng && item.tittel_orig !== item.tittel) tittelString += ` <span class="text-[11px] text-slate-500 italic font-normal ml-1">/ ${item.tittel_orig}</span>`;
+        let tittelString = `<span class="font-bold text-base text-amber-400 group-hover:text-amber-300 transition block">${item.tittel || 'Uten tittel'}</span>`;
+        let ekstraTitler = [];
+        if (item.tittel_eng && item.tittel_eng !== item.tittel) ekstraTitler.push(`🇬🇧 ${item.tittel_eng}`);
+        if (item.tittel_orig && item.tittel_orig !== item.tittel && item.tittel_orig !== item.tittel_eng) ekstraTitler.push(`🎬 ${item.tittel_orig}`);
+        let tittelSub = ekstraTitler.length > 0 ? `<span class="block text-[11px] text-slate-400 font-normal mt-0.5 flex flex-wrap gap-x-3 gap-y-1">${ekstraTitler.map(t => `<span>${t}</span>`).join('')}</span>` : '';
 
         let tilstandTekst = item.tilstand && item.tilstand !== 'Ikke relevant' ? `<span class="text-slate-500">| Tilstand: ${item.tilstand}</span>` : '';
         let kommentarHtml = item.kommentar ? `<div class="text-[11px] text-slate-400 mt-1 italic leading-tight bg-slate-900/50 p-1.5 rounded inline-block">💬 ${item.kommentar}</div>` : '';
         let verdiTekst = item.verdi ? `<span class="text-emerald-400 font-bold ml-2">${item.verdi} kr</span>` : '';
         let ratingBadge = item.rating ? `<span class="text-amber-400 font-bold text-[11px] flex items-center gap-0.5 mr-2" title="TMDb Rating">⭐ ${item.rating}</span>` : '';
+        
+        let lagretTekst = item.lagret ? `<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1" title="Lagringsplass">📍 ${item.lagret}</span>` : '';
 
         let sjekkPrisSok = encodeURIComponent(item.strekkode || item.tittel);
         let finnSok = `https://www.finn.no/bap/forsale/search.html?q=${sjekkPrisSok}`;
@@ -1002,13 +1003,16 @@
         let linkUrl = item.imdb ? item.imdb : `https://www.google.com/search?q=${encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'))}`;
 
         let infoHtml = item.kategori === 'film' 
-            ? `<div class="flex flex-wrap items-center mt-1 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ') : ''} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
-            : `<div class="flex flex-wrap items-center mt-1 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
+            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ')} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
+            : `<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
 
         rad.innerHTML = `
           <div class="space-y-1 w-full overflow-hidden flex-1">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <a href="${linkUrl}" target="_blank" class="truncate flex-1 group">${tittelString} <span class="text-[10px]">🔗</span></a>
+              <a href="${linkUrl}" target="_blank" class="truncate flex-1 group block">
+                ${tittelString}
+                ${tittelSub}
+              </a>
               ${eierBadge}
             </div>
             ${infoHtml}
