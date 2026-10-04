@@ -525,7 +525,6 @@
     let profiler = {};
     let database = [];
 
-    // Nøkler til TMDb og Supabase
     const tmdbToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0M2NhNDRmZTU1ODMxMTc1ZTVlMDdjNTQyYjIzZmI1NyIsIm5iZiI6MTc5MTExNjQ3Mi4zNDA5OTk4LCJzdWIiOiI2YWMyNDRiODg5ZDIzZWIzMzY1YWQ2MDQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.fxTQiASGDiRj4ibLHYP_rc9KSWbT3xZJS1pkFy11jLw"; 
     const supabaseUrl = "https://wlmeevxwzrxvvcpchfyh.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbWVldnh3enJ4dnZjcGNoZnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMjY4MjQsImV4cCI6MjEwNjcwMjgyNH0.8DF7iBxqvKm0WNzmiVzwfSSLjS7XdYFwr5Aq4oKdOgE";
@@ -536,7 +535,6 @@
     // ==========================================
     async function startApp() {
         try {
-            // Hent Profiler
             const svarProfil = await supabaseDb.from('samlerbase_profiler').select('*');
             if (svarProfil.data) {
                 svarProfil.data.forEach(p => {
@@ -544,7 +542,6 @@
                 });
             }
 
-            // Hent Objekter
             const svarData = await supabaseDb.from('samlerbase_data').select('*').order('id', { ascending: false });
             if (svarData.data) {
                 database = svarData.data;
@@ -669,7 +666,7 @@
       }
       
       if (brukerFunnet) {
-        alert(`SIMULERING AV E-POST:\n\nEn e-post har blitt "sendt" til ${epostSok} med instruksjoner for å tilbakestille passordet.`);
+        alert("SIMULERING AV E-POST:\n\nEn e-post har blitt sendt til " + epostSok + " med instruksjoner for å tilbakestille passordet.");
         byttTilLoggInn();
       } else {
         alert("Fant ingen bruker med denne e-postadressen.");
@@ -876,8 +873,8 @@
           return; 
       }
       
-      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: `Bearer ${tmdbToken}` } };
-      const sokUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(sokeord)}&language=no-NO`;
+      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
 
       try {
         const response = await fetch(sokUrl, options); 
@@ -885,7 +882,7 @@
         
         if (data.results && data.results.length > 0) {
           const film = data.results[0];
-          const detaljerUrl = `https://api.themoviedb.org/3/movie/${film.id}?language=no-NO`;
+          const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
           const detaljResponse = await fetch(detaljerUrl, options); 
           const detaljer = await detaljResponse.json();
 
@@ -895,10 +892,10 @@
           document.getElementById('feltAar').value = film.release_date ? film.release_date.substring(0, 4) : "";
           document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
           
-          if (detaljer.imdb_id) document.getElementById('feltImdb').value = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
+          if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
           if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
           
-          alert(`Fant "${film.title}"! Skjemaet er nå fylt ut med ekte data fra TMDb.`);
+          alert("Fant " + film.title + "! Skjemaet er nå fylt ut med ekte data fra TMDb.");
         } else { alert("Fant dessverre ingen filmer som passet med dette søket."); }
       } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
     }
@@ -910,9 +907,9 @@
        
        if (item.kategori !== 'film') { alert("Dette fungerer kun for filmer."); return; }
 
-       const options = { method: 'GET', headers: { accept: 'application/json', Authorization: `Bearer ${tmdbToken}` } };
-       let yearQuery = item.aar ? `&primary_release_year=${item.aar}` : '';
-       const sokUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(item.tittel)}&language=no-NO${yearQuery}`;
+       const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+       let yearQuery = item.aar ? "&primary_release_year=" + item.aar : '';
+       const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(item.tittel) + "&language=no-NO" + yearQuery;
 
        try {
          const response = await fetch(sokUrl, options);
@@ -920,7 +917,7 @@
          
          if (data.results && data.results.length > 0) {
             const film = data.results[0];
-            const detaljerUrl = `https://api.themoviedb.org/3/movie/${film.id}?language=no-NO`;
+            const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
             const detaljResponse = await fetch(detaljerUrl, options); 
             const detaljer = await detaljResponse.json();
 
@@ -930,7 +927,7 @@
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
             
             if (detaljer.imdb_id) {
-                item.imdb = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
+                item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             }
             if (detaljer.genres && detaljer.genres.length > 0) {
                 item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
@@ -939,8 +936,8 @@
             database[itemIndex] = item;
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
             utforSok();
-            alert(`Suksess! Oppdaterte info, rating og sjanger for "${film.title}".`);
-         } else { alert(`Fant ingen treff for "${item.tittel}" på TMDb.`); }
+            alert("Suksess! Oppdaterte info, rating og sjanger for " + film.title);
+         } else { alert("Fant ingen treff for " + item.tittel + " på TMDb."); }
        } catch(e) { console.error(e); alert("Feil ved tilkobling til TMDb."); }
     }
 
@@ -949,27 +946,27 @@
       
       const filmerAOppdatere = database.filter(i => i.eier === innloggetBruker && i.kategori === 'film' && !i.rating);
       if(filmerAOppdatere.length === 0) { alert("Alle filmene dine har allerede rating og info registrert!"); return; }
-      if(!confirm(`Fant ${filmerAOppdatere.length} filmer som mangler rating og detaljer. Vil du la appen søke opp og fylle inn for alle automatisk via TMDb nå?`)) return;
+      if(!confirm("Fant " + filmerAOppdatere.length + " filmer som mangler rating og detaljer. Vil du la appen søke opp og fylle inn for alle automatisk via TMDb nå?")) return;
 
       const knapp = document.getElementById('btnMasseOppdater');
       knapp.innerText = "⏳ Oppdaterer...";
       knapp.disabled = true;
 
-      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: `Bearer ${tmdbToken}` } };
+      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
       let oppdatert = 0;
 
       for (let item of filmerAOppdatere) {
         try {
           let renTittel = item.tittel.replace(/[^\w\sæøåÆØÅ]/g, ' '); 
-          let yearQuery = item.aar ? `&primary_release_year=${item.aar}` : '';
-          const sokUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(renTittel)}&language=no-NO${yearQuery}`;
+          let yearQuery = item.aar ? "&primary_release_year=" + item.aar : '';
+          const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO" + yearQuery;
           
           const response = await fetch(sokUrl, options);
           const data = await response.json();
 
           if (data.results && data.results.length > 0) {
             const film = data.results[0];
-            const detaljerUrl = `https://api.themoviedb.org/3/movie/${film.id}?language=no-NO`;
+            const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
             const detaljResponse = await fetch(detaljerUrl, options); 
             const detaljer = await detaljResponse.json();
 
@@ -977,7 +974,7 @@
             item.tittel_eng = detaljer.title || film.title || item.tittel_eng;
             if(!item.aar) item.aar = film.release_date ? film.release_date.substring(0, 4) : item.aar;
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
-            if (detaljer.imdb_id) item.imdb = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
+            if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
             
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then();
@@ -985,13 +982,13 @@
           }
         } catch (e) { console.log("Feil ved oppdatering av " + item.tittel); }
         await new Promise(resolve => setTimeout(resolve, 250));
-        knapp.innerText = `⏳ Arbeider... (${oppdatert}/${filmerAOppdatere.length})`;
+        knapp.innerText = "⏳ Arbeider... (" + oppdatert + "/" + filmerAOppdatere.length + ")";
       }
 
       utforSok();
       knapp.innerText = "🤖 Auto-fyll info (TMDb)";
       knapp.disabled = false;
-      alert(`Ferdig! Fant og oppdaterte detaljer for ${oppdatert} av ${filmerAOppdatere.length} filmer.`);
+      alert("Ferdig! Fant og oppdaterte detaljer for " + oppdatert + " av " + filmerAOppdatere.length + " filmer.");
     }
 
     // ==========================================
@@ -1036,7 +1033,7 @@
                 nyItem.kategori = 'tegneserie';
                 nyItem.bladserie = row['Bladserie'] || '';
                 nyItem.nr = row['nr'] || row['Nummer'] || '';
-                nyItem.tittel = row['Navn'] || row['Tittel'] || `${nyItem.bladserie} #${nyItem.nr}`;
+                nyItem.tittel = row['Navn'] || row['Tittel'] || nyItem.bladserie + " #" + nyItem.nr;
                 nyItem.aar = row['år'] || row['År'] || '';
               }
               
@@ -1051,7 +1048,7 @@
                 });
                 document.getElementById('eieFilter').value = 'min_alle';
                 utforSok(); 
-                alert(`Importert ferdig! La til ${nyeItemsArray.length} gjenstander i skyen.`);
+                alert("Importert ferdig! La til " + nyeItemsArray.length + " gjenstander i skyen.");
             }
           }
         });
@@ -1071,18 +1068,30 @@
       ];
       let html = '';
       bulkGjenstander.forEach((item, index) => {
-        let felterHtml = aktivKategori === 'film' 
-            ? `<div class="grid grid-cols-2 gap-2 mt-2"><input type="text" id="bulkAar_${index}" value="${item.aar}" placeholder="År" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">
-               <select id="bulkFormat_${index}" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">
-                 <option value="4K UHD" ${item.format === '4K UHD' ? 'selected' : ''}>4K UHD</option>
-                 <option value="Blu-ray" ${item.format === 'Blu-ray' ? 'selected' : ''}>Blu-ray</option>
-                 <option value="DVD" ${item.format === 'DVD' ? 'selected' : ''}>DVD</option>
-                 <option value="LaserDisc" ${item.format === 'LaserDisc' ? 'selected' : ''}>LaserDisc</option>
-                 <option value="UMD Video" ${item.format === 'UMD Video' ? 'selected' : ''}>UMD (PSP)</option>
-                 <option value="VHS" ${item.format === 'VHS' ? 'selected' : ''}>VHS</option>
-               </select></div>`
-            : `<div class="grid grid-cols-2 gap-2 mt-2"><input type="text" id="bulkSerie_${index}" value="${item.serie||''}" placeholder="Serie" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white"><input type="text" id="bulkNr_${index}" value="${item.nr||''}" placeholder="Nr" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white"></div>`;
-        html += `<div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex flex-col" id="bulkRow_${index}"><div class="flex justify-between items-center gap-2"><input type="text" id="bulkTittel_${index}" value="${item.tittel}" class="font-bold bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-amber-400 w-full"><button onclick="document.getElementById('bulkRow_${index}').remove()" class="text-rose-400 text-xs px-2 py-1 bg-rose-950 rounded border border-rose-900 shrink-0">✕ Slett</button></div>${felterHtml}</div>`;
+        let felterHtml = '';
+        if (aktivKategori === 'film') {
+            let sel = (val) => item.format === val ? 'selected' : '';
+            felterHtml = '<div class="grid grid-cols-2 gap-2 mt-2">' +
+               '<input type="text" id="bulkAar_' + index + '" value="' + item.aar + '" placeholder="År" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">' +
+               '<select id="bulkFormat_' + index + '" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">' +
+                 '<option value="4K UHD" ' + sel('4K UHD') + '>4K UHD</option>' +
+                 '<option value="Blu-ray" ' + sel('Blu-ray') + '>Blu-ray</option>' +
+                 '<option value="DVD" ' + sel('DVD') + '>DVD</option>' +
+                 '<option value="LaserDisc" ' + sel('LaserDisc') + '>LaserDisc</option>' +
+                 '<option value="UMD Video" ' + sel('UMD Video') + '>UMD (PSP)</option>' +
+                 '<option value="VHS" ' + sel('VHS') + '>VHS</option>' +
+               '</select></div>';
+        } else {
+            felterHtml = '<div class="grid grid-cols-2 gap-2 mt-2">' +
+               '<input type="text" id="bulkSerie_' + index + '" value="' + (item.serie||'') + '" placeholder="Serie" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">' +
+               '<input type="text" id="bulkNr_' + index + '" value="' + (item.nr||'') + '" placeholder="Nr" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">' +
+               '</div>';
+        }
+        html += '<div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex flex-col" id="bulkRow_' + index + '">' +
+           '<div class="flex justify-between items-center gap-2">' +
+           '<input type="text" id="bulkTittel_' + index + '" value="' + item.tittel + '" class="font-bold bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-amber-400 w-full">' +
+           '<button type="button" onclick="document.getElementById(\'bulkRow_' + index + '\').remove()" class="text-rose-400 text-xs px-2 py-1 bg-rose-950 rounded border border-rose-900 shrink-0">✕ Slett</button>' +
+           '</div>' + felterHtml + '</div>';
       });
       document.getElementById('hylleListe').innerHTML = html; 
       document.getElementById('hylleModal').classList.remove('hidden');
@@ -1093,12 +1102,12 @@
     function lagreHylleTilDatabase() {
       let objekterForSkyen = [];
       bulkGjenstander.forEach((item, index) => {
-        if (document.getElementById(`bulkRow_${index}`)) {
+        if (document.getElementById("bulkRow_" + index)) {
           const ny = { 
               id: Date.now() + index, 
               eier: innloggetBruker, 
               kategori: aktivKategori, 
-              tittel: document.getElementById(`bulkTittel_${index}`).value, 
+              tittel: document.getElementById("bulkTittel_" + index).value, 
               tittel_eng: item.eng, 
               tittel_orig: item.orig, 
               status: 'Har', 
@@ -1108,12 +1117,12 @@
               verdi: '' 
           };
           if (aktivKategori === 'film') { 
-              ny.aar = document.getElementById(`bulkAar_${index}`).value; 
-              ny.format = [document.getElementById(`bulkFormat_${index}`).value]; 
+              ny.aar = document.getElementById("bulkAar_" + index).value; 
+              ny.format = [document.getElementById("bulkFormat_" + index).value]; 
               ny.sjanger = item.sjanger; 
           } else { 
-              ny.bladserie = document.getElementById(`bulkSerie_${index}`).value; 
-              ny.nr = document.getElementById(`bulkNr_${index}`).value; 
+              ny.bladserie = document.getElementById("bulkSerie_" + index).value; 
+              ny.nr = document.getElementById("bulkNr_" + index).value; 
               ny.aar = item.aar; 
           }
           database.unshift(ny);
@@ -1169,7 +1178,7 @@
         let eierProfil = profiler[item.eier] || { land: 'Ukjent', spraak: 'Norsk', info: 'Ingen bio', standardSynlighet: 'offentlig' };
         
         let effektivSynlighet = item.synlighet && item.synlighet !== 'standard' ? item.synlighet : eierProfil.standardSynlighet;
-        let privatIkon = (erMin && effektivSynlighet === 'privat') ? `<span class="text-rose-400 text-[10px] border border-rose-900 bg-rose-950 px-1.5 py-0.5 rounded ml-2">🔒 Privat</span>` : '';
+        let privatIkon = (erMin && effektivSynlighet === 'privat') ? '<span class="text-rose-400 text-[10px] border border-rose-900 bg-rose-950 px-1.5 py-0.5 rounded ml-2">🔒 Privat</span>' : '';
 
         let kortStil = 'bg-slate-950 border p-3 rounded-lg flex flex-col sm:flex-row justify-between sm:items-center hover:border-slate-700 transition gap-2';
         if (eierIkke) kortStil += ' border-slate-800/50 opacity-60 border-dashed hover:opacity-100';
@@ -1177,57 +1186,63 @@
         else kortStil += ' border-slate-800';
         rad.className = kortStil;
 
-        const eieBadge = eierIkke ? `<span class="bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ml-2">Ønsker seg</span>` : '';
-        let eierTekst = eierProfil.land ? `${item.eier} (${eierProfil.land})` : item.eier;
-        const eierBadge = `<span title="${eierProfil.info || 'Ingen info'}" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700 flex items-center gap-1 w-fit cursor-help shrink-0">👤 ${eierTekst}</span>`;
+        const eieBadge = eierIkke ? '<span class="bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ml-2">Ønsker seg</span>' : '';
+        let eierTekst = eierProfil.land ? item.eier + " (" + eierProfil.land + ")" : item.eier;
+        const eierBadge = '<span title="' + (eierProfil.info || 'Ingen info') + '" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700 flex items-center gap-1 w-fit cursor-help shrink-0">👤 ' + eierTekst + '</span>';
 
-        let tittelString = `<span class="font-bold text-base text-amber-400 group-hover:text-amber-300 transition block">${item.tittel || 'Uten tittel'}</span>`;
-        let ekstraTitler = [];
-        if (item.tittel_eng && item.tittel_eng !== item.tittel) ekstraTitler.push(`🇬🇧 ${item.tittel_eng}`);
-        if (item.tittel_orig && item.tittel_orig !== item.tittel && item.tittel_orig !== item.tittel_eng) ekstraTitler.push(`🎬 ${item.tittel_orig}`);
-        let tittelSub = ekstraTitler.length > 0 ? `<span class="block text-[11px] text-slate-400 font-normal mt-0.5 flex flex-wrap gap-x-3 gap-y-1">${ekstraTitler.map(t => `<span>${t}</span>`).join('')}</span>` : '';
-
-        let tilstandTekst = item.tilstand && item.tilstand !== 'Ikke relevant' ? `<span class="text-slate-500">| Tilstand: ${item.tilstand}</span>` : '';
-        let kommentarHtml = item.kommentar ? `<div class="text-[11px] text-slate-400 mt-1 italic leading-tight bg-slate-900/50 p-1.5 rounded inline-block">💬 ${item.kommentar}</div>` : '';
-        let verdiTekst = item.verdi ? `<span class="text-emerald-400 font-bold ml-2">${item.verdi} kr</span>` : '';
-        let ratingBadge = item.rating ? `<span class="text-amber-400 font-bold text-[11px] flex items-center gap-0.5 mr-2" title="TMDb Rating">⭐ ${item.rating}</span>` : '';
+        let tittelString = '<span class="font-bold text-base text-amber-400 group-hover:text-amber-300 transition block">' + (item.tittel || 'Uten tittel') + '</span>';
         
-        let lagretTekst = item.lagret ? `<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1" title="Lagringsplass">📍 ${item.lagret}</span>` : '';
+        let ekstraTitler = [];
+        if (item.tittel_eng && item.tittel_eng !== item.tittel) ekstraTitler.push("🇬🇧 " + item.tittel_eng);
+        if (item.tittel_orig && item.tittel_orig !== item.tittel && item.tittel_orig !== item.tittel_eng) ekstraTitler.push("🎬 " + item.tittel_orig);
+        
+        let tittelSub = '';
+        if (ekstraTitler.length > 0) {
+            tittelSub = '<span class="block text-[11px] text-slate-400 font-normal mt-0.5 flex flex-wrap gap-x-3 gap-y-1">';
+            ekstraTitler.forEach(t => { tittelSub += "<span>" + t + "</span>"; });
+            tittelSub += '</span>';
+        }
+
+        let tilstandTekst = item.tilstand && item.tilstand !== 'Ikke relevant' ? '<span class="text-slate-500">| Tilstand: ' + item.tilstand + '</span>' : '';
+        let kommentarHtml = item.kommentar ? '<div class="text-[11px] text-slate-400 mt-1 italic leading-tight bg-slate-900/50 p-1.5 rounded inline-block">💬 ' + item.kommentar + '</div>' : '';
+        let verdiTekst = item.verdi ? '<span class="text-emerald-400 font-bold ml-2">' + item.verdi + ' kr</span>' : '';
+        let ratingBadge = item.rating ? '<span class="text-amber-400 font-bold text-[11px] flex items-center gap-0.5 mr-2" title="TMDb Rating">⭐ ' + item.rating + '</span>' : '';
+        let lagretTekst = item.lagret ? '<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1" title="Lagringsplass">📍 ' + item.lagret + '</span>' : '';
 
         let sjekkPrisSok = encodeURIComponent(item.strekkode || item.tittel);
-        let finnSok = `https://www.finn.no/bap/forsale/search.html?q=${sjekkPrisSok}`;
-        let ebaySok = `https://www.ebay.com/sch/i.html?_nkw=${sjekkPrisSok}`;
-        let prisKnapper = `<div class="flex gap-2 mt-2"><a href="${finnSok}" target="_blank" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">🔍 Finn.no</a><a href="${ebaySok}" target="_blank" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">🔍 eBay</a></div>`;
+        let finnSok = "https://www.finn.no/bap/forsale/search.html?q=" + sjekkPrisSok;
+        let ebaySok = "https://www.ebay.com/sch/i.html?_nkw=" + sjekkPrisSok;
+        let prisKnapper = '<div class="flex gap-2 mt-2"><a href="' + finnSok + '" target="_blank" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">🔍 Finn.no</a><a href="' + ebaySok + '" target="_blank" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">🔍 eBay</a></div>';
         
-        let oppdaterKnapp = (erMin && item.kategori === 'film') ? `<button onclick="oppdaterEnkelFilmTMDb(${item.id})" class="text-indigo-400 hover:text-indigo-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0" title="Hent all info fra TMDb på nytt">🔄 TMDb</button>` : '';
-        let endreKnapp = erMin ? `<button onclick="apneEndreModal(${item.id})" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0" title="Rediger manuelt">✏️ Endre</button>` : '';
+        let oppdaterKnapp = (erMin && item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 hover:text-indigo-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0" title="Hent all info fra TMDb på nytt">🔄 TMDb</button>' : '';
+        let endreKnapp = erMin ? '<button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0" title="Rediger manuelt">✏️ Endre</button>' : '';
 
-        let linkUrl = item.imdb ? item.imdb : `https://www.google.com/search?q=${encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'))}`;
+        let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
 
-        let infoHtml = item.kategori === 'film' 
-            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ')} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
-            : `<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
+        let infoHtml = '';
+        if (item.kategori === 'film') {
+            let formatBadges = Array.isArray(item.format) ? item.format.map(f => '<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">' + f + '</span>').join(' ') : '';
+            infoHtml = '<div class="flex flex-wrap items-center mt-1.5 gap-2">' + ratingBadge + ' ' + formatBadges + ' <span class="text-[11px] text-slate-400">' + (item.sjanger || '') + '</span> ' + lagretTekst + ' ' + eieBadge + ' ' + privatIkon + ' ' + tilstandTekst + ' ' + verdiTekst + '</div>';
+        } else {
+            infoHtml = '<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ' + (item.bladserie || '') + ' #' + (item.nr || '') + '</span><span>|</span><span>Utgitt: ' + (item.aar || '-') + '</span> ' + lagretTekst + ' ' + eieBadge + ' ' + privatIkon + ' ' + tilstandTekst + ' ' + verdiTekst + '</div>';
+        }
 
-        rad.innerHTML = `
-          <div class="space-y-1 w-full overflow-hidden flex-1">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <a href="${linkUrl}" target="_blank" class="truncate flex-1 group block">
-                ${tittelString}
-                ${tittelSub}
-              </a>
-              ${eierBadge}
-            </div>
-            ${infoHtml}
-            ${kommentarHtml}
-            ${prisKnapper}
-          </div>
-          ${erMin ? `
-            <div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">
-              ${endreKnapp}${oppdaterKnapp}
-              <button onclick="slettElement(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button>
-            </div>
-          ` : ''}
-        `;
+        let adminKnapper = '';
+        if (erMin) {
+            adminKnapper = '<div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + endreKnapp + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button></div>';
+        }
+
+        let htmlString = '<div class="space-y-1 w-full overflow-hidden flex-1">' +
+            '<div class="flex flex-wrap items-center justify-between gap-2">' +
+              '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block">' +
+                tittelString + tittelSub +
+              '</a>' +
+              eierBadge +
+            '</div>' +
+            infoHtml + kommentarHtml + prisKnapper +
+          '</div>' + adminKnapper;
+
+        rad.innerHTML = htmlString;
         container.appendChild(rad);
       });
     }
