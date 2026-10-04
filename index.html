@@ -12,7 +12,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
-  <!-- LASTE-SKJERM MENS VI KOBLE TIL SKYEN -->
+  <!-- LASTE-SKJERM MENS VI KOBLER TIL SKYEN -->
   <div id="loadingOverlay" class="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center p-4">
     <div class="text-center">
       <span class="text-6xl animate-bounce block mb-4">☁️</span>
@@ -928,8 +928,13 @@
             item.tittel_eng = detaljer.title || film.title || item.tittel_eng;
             if(!item.aar) item.aar = film.release_date ? film.release_date.substring(0, 4) : item.aar;
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
-            if (detaljer.imdb_id) item.imdb = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
-            if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
+            
+            if (detaljer.imdb_id) {
+                item.imdb = `https://www.imdb.com/title/${detaljer.imdb_id}/`;
+            }
+            if (detaljer.genres && detaljer.genres.length > 0) {
+                item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
+            }
 
             database[itemIndex] = item;
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
@@ -1177,23 +1182,16 @@
         const eierBadge = `<span title="${eierProfil.info || 'Ingen info'}" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700 flex items-center gap-1 w-fit cursor-help shrink-0">👤 ${eierTekst}</span>`;
 
         let tittelString = `<span class="font-bold text-base text-amber-400 group-hover:text-amber-300 transition block">${item.tittel || 'Uten tittel'}</span>`;
-        
-        // SIKKERHETS-FIKS FOR EKSTRA TITLER
         let ekstraTitler = [];
         if (item.tittel_eng && item.tittel_eng !== item.tittel) ekstraTitler.push(`🇬🇧 ${item.tittel_eng}`);
         if (item.tittel_orig && item.tittel_orig !== item.tittel && item.tittel_orig !== item.tittel_eng) ekstraTitler.push(`🎬 ${item.tittel_orig}`);
-        
-        let tittelSub = '';
-        if (ekstraTitler.length > 0) {
-            tittelSub = '<span class="block text-[11px] text-slate-400 font-normal mt-0.5 flex flex-wrap gap-x-3 gap-y-1">';
-            ekstraTitler.forEach(t => { tittelSub += `<span>${t}</span>`; });
-            tittelSub += '</span>';
-        }
+        let tittelSub = ekstraTitler.length > 0 ? `<span class="block text-[11px] text-slate-400 font-normal mt-0.5 flex flex-wrap gap-x-3 gap-y-1">${ekstraTitler.map(t => `<span>${t}</span>`).join('')}</span>` : '';
 
         let tilstandTekst = item.tilstand && item.tilstand !== 'Ikke relevant' ? `<span class="text-slate-500">| Tilstand: ${item.tilstand}</span>` : '';
         let kommentarHtml = item.kommentar ? `<div class="text-[11px] text-slate-400 mt-1 italic leading-tight bg-slate-900/50 p-1.5 rounded inline-block">💬 ${item.kommentar}</div>` : '';
         let verdiTekst = item.verdi ? `<span class="text-emerald-400 font-bold ml-2">${item.verdi} kr</span>` : '';
         let ratingBadge = item.rating ? `<span class="text-amber-400 font-bold text-[11px] flex items-center gap-0.5 mr-2" title="TMDb Rating">⭐ ${item.rating}</span>` : '';
+        
         let lagretTekst = item.lagret ? `<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1" title="Lagringsplass">📍 ${item.lagret}</span>` : '';
 
         let sjekkPrisSok = encodeURIComponent(item.strekkode || item.tittel);
@@ -1206,24 +1204,9 @@
 
         let linkUrl = item.imdb ? item.imdb : `https://www.google.com/search?q=${encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'))}`;
 
-        // SIKKERHETS-FIKS FOR INFO HTML
-        let infoHtml = '';
-        if (item.kategori === 'film') {
-            let formatBadges = Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ') : '';
-            infoHtml = `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${formatBadges} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
-        } else {
-            infoHtml = `<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
-        }
-
-        let adminKnapper = '';
-        if (erMin) {
-            adminKnapper = `
-            <div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">
-              ${endreKnapp}
-              ${oppdaterKnapp}
-              <button onclick="slettElement(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button>
-            </div>`;
-        }
+        let infoHtml = item.kategori === 'film' 
+            ? `<div class="flex flex-wrap items-center mt-1.5 gap-2">${ratingBadge} ${Array.isArray(item.format) ? item.format.map(f => `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">${f}</span>`).join(' ')} <span class="text-[11px] text-slate-400">${item.sjanger || ''}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`
+            : `<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ${item.bladserie || ''} #${item.nr || ''}</span><span>|</span><span>Utgitt: ${item.aar || '-'}</span> ${lagretTekst} ${eieBadge} ${privatIkon} ${tilstandTekst} ${verdiTekst}</div>`;
 
         rad.innerHTML = `
           <div class="space-y-1 w-full overflow-hidden flex-1">
@@ -1238,7 +1221,12 @@
             ${kommentarHtml}
             ${prisKnapper}
           </div>
-          ${adminKnapper}
+          ${erMin ? `
+            <div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">
+              ${endreKnapp}${oppdaterKnapp}
+              <button onclick="slettElement(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button>
+            </div>
+          ` : ''}
         `;
         container.appendChild(rad);
       });
