@@ -1003,6 +1003,7 @@
     }
 
 // ----------------------------------------------------
+    // ----------------------------------------------------
     // NY MOTOR FOR NORSKE & GLOBALE STREKKODER (MED LOKALT SØK)
     // ----------------------------------------------------
     async function handterStrekkode(strekkode) {
@@ -1085,8 +1086,9 @@
                 if (overlay) overlay.classList.add('hidden');
                 
                 let butikkNavn = aktivKategori === 'film' ? "Platekompaniet" : "Outland";
+                // Løst bug: Oppdatert /sok?q= til /search?q= for Platekompaniet
                 let butikkUrl = aktivKategori === 'film' 
-                    ? "https://www.platekompaniet.no/sok?q=" + strekkode 
+                    ? "https://www.platekompaniet.no/search?q=" + strekkode 
                     : "https://www.outland.no/search?q=" + strekkode;
 
                 if (confirm("Fant dessverre ingen treff på strekkoden (" + strekkode + ") i de globale databasene.\n\nVil du åpne et søk hos " + butikkNavn + " i en ny fane for å finne tittelen raskt?")) {
@@ -1099,8 +1101,9 @@
             if (overlay) overlay.classList.add('hidden');
             
             let butikkNavn = aktivKategori === 'film' ? "Platekompaniet" : "Outland";
+            // Løst bug: Oppdatert /sok?q= til /search?q= for Platekompaniet
             let butikkUrl = aktivKategori === 'film' 
-                ? "https://www.platekompaniet.no/sok?q=" + strekkode 
+                ? "https://www.platekompaniet.no/search?q=" + strekkode 
                 : "https://www.outland.no/search?q=" + strekkode;
 
             if (confirm("Klarte ikke koble til de globale databasene.\n\nVil du åpne et manuelt søk hos " + butikkNavn + " i en ny fane i stedet?")) {
