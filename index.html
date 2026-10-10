@@ -9,8 +9,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <!-- SUPABASE BIBLIOTEK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- TESSERACT.JS FOR BILDEGJENKJENNING (OCR) -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
@@ -381,15 +379,14 @@
           
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-5 text-[11px] sm:text-xs font-semibold">
             <button type="button" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> 1. Strekkode</button>
-            <button type="button" onclick="startAutoRegistrering('bilde')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">🖼</span> 2. Bilde</button>
-            <button type="button" onclick="startAutoRegistrering('tittel')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">🔍</span> 3. Nettsøk</button>
-            <button type="button" onclick="startAutoRegistrering('hylle')" class="bg-indigo-600/20 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📚</span> 4. Hyllebilde</button>
-            <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> 5. Fil-import</button>
-            <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">✍</span> 6. Manuell</button>
+            <button type="button" onclick="startAutoRegistrering('tittel')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">🔍</span> 2. Nettsøk</button>
+            <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> 3. Diktering</button>
+            <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> 4. Fil-import</button>
+            <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">✍</span> 5. Manuell</button>
           </div>
 
-          <input type="file" id="bildeInput" accept="image/*" capture="environment" class="hidden" onchange="utforBildeAnalyse(event)" />
-          <input type="file" id="hylleInput" accept="image/*" capture="environment" class="hidden" onchange="utforBildeAnalyse(event)" />
+          <input type="file" id="bildeInput" accept="image/*" capture="environment" class="hidden" onchange="simulerBildeAnalyse()" />
+          <input type="file" id="hylleInput" accept="image/*" capture="environment" class="hidden" onchange="simulerHylleAnalyse()" />
           <input type="file" id="csvInput" accept=".csv" multiple class="hidden" onchange="importerCSV(event)" />
 
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs">
@@ -922,19 +919,80 @@
         skannerInstans.start(
             { facingMode: "environment" }, 
             { fps: 10, qrbox: { width: 250, height: 150 } }, 
-            (decodedText) => { stoppSkanner(); simulerApiOppslag(decodedText); }, 
+            (decodedText) => { stoppSkanner(); handterStrekkode(decodedText); }, 
             (err) => {}
         ).catch(err => { stoppSkanner(); });
-      } else if (metode === 'bilde') { 
-          document.getElementById('bildeInput').click();
       } else if (metode === 'tittel') { 
           const sok = prompt("Skriv inn film-tittel (TMDb-søk):"); 
           if (sok) simulerApiOppslag(sok);
-      } else if (metode === 'hylle') { 
-          document.getElementById('hylleInput').click(); 
       } else if (metode === 'csv') { 
           document.getElementById('csvInput').click(); 
       }
+    }
+
+    // ----------------------------------------------------
+    // NY MOTOR FOR STEMMESØK (DIKTERING)
+    // ----------------------------------------------------
+    function startDiktering() {
+        if (aktivKategori !== 'film') { 
+            alert("Stemmesøk er kun tilgjengelig for filmer foreløpig."); 
+            return; 
+        }
+
+        // Sjekker om nettleseren (Chrome/Safari) støtter mikrofon-AI
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Nettleseren din støtter dessverre ikke stemmegjenkjenning direkte. Prøv Chrome eller Safari.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'no-NO'; // Tvinger den til å forstå Norsk/Engelsk uttale
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        // Viser lytte-skjermen din
+        const overlay = document.getElementById('loadingOverlay');
+        const tittelFelt = overlay ? overlay.querySelector('h2') : null;
+        const undertekstFelt = overlay ? overlay.querySelector('p') : null;
+
+        if (overlay) overlay.classList.remove('hidden');
+        if (tittelFelt) tittelFelt.innerText = "Lytter... 🎤";
+        if (undertekstFelt) undertekstFelt.innerText = "Snakk nå. Si tittelen på filmen høyt.";
+
+        recognition.start();
+
+        recognition.onresult = (event) => {
+            const taleResultat = event.results[0][0].transcript;
+            
+            if (overlay) overlay.classList.add('hidden');
+            if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
+            if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
+
+            // Viser hva den hørte, og lar deg rette opp evt. skrivefeil
+            const bekreft = prompt("🎤 Jeg hørte:\n\n" + taleResultat + "\n\nTrykk OK for å søke i databasen, eller rett opp i teksten under først:", taleResultat);
+            
+            if (bekreft && bekreft.trim() !== "") {
+                simulerApiOppslag(bekreft.trim());
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Talefeil: ", event.error);
+            if (overlay) overlay.classList.add('hidden');
+            if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
+            if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
+            
+            if (event.error === 'not-allowed') {
+                alert("Du må gi nettleseren tillatelse til å bruke mikrofonen for at dette skal fungere.");
+            } else {
+                alert("Klarte ikke å oppfatte hva du sa. Sørg for at det er stille rundt deg, og prøv igjen.");
+            }
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
     }
     
     function stoppSkanner() { 
@@ -943,64 +1001,119 @@
         }
         document.getElementById('skannerModal').classList.add('hidden'); 
     }
-    
-   // ----------------------------------------------------
-    // NY AI BILDEGJENKJENNING MED TESSERACT.JS
+
+// ----------------------------------------------------
+    // NY MOTOR FOR NORSKE & GLOBALE STREKKODER (MED LOKALT SØK)
     // ----------------------------------------------------
-    async function utforBildeAnalyse(event) {
-      const fil = event.target.files[0];
-      if (!fil) return;
+    async function handterStrekkode(strekkode) {
+        // 1. Legg strekkoden rett inn i skjemaet uansett
+        document.getElementById('feltStrekkode').value = strekkode; 
 
-      if (aktivKategori !== 'film') { 
-          alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); 
-          event.target.value = '';
-          return; 
-      }
+        // Vis laste-skjerm
+        const overlay = document.getElementById('loadingOverlay');
+        const tittelFelt = overlay ? overlay.querySelector('h2') : null;
+        const undertekstFelt = overlay ? overlay.querySelector('p') : null;
 
-      // Vis laste-skjerm
-      const overlay = document.getElementById('loadingOverlay');
-      const tittelFelt = overlay ? overlay.querySelector('h2') : null;
-      const undertekstFelt = overlay ? overlay.querySelector('p') : null;
+        if (overlay) overlay.classList.remove('hidden');
+        if (tittelFelt) tittelFelt.innerText = "Slår opp strekkode...";
+        if (undertekstFelt) undertekstFelt.innerText = "Søker i globale registre: " + strekkode;
 
-      if (overlay) overlay.classList.remove('hidden');
-      if (tittelFelt) tittelFelt.innerText = "AI leser bildet...";
-      if (undertekstFelt) undertekstFelt.innerText = "Dette kan ta 5-10 sekunder aller første gang du bruker appen...";
+        let funnetTreff = false;
 
-      try {
-        // Tesseract leser bildet (støtter Engelsk og Norsk for best treff)
-        const resultat = await Tesseract.recognize(fil, 'eng+nor');
-        
-        // Skjul laste-skjerm
-        if (overlay) overlay.classList.add('hidden');
-        
-        // Tilbakestill tekstene på laste-skjermen til neste gang
-        if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
-        if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
+        try {
+            if (aktivKategori === 'film') {
+                // Sjekker gratis åpen database for EAN/UPC-strekkoder (Filmer)
+                const response = await fetch("https://api.upcitemdb.com/prod/trial/lookup?upc=" + strekkode);
+                const data = await response.json();
 
-        let gjenkjentTekst = resultat.data.text.trim();
-        
-        // Prøv å finn den første fornuftige linjen (fjerner helt tomme linjer eller linjer med bare ett tegn)
-        let linjer = gjenkjentTekst.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-        let foreslattTittel = linjer.length > 0 ? linjer[0] : "";
+                if (data.items && data.items.length > 0) {
+                    funnetTreff = true;
+                    let produktTittel = data.items[0].title;
+                    
+                    // Rens tittelen for typiske butikk-ord for å sikre treff i TMDb
+                    let renTittel = produktTittel.replace(/blu-ray|dvd|4k|uhd|nordic|import|edition|nordisk|norsk|uk/gi, '').trim();
+                    renTittel = renTittel.replace(/\([0-9]{4}\)/g, '').replace(/-|\(|\)|\[|\]/g, ' ').replace(/\s+/g, ' ').trim();
 
-        // Be brukeren bekrefte eller rydde i teksten før vi søker (siden covere ofte har mye ekstra tekst)
-        const bekreftetTittel = prompt("🤖 AI fant denne teksten på coveret.\n\nSiden covere ofte har mye ekstra tekst, gjerne fjern litt rusk før vi søker i databasen:", foreslattTittel || gjenkjentTekst);
-        
-        if (bekreftetTittel && bekreftetTittel.trim() !== "") {
-           simulerApiOppslag(bekreftetTittel.trim());
+                    if (overlay) overlay.classList.add('hidden'); 
+
+                    const bekreft = prompt("Fant dette produktet fra strekkoden:\n" + produktTittel + "\n\nSøker i filmdatabasen (TMDb) med denne rensede teksten:", renTittel);
+                    
+                    if (bekreft && bekreft.trim() !== "") {
+                        simulerApiOppslag(bekreft.trim());
+                    }
+                }
+
+            } else {
+                // DOBBELT-SØK FOR TEGNESERIER (Google Books -> UPCitemdb)
+                let funnetTittel = "";
+                let funnetAar = "";
+                let funnetForfatter = "";
+
+                // 1. Prøv Google Books (Overlegen på ISBN og tykke bøker)
+                const gbResponse = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + strekkode);
+                const gbData = await gbResponse.json();
+
+                if (gbData.items && gbData.items.length > 0) {
+                    const bok = gbData.items[0].volumeInfo;
+                    funnetTittel = bok.title || "";
+                    if (bok.publishedDate) funnetAar = bok.publishedDate.substring(0, 4);
+                    if (bok.authors) funnetForfatter = bok.authors.join(", ");
+                } else {
+                    // 2. Prøv UPCitemdb hvis Google Books feiler (Bra for US Comics og Norske kioskblader)
+                    const upcResponse = await fetch("https://api.upcitemdb.com/prod/trial/lookup?upc=" + strekkode);
+                    const upcData = await upcResponse.json();
+                    
+                    if (upcData.items && upcData.items.length > 0) {
+                        funnetTittel = upcData.items[0].title;
+                    }
+                }
+
+                if (funnetTittel) {
+                    funnetTreff = true;
+                    if (overlay) overlay.classList.add('hidden');
+                    
+                    document.getElementById('feltBladserie').value = funnetTittel;
+                    if (funnetAar) document.getElementById('feltAar').value = funnetAar;
+                    if (funnetForfatter) document.getElementById('feltKommentar').value = "Forfatter: " + funnetForfatter;
+                    
+                    alert("Fant treff! 🎉\n\nTittel: " + funnetTittel + "\n\nFylte det inn i skjemaet. Du kan selv fylle inn aktuelt nummer og justere informasjonen før du trykker lagre.");
+                }
+            }
+            
+            // HVIS INGEN TREFF: Tilby lokalt butikk-søk
+            if (!funnetTreff) {
+                if (overlay) overlay.classList.add('hidden');
+                
+                let butikkNavn = aktivKategori === 'film' ? "Platekompaniet" : "Outland";
+                let butikkUrl = aktivKategori === 'film' 
+                    ? "https://www.platekompaniet.no/sok?q=" + strekkode 
+                    : "https://www.outland.no/search?q=" + strekkode;
+
+                if (confirm("Fant dessverre ingen treff på strekkoden (" + strekkode + ") i de globale databasene.\n\nVil du åpne et søk hos " + butikkNavn + " i en ny fane for å finne tittelen raskt?")) {
+                    window.open(butikkUrl, '_blank');
+                }
+            }
+
+        } catch (error) {
+            console.error("Feil ved strekkodesøk:", error);
+            if (overlay) overlay.classList.add('hidden');
+            
+            let butikkNavn = aktivKategori === 'film' ? "Platekompaniet" : "Outland";
+            let butikkUrl = aktivKategori === 'film' 
+                ? "https://www.platekompaniet.no/sok?q=" + strekkode 
+                : "https://www.outland.no/search?q=" + strekkode;
+
+            if (confirm("Klarte ikke koble til de globale databasene.\n\nVil du åpne et manuelt søk hos " + butikkNavn + " i en ny fane i stedet?")) {
+                window.open(butikkUrl, '_blank');
+            }
         }
-
-      } catch (error) {
-        console.error("Feil ved bildegjenkjenning:", error);
-        if (overlay) overlay.classList.add('hidden');
+        
+        // Tilbakestill teksten på laste-skjermen for sikkerhets skyld
         if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
-        alert("Klarte ikke å lese teksten på bildet. Sørg for at du har godt lys og at tittelen er tydelig.");
-      }
-      
-      // Nullstill input slik at du kan ta bilde av samme film en gang til om ønskelig
-      event.target.value = ''; 
     }
+    
+    function simulerBildeAnalyse() { setTimeout(() => { simulerApiOppslag("Terminator"); }, 500); }
 
     async function simulerApiOppslag(sokeord) {
       if (aktivKategori !== 'film') { 
