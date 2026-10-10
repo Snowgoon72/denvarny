@@ -1020,9 +1020,11 @@
 
         let funnetTreff = false;
 
+        // ========================================================
+        // STEG 1: SJEKK GLOBALT (UPCitemdb / Google Books)
+        // ========================================================
         try {
             if (aktivKategori === 'film') {
-                // 1. Sjekker globale databaser for filmer
                 const response = await fetch("https://api.upcitemdb.com/prod/trial/lookup?upc=" + strekkode);
                 const data = await response.json();
 
@@ -1037,9 +1039,7 @@
                     const bekreft = prompt("Fant dette produktet fra strekkoden:\n" + produktTittel + "\n\nSøker i filmdatabasen (TMDb) med denne teksten:", renTittel);
                     if (bekreft && bekreft.trim() !== "") simulerApiOppslag(bekreft.trim());
                 }
-
             } else {
-                // 1. Sjekker globale databaser for tegneserier (Google Books -> UPCitemdb)
                 let funnetTittel = "";
                 let funnetAar = "";
                 let funnetForfatter = "";
@@ -1067,84 +1067,76 @@
                     alert("Fant treff globalt! 🎉\n\nTittel: " + funnetTittel + "\n\nFylte det inn i skjemaet.");
                 }
             }
-            
-            // ========================================================
-            // HVIS INGEN TREFF GLOBALT: "Snok" på Platekompaniet / Outland via Proxy
-            // ========================================================
-            if (!funnetTreff) {
-                if (undertekstFelt) undertekstFelt.innerText = "Ikke funnet globalt. Snoker i norske nettbutikker i bakgrunnen...";
-                
-                try {
-                    let butikkSokUrl = aktivKategori === 'film' 
-                        ? "https://www.platekompaniet.no/search?q=" + strekkode 
-                        : "https://www.outland.no/search?q=" + strekkode;
-                        
-                    // Bruker AllOrigins Proxy for å omgå sikkerhetssperrer (CORS)
-                    const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(butikkSokUrl);
-                    const butikkRes = await fetch(proxyUrl);
-                    const butikkData = await butikkRes.json();
-                    
-                    if (butikkData.contents) {
-                        // Tolker nettsiden i bakgrunnen
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(butikkData.contents, "text/html");
-                        
-                        let lokalTittel = "";
-                        // Leter etter standard overskrifter og produktkort
-                        const tittelElement = doc.querySelector('.product-item-link, .product-title, .product-item-name, h1.page-title, h1');
-                        
-                        if (tittelElement) {
-                            lokalTittel = tittelElement.innerText.trim();
-                        }
-                        
-                        // Sjekker at vi fant en reell tittel og ikke bare ordet "Søkeresultat"
-                        if (lokalTittel && lokalTittel.length > 2 && !lokalTittel.toLowerCase().includes('søkeresultat')) {
-                            funnetTreff = true;
-                            if (overlay) overlay.classList.add('hidden');
-                            
-                            if (aktivKategori === 'film') {
-                                // Rens Platekompaniet-tittelen for TMDb-søket
-                                let renTittel = lokalTittel.replace(/blu-ray|dvd|4k|uhd|nordic|import|edition|nordisk|norsk|uk/gi, '').trim();
-                                renTittel = renTittel.replace(/\([0-9]{4}\)/g, '').replace(/-|\(|\)|\[|\]/g, ' ').replace(/\s+/g, ' ').trim();
-
-                                const bekreft = prompt("🕵️ Snoket på Platekompaniet og fant:\n" + lokalTittel + "\n\nSender dette til filmdatabasen (TMDb) for info, rating og cover:", renTittel);
-                                if (bekreft && bekreft.trim() !== "") {
-                                    simulerApiOppslag(bekreft.trim());
-                                }
-                            } else {
-                                document.getElementById('feltBladserie').value = lokalTittel;
-                                alert("🕵️ Fant treff skjult hos Outland! 🎉\n\nTittel: " + lokalTittel + "\n\nFylte det inn i skjemaet. Du kan selv justere informasjonen.");
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.log("Klarte ikke skrape norske butikker i bakgrunnen:", e);
-                }
-
-                // ========================================================
-                // ALLER SISTE UTVEI: Åpne ny fane manuelt hvis Proxy-en feiler
-                // ========================================================
-                if (!funnetTreff) {
-                    if (overlay) overlay.classList.add('hidden');
-                    
-                    let butikkNavn = aktivKategori === 'film' ? "Platekompaniet" : "Outland";
-                    let butikkUrl = aktivKategori === 'film' 
-                        ? "https://www.platekompaniet.no/search?q=" + strekkode 
-                        : "https://www.outland.no/search?q=" + strekkode;
-
-                    if (confirm("Fant dessverre ingen treff på strekkoden (" + strekkode + ") hverken globalt eller via skjult søk.\n\nVil du åpne et manuelt søk hos " + butikkNavn + " i en ny fane?")) {
-                        window.open(butikkUrl, '_blank');
-                    }
-                }
-            }
-
         } catch (error) {
-            console.error("Feil ved strekkodesøk:", error);
-            if (overlay) overlay.classList.add('hidden');
-            alert("En feil oppstod under strekkodesøket. Sjekk internettforbindelsen din.\nStrekkoden ligger klar i skjemaet.");
+            console.log("Globalt søk feilet (blokkert av nettleser eller server nede), går videre til lokalt søk i bakgrunnen.", error);
         }
         
-        // Tilbakestill teksten på laste-skjermen for sikkerhets skyld
+        // ========================================================
+        // STEG 2: HVIS INGEN TREFF GLOBALT: "Snok" på Platekompaniet / Outland
+        // ========================================================
+        if (!funnetTreff) {
+            if (undertekstFelt) undertekstFelt.innerText = "Ikke funnet globalt. Snoker i norske nettbutikker i bakgrunnen...";
+            
+            try {
+                let butikkSokUrl = aktivKategori === 'film' 
+                    ? "https://www.platekompaniet.no/search?q=" + strekkode 
+                    : "https://www.outland.no/search?q=" + strekkode;
+                    
+                const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(butikkSokUrl);
+                const butikkRes = await fetch(proxyUrl);
+                const butikkData = await butikkRes.json();
+                
+                if (butikkData.contents) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(butikkData.contents, "text/html");
+                    
+                    let lokalTittel = "";
+                    const tittelElement = doc.querySelector('.product-item-link, .product-title, .product-item-name, h1.page-title, h1');
+                    
+                    if (tittelElement) {
+                        lokalTittel = tittelElement.innerText.trim();
+                    }
+                    
+                    if (lokalTittel && lokalTittel.length > 2 && !lokalTittel.toLowerCase().includes('søkeresultat')) {
+                        funnetTreff = true;
+                        if (overlay) overlay.classList.add('hidden');
+                        
+                        if (aktivKategori === 'film') {
+                            let renTittel = lokalTittel.replace(/blu-ray|dvd|4k|uhd|nordic|import|edition|nordisk|norsk|uk/gi, '').trim();
+                            renTittel = renTittel.replace(/\([0-9]{4}\)/g, '').replace(/-|\(|\)|\[|\]/g, ' ').replace(/\s+/g, ' ').trim();
+
+                            const bekreft = prompt("🕵️ Snoket på Platekompaniet og fant:\n" + lokalTittel + "\n\nSender dette til filmdatabasen (TMDb) for info, rating og cover:", renTittel);
+                            if (bekreft && bekreft.trim() !== "") {
+                                simulerApiOppslag(bekreft.trim());
+                            }
+                        } else {
+                            document.getElementById('feltBladserie').value = lokalTittel;
+                            alert("🕵️ Fant treff skjult hos Outland! 🎉\n\nTittel: " + lokalTittel + "\n\nFylte det inn i skjemaet. Du kan selv justere informasjonen.");
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log("Klarte ikke skrape norske butikker i bakgrunnen:", e);
+            }
+        }
+
+        // ========================================================
+        // STEG 3: ALLER SISTE UTVEI: Åpne ny fane manuelt
+        // ========================================================
+        if (!funnetTreff) {
+            if (overlay) overlay.classList.add('hidden');
+            
+            let butikkNavn = aktivKategori === 'film' ? "Platekompaniet" : "Outland";
+            let butikkUrl = aktivKategori === 'film' 
+                ? "https://www.platekompaniet.no/search?q=" + strekkode 
+                : "https://www.outland.no/search?q=" + strekkode;
+
+            if (confirm("Fant dessverre ingen treff på strekkoden (" + strekkode + ") hverken globalt eller via skjult søk.\n\nVil du åpne et manuelt søk hos " + butikkNavn + " i en ny fane?")) {
+                window.open(butikkUrl, '_blank');
+            }
+        }
+        
+        // Tilbakestill teksten på laste-skjermen
         if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
     }
