@@ -685,7 +685,6 @@ async function registrerBruker(e) {
       let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
       if (eksisterer) { alert("Brukernavn er tatt. Velg et annet."); return; }
       
-      // Auto-godkjenner deg som eier, setter alle andre nye brukere på vent
       const erAdmin = epost === 'jorn.garder@gmail.com';
       
       const nyProfil = { 
@@ -700,8 +699,16 @@ async function registrerBruker(e) {
         godkjent: erAdmin 
       };
       
+      // NYTT: Vi spør Supabase om det gikk bra, og stopper hvis vi får feil!
+      const { data, error } = await supabaseDb.from('samlerbase_profiler').insert([nyProfil]);
+      
+      if (error) {
+          alert("🚨 Supabase nektet å lagre: " + error.message);
+          console.error("Database-feil:", error);
+          return; // Stopper prosessen, slik at du ikke "tror" du er logget inn
+      }
+      
       profiler[nyttNavn] = nyProfil;
-      await supabaseDb.from('samlerbase_profiler').insert([nyProfil]);
       
       if(erAdmin) {
           innloggetBruker = nyttNavn; 
