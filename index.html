@@ -1753,7 +1753,7 @@
             adminKnapper = '<div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + endreKnapp + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button></div>';
         }
 
- let bildeHtml = '';
+  let bildeHtml = '';
         if (item.kategori === 'film') {
             bildeHtml = item.cover 
               ? '<img src="' + item.cover + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
@@ -1778,7 +1778,6 @@
         rad.innerHTML = htmlString;
         container.appendChild(rad);
       });
-    }
 
     function toggleKopier(id) {
         const div = document.getElementById(id);
