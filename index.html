@@ -433,7 +433,7 @@
           <h2 class="text-lg font-bold mb-4 text-amber-400" id="skjemaTittel">Registrer ny film</h2>
           
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-5 text-[11px] sm:text-xs font-semibold">
-            <button type="button" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> 1. Strekkode</button>
+<           button type="button" id="btnSkannStrekkode" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> 1. Strekkode</button>
             
             <!-- NY AI-KNAPP: -->
             <button type="button" onclick="document.getElementById('bildeInput').click()" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">👁️</span> 2. AI Cover</button>
@@ -1267,7 +1267,7 @@ function apneEndreModal(id) {
     // ----------------------------------------------------
     // NY MOTOR FOR AI-BILDEGJENKJENNING AV COVER (OpenAI)
     // ----------------------------------------------------
-async function simulerBildeAnalyse() {
+    async function simulerBildeAnalyse() {
         const input = document.getElementById('bildeInput');
         if (!input.files || input.files.length === 0) return;
 
@@ -1281,81 +1281,86 @@ async function simulerBildeAnalyse() {
         if (tittelFelt) tittelFelt.innerText = "Ser på bildet... 👀";
         if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer " + (aktivKategori === 'plante' ? 'bladene' : 'coveret');
 
-        try {
-            // === LØSNING FOR PLANTER (PL@NTNET API) ===
-            if (aktivKategori === 'plante') {
-                const plantNetKey = "2b10K7RBwN7LiZxTLLMgEb4p3u"; // Lag gratis nøkkel på my.plantnet.org
+        // Forminsker bildet BÅDE for filmer og planter slik at det går lynraskt!
+        const reader = new FileReader();
+        reader.readAsDataURL(fil);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = async function() {
+                const canvas = document.createElement('canvas');
+                const maxBredde = 800; // Perfekt størrelse for AI og Pl@ntNet
+                let skala = 1;
+                if (img.width > maxBredde) skala = maxBredde / img.width;
+                canvas.width = img.width * skala;
+                canvas.height = img.height * skala;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                if (plantNetKey.includes("LIM_INN")) {
-                    alert("Du må legge inn din gratis Pl@ntNet API-nøkkel i koden for at dette skal fungere.");
-                    if (overlay) overlay.classList.add('hidden');
-                    return;
-                }
+                // Hent ut det forminskede bildet
+                const bildeBase64 = canvas.toDataURL('image/jpeg', 0.8);
 
-                let formData = new FormData();
-                formData.append('images', fil);
-                formData.append('organs', 'auto'); // Finner automatisk ut om det er blad, blomst etc.
+                try {
+                    // === LØSNING FOR PLANTER (PL@NTNET API) ===
+                    if (aktivKategori === 'plante') {
+                        const plantNetKey = "2b10K7RBwN7LiZxTLLMgEb4p3u"; 
+                        
+                        // Konverterer det forminskede bildet tilbake til en fil
+                        const res = await fetch(bildeBase64);
+                        const blob = await res.blob();
 
-                const response = await fetch('https://my-api.plantnet.org/v2/identify/all?api-key=' + plantNetKey, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.results && data.results.length > 0) {
-                    const besteTreff = data.results[0];
-                    const vitenskapeligNavn = besteTreff.species.scientificNameWithoutAuthor;
-                    const score = Math.round(besteTreff.score * 100);
+                        let formData = new FormData();
+                        formData.append('images', blob, 'plante.jpg');
+                        formData.append('organs', 'auto');
 
-                    if (undertekstFelt) undertekstFelt.innerText = `Fant ${vitenskapeligNavn} (${score}% sikker). Leter etter norsk navn...`;
-
-                    // WIKIPEDIA-TRIKSET: Henter offisielt norsk navn basert på latin!
-                    let norskNavn = vitenskapeligNavn; 
-                    try {
-                        const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapeligNavn)}&utf8=&format=json&origin=*`);
-                        const wikiData = await wikiRes.json();
-                        if (wikiData.query.search.length > 0) {
-                            norskNavn = wikiData.query.search[0].title; 
+                        const response = await fetch('https://my-api.plantnet.org/v2/identify/all?api-key=' + plantNetKey, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        // Sjekker om API-nøkkelen er feil, eller vi får en annen feilmelding fra serveren
+                        if (!response.ok) {
+                            throw new Error(data.message || "Feil ved tilkobling til Pl@ntNet (" + response.status + ")");
                         }
-                    } catch (e) { console.log("Kunne ikke nå Wikipedia", e); }
+                        
+                        if (data.results && data.results.length > 0) {
+                            const besteTreff = data.results[0];
+                            const vitenskapeligNavn = besteTreff.species.scientificNameWithoutAuthor;
+                            const score = Math.round(besteTreff.score * 100);
 
-                    if (overlay) overlay.classList.add('hidden');
-                    
-                    const bekreft = prompt(`🌿 AI-en er ${score}% sikker på at dette er:\n\nVitenskapelig: ${vitenskapeligNavn}\nNorsk navn: ${norskNavn}\n\nTrykk OK for å hente stell-info:`, vitenskapeligNavn);
-                    
-                    if (bekreft && bekreft.trim() !== "") {
-                        // Sender det vitenskapelige navnet videre for å hente vanningsinfo
-                        simulerApiOppslag(bekreft.trim()); 
+                            if (undertekstFelt) undertekstFelt.innerText = `Fant ${vitenskapeligNavn} (${score}% sikker). Leter etter norsk navn...`;
+
+                            // WIKIPEDIA-TRIKSET
+                            let norskNavn = vitenskapeligNavn; 
+                            try {
+                                const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapeligNavn)}&utf8=&format=json&origin=*`);
+                                const wikiData = await wikiRes.json();
+                                if (wikiData.query.search.length > 0) {
+                                    norskNavn = wikiData.query.search[0].title; 
+                                }
+                            } catch (e) { console.log("Kunne ikke nå Wikipedia", e); }
+
+                            if (overlay) overlay.classList.add('hidden');
+                            
+                            const bekreft = prompt(`🌿 AI-en er ${score}% sikker på at dette er:\n\nVitenskapelig: ${vitenskapeligNavn}\nNorsk navn: ${norskNavn}\n\nTrykk OK for å hente stell-info:`, vitenskapeligNavn);
+                            
+                            if (bekreft && bekreft.trim() !== "") {
+                                simulerApiOppslag(bekreft.trim()); 
+                            }
+                        } else {
+                            throw new Error("Gjenkjente ingen planter på bildet.");
+                        }
+                        input.value = '';
+                        return;
                     }
-                } else {
-                    throw new Error("Gjenkjente ingen planter på bildet.");
-                }
-                input.value = '';
-                return;
-            }
 
-            // === LØSNING FOR FILMER (Eksisterende OpenAI-server) ===
-            const reader = new FileReader();
-            reader.readAsDataURL(fil);
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const maxBredde = 600; 
-                    const skala = maxBredde / img.width;
-                    canvas.width = maxBredde;
-                    canvas.height = img.height * skala;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
-
+                    // === LØSNING FOR FILMER (Eksisterende server) ===
                     const response = await fetch('/api/bilde', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ bildeBase64: forminsketBilde })
+                        body: JSON.stringify({ bildeBase64: bildeBase64 })
                     });
 
                     const data = await response.json();
@@ -1369,15 +1374,18 @@ async function simulerBildeAnalyse() {
                     } else {
                         throw new Error(data.error || "Fikk ikke svar fra AI.");
                     }
-                };
+
+                } catch (error) {
+                    console.error(error);
+                    if (overlay) overlay.classList.add('hidden');
+                    // Viser den spesifikke feilen til deg hvis noe krasjer!
+                    alert("⚠️ Skanner-feil:\n\n" + error.message);
+                    input.value = '';
+                }
             };
-        } catch (error) {
-            console.error(error);
-            if (overlay) overlay.classList.add('hidden');
-            alert("Klarte ikke å gjenkjenne bildet. Sørg for godt lys og prøv igjen!");
-            input.value = '';
-        }
-        
+        };
+    }
+
         if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
     }
@@ -1784,6 +1792,7 @@ async function simulerBildeAnalyse() {
       });
       
       document.getElementById('btnMasseOppdater').style.display = kat === 'film' ? 'inline-block' : 'none';
+      document.getElementById('btnSkannStrekkode').style.display = kat === 'plante' ? 'none' : 'flex'; // NY LINJE!
       utforSok();
     }
 
