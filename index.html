@@ -1742,6 +1742,29 @@ let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encod
             '</div>' + adminKnapper +
           '</div>';
 
+      let kopierHtml = '';
+        if (antallKopier > 1) {
+            kopierHtml = '<div id="gruppe_' + gruppe[0].id + '" class="hidden mt-3 pt-3 border-t border-slate-800 space-y-2">';
+            
+            gruppe.forEach((kopi, index) => {
+                let kopiOppdaterKnapp = (erMin && kopi.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + kopi.id + ')" class="text-indigo-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">🔄</button>' : '';
+                let kopiEndreKnapp = erMin ? '<button onclick="apneEndreModal(' + kopi.id + ')" class="text-amber-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">✏️ Endre</button>' : '';
+                let kopiSlettKnapp = erMin ? '<button onclick="slettElement(' + kopi.id + ')" class="text-slate-500 hover:text-rose-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button>' : '';
+                
+                let formatTags = kopi.format && kopi.format.length > 0 ? `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded font-bold">${kopi.format.join(', ')}</span>` : '';
+                
+                kopierHtml += '<div class="bg-slate-900 p-2.5 rounded border border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-3">' +
+                   '<div class="text-xs text-slate-300 w-full flex-1">' +
+                     '<div class="flex justify-between items-center mb-1"><span class="font-bold text-amber-500">Eksemplar ' + (index+1) + '</span><span class="text-[9px] font-mono text-slate-500 bg-slate-950 px-1 rounded border border-slate-800">ID: ' + kopi.id + '</span></div>' +
+                     '<div class="flex flex-wrap items-center gap-2 mt-1">Tilstand: <span class="text-white">' + (kopi.tilstand || 'Ok') + '</span> | Lagret: <span class="text-white">' + (kopi.lagret || 'Ikke oppgitt') + '</span> ' + formatTags + '</div>' +
+                     (kopi.kommentar ? '<div class="mt-1.5 italic text-[10px] text-slate-400 bg-slate-950/50 p-1.5 rounded">💬 ' + kopi.kommentar + '</div>' : '') +
+                   '</div>' +
+                   '<div class="flex gap-1 shrink-0">' + kopiEndreKnapp + kopiOppdaterKnapp + kopiSlettKnapp + '</div>' +
+                '</div>';
+            });
+            kopierHtml += '</div>';
+        }
+
         rad.innerHTML = hovedKort + kopierHtml;
         container.appendChild(rad);
       });
