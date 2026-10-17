@@ -1484,46 +1484,6 @@ async function simulerBildeAnalyse() {
       } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
     }
 
-      if (aktivKategori !== 'film') { 
-          alert("Automatiske oppslag fungerer nå for filmer og planter. Fyll inn skjemaet manuelt for tegneserier."); 
-          return; 
-      }
-      
-      // ... (Her fortsetter den vanlige TMDb-koden din urørt nedover) 
-      
-      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
-      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
-
-      try {
-        const response = await fetch(sokUrl, options); 
-        const data = await response.json();
-        
-        if (data.results && data.results.length > 0) {
-          const film = data.results[0];
-          const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
-          const detaljResponse = await fetch(detaljerUrl, options); 
-          const detaljer = await detaljResponse.json();
-
-          document.getElementById('feltTittel').value = film.title || "";
-          document.getElementById('feltTittelOrig').value = film.original_title || "";
-          document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
-          document.getElementById('feltAar').value = film.release_date ? film.release_date.substring(0, 4) : "";
-          document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
-          
-          if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
-          if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
-          
-          if (film.poster_path) {
-              document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
-          } else {
-              document.getElementById('feltCover').value = "";
-          }
-          
-          alert("Fant " + film.title + "! Skjemaet er nå fylt ut med ekte data og plakat fra TMDb.");
-        } else { alert("Fant dessverre ingen filmer som passet med dette søket."); }
-      } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
-    }
-
     async function oppdaterEnkelFilmTMDb(id) {
        const itemIndex = database.findIndex(i => i.id === id);
        if (itemIndex === -1) return;
