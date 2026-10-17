@@ -1716,17 +1716,20 @@ function apneEndreModal(id) {
       // Bestemmer hvilke knapper som skal vises på hovedkortet
         let detaljerKnapp = '<button onclick="apneDetaljerModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0 mt-2 sm:mt-0 font-bold">📖 Detaljer</button>';
         
+let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
+
+        // Bestemmer hvilke knapper som skal vises på hovedkortet
         let adminKnapper = '';
         if (antallKopier > 1) {
-            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + detaljerKnapp + '<button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
+            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Detaljer</button><button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
         } else if (erMin) {
             let oppdaterKnapp = (item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition" title="Hent info fra TMDb">🔄 TMDb</button>' : '';
-            adminKnapper = '<div class="flex flex-wrap sm:flex-nowrap gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + detaljerKnapp + '<button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">✏️</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
+            adminKnapper = '<div class="flex gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">✏️ Detaljer/Endre</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
         } else {
-            adminKnapper = '<div class="shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + detaljerKnapp + '</div>'; // Vennene dine får også se detaljer
+            adminKnapper = '<div class="shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Se detaljer</button></div>';
         }
 
-        // Bygger HTML for hovedvisningen
+        // Bygger HTML for hovedvisningen (Nå er tittelen klikkbar mot IMDb igjen!)
 let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
 
         // Bestemmer hvilke knapper som skal vises på hovedkortet
