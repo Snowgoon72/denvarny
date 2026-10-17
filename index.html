@@ -395,7 +395,7 @@
           <input type="file" id="csvInput" accept=".csv" multiple class="hidden" onchange="importerCSV(event)" />
 
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs">
-
+            <input type="hidden" id="feltCover" />
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Strekkode / EAN</label>
@@ -1255,6 +1255,45 @@
       } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
     }
 
+ async function simulerApiOppslag(sokeord) {
+      if (aktivKategori !== 'film') { 
+          alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); 
+          return; 
+      }
+      
+      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
+
+      try {
+        const response = await fetch(sokUrl, options); 
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const film = data.results[0];
+          const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
+          const detaljResponse = await fetch(detaljerUrl, options); 
+          const detaljer = await detaljResponse.json();
+
+          document.getElementById('feltTittel').value = film.title || "";
+          document.getElementById('feltTittelOrig').value = film.original_title || "";
+          document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
+          document.getElementById('feltAar').value = film.release_date ? film.release_date.substring(0, 4) : "";
+          document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
+          
+          if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
+          if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
+          
+          if (film.poster_path) {
+              document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
+          } else {
+              document.getElementById('feltCover').value = "";
+          }
+          
+          alert("Fant " + film.title + "! Skjemaet er nå fylt ut med ekte data og plakat fra TMDb.");
+        } else { alert("Fant dessverre ingen filmer som passet med dette søket."); }
+      } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
+    }
+
     async function oppdaterEnkelFilmTMDb(id) {
        const itemIndex = database.findIndex(i => i.id === id);
        if (itemIndex === -1) return;
@@ -1281,17 +1320,14 @@
             if(!item.aar) item.aar = film.release_date ? film.release_date.substring(0, 4) : item.aar;
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
             
-            if (detaljer.imdb_id) {
-                item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
-            }
-            if (detaljer.genres && detaljer.genres.length > 0) {
-                item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
-            }
+            if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
+            if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
+            if (film.poster_path) item.cover = "https://image.tmdb.org/t/p/w200" + film.poster_path;
 
             database[itemIndex] = item;
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
             utforSok();
-            alert("Suksess! Oppdaterte info, rating og sjanger for " + film.title);
+            alert("Suksess! Oppdaterte info, rating og plakat for " + film.title);
          } else { alert("Fant ingen treff for " + item.tittel + " på TMDb."); }
        } catch(e) { console.error(e); alert("Feil ved tilkobling til TMDb."); }
     }
@@ -1299,9 +1335,9 @@
     async function masseOppdaterTMDb() {
       if(!innloggetBruker) return;
       
-      const filmerAOppdatere = database.filter(i => i.eier === innloggetBruker && i.kategori === 'film' && !i.rating);
-      if(filmerAOppdatere.length === 0) { alert("Alle filmene dine har allerede rating og info registrert!"); return; }
-      if(!confirm("Fant " + filmerAOppdatere.length + " filmer som mangler rating og detaljer. Vil du la appen søke opp og fylle inn for alle automatisk via TMDb nå?")) return;
+      const filmerAOppdatere = database.filter(i => i.eier === innloggetBruker && i.kategori === 'film' && (!i.rating || !i.cover));
+      if(filmerAOppdatere.length === 0) { alert("Alle filmene dine har allerede rating og plakater registrert!"); return; }
+      if(!confirm("Fant " + filmerAOppdatere.length + " filmer som mangler rating eller plakat. Vil du la appen søke opp og fylle inn for alle automatisk via TMDb nå?")) return;
 
       const knapp = document.getElementById('btnMasseOppdater');
       knapp.innerText = "⏳ Oppdaterer...";
@@ -1331,6 +1367,7 @@
             item.rating = film.vote_average ? film.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
+            if (film.poster_path) item.cover = "https://image.tmdb.org/t/p/w200" + film.poster_path;
             
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then();
             oppdatert++;
@@ -1343,7 +1380,7 @@
       utforSok();
       knapp.innerText = "🤖 Auto-fyll info (TMDb)";
       knapp.disabled = false;
-      alert("Ferdig! Fant og oppdaterte detaljer for " + oppdatert + " av " + filmerAOppdatere.length + " filmer.");
+      alert("Ferdig! Fant og oppdaterte detaljer og plakat for " + oppdatert + " av " + filmerAOppdatere.length + " filmer.");
     }
 
     // ==========================================
@@ -1614,14 +1651,26 @@
             adminKnapper = '<div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + endreKnapp + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button></div>';
         }
 
-        let htmlString = '<div class="space-y-1 w-full overflow-hidden flex-1">' +
-            '<div class="flex flex-wrap items-center justify-between gap-2">' +
-              '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block">' +
-                tittelString + tittelSub +
-              '</a>' +
-              eierBadge +
+ let bildeHtml = '';
+        if (item.kategori === 'film') {
+            bildeHtml = item.cover 
+              ? '<img src="' + item.cover + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
+              : '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">🎬</div>';
+        } else {
+            bildeHtml = '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">📚</div>';
+        }
+
+        let htmlString = '<div class="flex gap-3 w-full overflow-hidden flex-1">' +
+            bildeHtml + 
+            '<div class="space-y-1 w-full overflow-hidden flex-1">' +
+              '<div class="flex flex-wrap items-center justify-between gap-2">' +
+                '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block">' +
+                  tittelString + tittelSub +
+                '</a>' +
+                eierBadge +
+              '</div>' +
+              infoHtml + kommentarHtml + prisKnapper +
             '</div>' +
-            infoHtml + kommentarHtml + prisKnapper +
           '</div>' + adminKnapper;
 
         rad.innerHTML = htmlString;
@@ -1699,6 +1748,7 @@
     }
 
     function lagreNyttElement(e) {
+
       e.preventDefault();
       const valgteFormater = Array.from(document.querySelectorAll('#formatValg input[type="checkbox"]:checked')).map(cb => cb.value);
 
@@ -1717,7 +1767,8 @@
         tilstand: document.getElementById('feltTilstand').value, 
         kommentar: document.getElementById('feltKommentar').value,
         imdb: document.getElementById('feltImdb').value, 
-        verdi: document.getElementById('feltVerdi').value
+        verdi: document.getElementById('feltVerdi').value,
+        cover: document.getElementById('feltCover').value
       };
 
       if (aktivKategori === 'film') { 
@@ -1733,6 +1784,7 @@
       supabaseDb.from('samlerbase_data').insert([ny]).then(); 
       
       document.getElementById('hovedSkjema').reset(); 
+      document.getElementById('feltCover').value = '';
       document.getElementById('feltSynlighet').value = 'standard';
       document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
       document.getElementById('eieFilter').value = 'min_alle'; 
