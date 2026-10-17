@@ -1149,9 +1149,6 @@
         // Tilbakestill teksten på laste-skjermen
         if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
-    }
-    
-    function simulerBildeAnalyse() { setTimeout(() => { simulerApiOppslag("Terminator"); }, 500); }
 
     async function simulerApiOppslag(sokeord) {
       if (aktivKategori !== 'film') { 
