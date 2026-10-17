@@ -187,114 +187,129 @@
     </div>
   </div>
 
-  <!-- REDIGERINGS-MODAL -->
-  <div id="endreModal" class="hidden fixed inset-0 bg-black/85 z-[65] flex flex-col items-center justify-center p-4">
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-lg w-full shadow-2xl overflow-y-auto max-h-[90vh]">
+<!-- REDIGERINGS- OG DETALJ-MODAL -->
+  <div id="endreModal" class="hidden fixed inset-0 bg-black/85 z-[65] flex flex-col items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">✏ Rediger objekt</h2>
-        <button onclick="lukkEndreModal()" class="text-slate-400 hover:text-white font-bold">✕</button>
+        <h2 id="endreModalTittelTekst" class="text-lg font-black text-amber-400 flex items-center gap-2">✏️ Rediger / Detaljer</h2>
+        <button onclick="lukkEndreModal()" class="text-slate-400 hover:text-white font-bold text-xl px-2">✕</button>
       </div>
-      <form id="skjemaEndre" onsubmit="lagreEndring(event)" class="space-y-3 text-xs">
+      
+      <form id="skjemaEndre" onsubmit="lagreEndring(event)" class="space-y-4 text-xs">
         <input type="hidden" id="endreId" />
         
-        <div>
-          <label class="block font-semibold text-slate-400 mb-1">Tittel (Lokal)</label>
-          <input type="text" id="endreTittel" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-        </div>
+        <!-- SEKSJON 1: TMDb / Generelt -->
+        <div class="bg-slate-950 p-4 rounded-lg border border-indigo-900/50 space-y-3 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-indigo-900/30 text-indigo-400 px-3 py-1 rounded-bl-lg font-bold text-[10px] uppercase tracking-wider">Generell Info (Kan auto-hentes)</div>
+          
+          <div class="pt-2">
+            <label class="block font-semibold text-slate-400 mb-1">Tittel (Lokal)</label>
+            <input type="text" id="endreTittel" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold" />
+          </div>
 
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">Engelsk Tittel</label>
-            <input type="text" id="endreTittelEng" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">Originaltittel</label>
-            <input type="text" id="endreTittelOrig" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">År</label>
-            <input type="number" id="endreAar" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-          </div>
-          <div>
-            <label class="block font-semibold text-emerald-400 mb-1">Antatt verdi (NOK)</label>
-            <input type="number" id="endreVerdi" placeholder="0" class="w-full bg-slate-950 border border-emerald-500/50 rounded-lg px-3 py-2 text-emerald-400 font-bold" />
-          </div>
-        </div>
-
-        <div id="endreFilmSeksjon" class="space-y-2">
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block font-semibold text-slate-400 mb-1">Sjanger</label>
-              <input type="text" id="endreSjanger" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              <label class="block font-semibold text-slate-400 mb-1">Engelsk Tittel</label>
+              <input type="text" id="endreTittelEng" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
             </div>
             <div>
-              <label class="block font-semibold text-amber-400 mb-1">Rating (0-10)</label>
-              <input type="number" step="0.1" id="endreRating" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-400 font-bold" />
+              <label class="block font-semibold text-slate-400 mb-1">Originaltittel</label>
+              <input type="text" id="endreTittelOrig" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
             </div>
           </div>
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">IMDb-lenke</label>
-            <input type="url" id="endreImdb" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-blue-400" />
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-400 mb-1">Utgivelsesår</label>
+              <input type="number" id="endreAar" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+            </div>
+            <!-- Skjult for film, vises for tegneserie -->
+            <div id="endreTegneserieFelter" class="hidden grid-cols-2 gap-2 col-span-2 sm:col-span-1 w-full">
+                <div>
+                  <label class="block font-semibold text-slate-400 mb-1">Bladserie</label>
+                  <input type="text" id="endreBladserie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-400 mb-1">Nummer</label>
+                  <input type="text" id="endreNummer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                </div>
+            </div>
+          </div>
+
+          <div id="endreFilmSeksjon" class="space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block font-semibold text-slate-400 mb-1">Sjanger</label>
+                <input type="text" id="endreSjanger" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+              </div>
+              <div>
+                <label class="block font-semibold text-amber-400 mb-1">TMDb Rating</label>
+                <input type="number" step="0.1" id="endreRating" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-amber-400 font-bold" />
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-400 mb-1">IMDb-lenke (Du kan lime inn manuelt)</label>
+              <div class="flex gap-2">
+                <input type="url" id="endreImdb" placeholder="https://www.imdb.com/title/tt..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-blue-400" />
+                <a href="#" id="endreImdbLinkBtn" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg font-bold flex items-center justify-center shrink-0 transition">↗ Åpne</a>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div id="endreTegneserieSeksjon" class="grid grid-cols-2 gap-2 hidden">
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">Bladserie</label>
-            <input type="text" id="endreBladserie" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+        <!-- SEKSJON 2: Din Kopi (Manuelt) -->
+        <div class="bg-slate-950 p-4 rounded-lg border border-emerald-900/50 space-y-3 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-emerald-900/30 text-emerald-400 px-3 py-1 rounded-bl-lg font-bold text-[10px] uppercase tracking-wider">Mitt Eksemplar (Helt manuelt)</div>
+          
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <div>
+              <label class="block font-semibold text-slate-400 mb-1">Status</label>
+              <select id="endreStatus" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-amber-400 font-bold">
+                <option value="Har">Ja (I samling)</option>
+                <option value="Har ikke">Nei (Ønskeliste)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-emerald-400 mb-1">Antatt verdi (NOK)</label>
+              <input type="number" id="endreVerdi" placeholder="0" class="w-full bg-slate-900 border border-emerald-500/50 rounded-lg px-3 py-2 text-emerald-400 font-bold" />
+            </div>
           </div>
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">Nummer</label>
-            <input type="text" id="endreNummer" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-          </div>
-        </div>
 
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">Lagringsplass</label>
-            <input type="text" id="endreLagret" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-400 mb-1">Lagringsplass</label>
+              <input type="text" id="endreLagret" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-400 mb-1">Tilstand</label>
+              <select id="endreTilstand" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+                <option value="Ok">Ok / Vanlig brukt</option>
+                <option value="Mint / Ny">Mint / Ny (Forseglet)</option>
+                <option value="Samlerkvalitet">Samlerkvalitet</option>
+                <option value="Slitt">Slitt / Skadet</option>
+                <option value="Ikke relevant">Ikke relevant</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1">Tilstand</label>
-            <select id="endreTilstand" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white">
-              <option value="Ok">Ok / Vanlig brukt</option>
-              <option value="Mint / Ny">Mint / Ny (Forseglet)</option>
-              <option value="Samlerkvalitet">Samlerkvalitet</option>
-              <option value="Slitt">Slitt / Skadet</option>
-              <option value="Ikke relevant">Ikke relevant</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block font-semibold text-slate-400 mb-1">Status</label>
-            <select id="endreStatus" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-400 font-bold">
-              <option value="Har">Ja (I samling)</option>
-              <option value="Har ikke">Nei (Ønskeliste)</option>
-            </select>
+            <label class="block font-semibold text-slate-400 mb-1">Kommentar / Notat</label>
+            <textarea id="endreKommentar" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"></textarea>
           </div>
+          
           <div>
-            <label class="block font-semibold text-slate-400 mb-1">Synlighet</label>
-            <select id="endreSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-300">
+            <label class="block font-semibold text-slate-400 mb-1">Synlighet for venner</label>
+            <select id="endreSynlighet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300">
               <option value="standard">Følg profilstandard</option>
-              <option value="offentlig">Offentlig</option>
-              <option value="privat">Privat</option>
+              <option value="offentlig">Offentlig (Vis for alle)</option>
+              <option value="privat">Privat (Kun for meg)</option>
             </select>
           </div>
-        </div>
-
-        <div>
-          <label class="block font-semibold text-slate-400 mb-1">Kommentar / Notat</label>
-          <input type="text" id="endreKommentar" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white" />
         </div>
 
         <div class="flex gap-2 pt-3">
-          <button type="button" onclick="lukkEndreModal()" class="flex-1 bg-slate-800 text-slate-300 py-2.5 rounded-lg border border-slate-700 hover:bg-slate-700">Avbryt</button>
-          <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-lg">Oppdater objekt</button>
+          <button type="button" onclick="lukkEndreModal()" class="flex-1 bg-slate-800 text-slate-300 py-3 rounded-lg border border-slate-700 hover:bg-slate-700 font-bold transition">Lukk</button>
+          <button type="submit" id="btnLagreEndring" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-lg transition">Lagre Endringer</button>
         </div>
       </form>
     </div>
@@ -854,9 +869,11 @@ async function registrerBruker(e) {
     // ==========================================
     // REDIGERING AV EKSISTERENDE OBJEKT
     // ==========================================
-    function apneEndreModal(id) {
+function apneEndreModal(id) {
       const item = database.find(i => i.id === id);
       if (!item) return;
+
+      const erMin = item.eier === innloggetBruker;
 
       document.getElementById('endreId').value = item.id;
       document.getElementById('endreTittel').value = item.tittel || '';
@@ -872,17 +889,50 @@ async function registrerBruker(e) {
 
       const erFilm = (item.kategori === 'film');
       document.getElementById('endreFilmSeksjon').classList.toggle('hidden', !erFilm);
-      document.getElementById('endreTegneserieSeksjon').classList.toggle('hidden', erFilm);
+      document.getElementById('endreTegneserieFelter').classList.toggle('hidden', erFilm);
+      document.getElementById('endreTegneserieFelter').style.display = erFilm ? 'none' : 'flex';
 
       if (erFilm) {
         document.getElementById('endreSjanger').value = item.sjanger || '';
         document.getElementById('endreRating').value = item.rating || '';
-        document.getElementById('endreImdb').value = item.imdb || '';
+        
+        const imdbFelt = document.getElementById('endreImdb');
+        const imdbKnapp = document.getElementById('endreImdbLinkBtn');
+        imdbFelt.value = item.imdb || '';
+        
+        // Sjekker kontinuerlig om IMDb-lenken er gyldig, og slår knappen av/på
+        const oppdaterLenke = () => {
+            if(imdbFelt.value.includes('http')) {
+                imdbKnapp.href = imdbFelt.value;
+                imdbKnapp.style.opacity = '1';
+                imdbKnapp.style.pointerEvents = 'auto';
+            } else {
+                imdbKnapp.href = '#';
+                imdbKnapp.style.opacity = '0.3';
+                imdbKnapp.style.pointerEvents = 'none';
+            }
+        };
+        imdbFelt.oninput = oppdaterLenke;
+        oppdaterLenke();
       } else {
         document.getElementById('endreBladserie').value = item.bladserie || '';
         document.getElementById('endreNummer').value = item.nr || '';
       }
 
+      // Lås feltene for redigering hvis det er en venns samling man ser på
+      const skjema = document.getElementById('skjemaEndre');
+      skjema.querySelectorAll('input, select, textarea').forEach(el => {
+          el.disabled = !erMin;
+          if(!erMin) el.classList.add('opacity-50', 'cursor-not-allowed');
+          else el.classList.remove('opacity-50', 'cursor-not-allowed');
+      });
+      
+      // Åpne-knappen skal alltid fungere, selv på venners filmer!
+      if(erFilm) document.getElementById('endreImdbLinkBtn').style.pointerEvents = document.getElementById('endreImdb').value.includes('http') ? 'auto' : 'none';
+      
+      document.getElementById('btnLagreEndring').style.display = erMin ? 'block' : 'none';
+      document.getElementById('endreModalTittelTekst').innerText = erMin ? '✏️ Rediger / Detaljer' : '📖 Detaljer (Låst for redigering)';
+      
       document.getElementById('endreModal').classList.remove('hidden');
     }
 
@@ -1677,41 +1727,31 @@ async function registrerBruker(e) {
         }
 
         // Bygger HTML for hovedvisningen
+let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
+
+        // Bestemmer hvilke knapper som skal vises på hovedkortet
+        let adminKnapper = '';
+        if (antallKopier > 1) {
+            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Detaljer</button><button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
+        } else if (erMin) {
+            let oppdaterKnapp = (item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition" title="Hent info fra TMDb">🔄 TMDb</button>' : '';
+            adminKnapper = '<div class="flex gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">✏️ Detaljer/Endre</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
+        } else {
+            adminKnapper = '<div class="shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Se detaljer</button></div>';
+        }
+
+        // Bygger HTML for hovedvisningen (Nå er tittelen klikkbar mot IMDb igjen!)
         let hovedKort = '<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">' +
             '<div class="flex gap-3 w-full overflow-hidden flex-1">' +
               bildeHtml + 
               '<div class="space-y-1 w-full overflow-hidden flex-1">' +
                 '<div class="flex flex-wrap items-center justify-between gap-2">' +
-                  '<div class="truncate flex-1 group block">' + tittelString + tittelSub + '</div>' + eierBadge +
+                  '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block hover:opacity-80 transition">' + tittelString + tittelSub + '</a>' + eierBadge +
                 '</div>' +
                 '<div class="text-[11px] text-slate-400 mt-1">' + (item.kategori === 'film' ? (item.sjanger||'') + ' | År: ' + (item.aar||'') : 'Serie: ' + (item.bladserie||'')) + '</div>' +
               '</div>' +
             '</div>' + adminKnapper +
           '</div>';
-
-        // Bygger "Trekkspill"-listen som ligger skjult hvis det er flere kopier
-        let kopierHtml = '';
-        if (antallKopier > 1) {
-            kopierHtml = '<div id="gruppe_' + gruppe[0].id + '" class="hidden mt-3 pt-3 border-t border-slate-800 space-y-2">';
-            
-            gruppe.forEach((kopi, index) => {
-                let kopiOppdaterKnapp = (erMin && kopi.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + kopi.id + ')" class="text-indigo-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">🔄</button>' : '';
-                let kopiEndreKnapp = erMin ? '<button onclick="apneEndreModal(' + kopi.id + ')" class="text-amber-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">✏️ Endre</button>' : '';
-                let kopiSlettKnapp = erMin ? '<button onclick="slettElement(' + kopi.id + ')" class="text-slate-500 hover:text-rose-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button>' : '';
-                
-                let formatTags = kopi.format && kopi.format.length > 0 ? `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded font-bold">${kopi.format.join(', ')}</span>` : '';
-                
-                kopierHtml += '<div class="bg-slate-900 p-2.5 rounded border border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-3">' +
-                   '<div class="text-xs text-slate-300 w-full flex-1">' +
-                     '<div class="flex justify-between items-center mb-1"><span class="font-bold text-amber-500">Eksemplar ' + (index+1) + '</span><span class="text-[9px] font-mono text-slate-500 bg-slate-950 px-1 rounded border border-slate-800">ID: ' + kopi.id + '</span></div>' +
-                     '<div class="flex flex-wrap items-center gap-2 mt-1">Tilstand: <span class="text-white">' + (kopi.tilstand || 'Ok') + '</span> | Lagret: <span class="text-white">' + (kopi.lagret || 'Ikke oppgitt') + '</span> ' + formatTags + '</div>' +
-                     (kopi.kommentar ? '<div class="mt-1.5 italic text-[10px] text-slate-400 bg-slate-950/50 p-1.5 rounded">💬 ' + kopi.kommentar + '</div>' : '') +
-                   '</div>' +
-                   '<div class="flex gap-1 shrink-0">' + kopiEndreKnapp + kopiOppdaterKnapp + kopiSlettKnapp + '</div>' +
-                '</div>';
-            });
-            kopierHtml += '</div>';
-        }
 
         rad.innerHTML = hovedKort + kopierHtml;
         container.appendChild(rad);
@@ -1851,6 +1891,10 @@ function lagreNyttElement(e) {
     }
 
     function slettElement(id) { 
+        const item = database.find(i => i.id === id);
+        if (!confirm("🚨 ADVARSEL!\n\nVil du virkelig slette '" + (item.tittel || 'dette objektet') + "' permanent?")) {
+            return; // Avbryt hvis brukeren trykker nei
+        }
         database = database.filter(i => i.id !== id); 
         supabaseDb.from('samlerbase_data').delete().eq('id', id).then(); 
         utforSok(); 
