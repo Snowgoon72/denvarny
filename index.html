@@ -379,10 +379,20 @@
           
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-5 text-[11px] sm:text-xs font-semibold">
             <button type="button" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> 1. Strekkode</button>
-            <button type="button" onclick="startAutoRegistrering('tittel')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">🔍</span> 2. Nettsøk</button>
-            <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> 3. Diktering</button>
-            <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> 4. Fil-import</button>
-            <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">✍</span> 5. Manuell</button>
+            
+            <!-- NY AI-KNAPP: -->
+            <button type="button" onclick="document.getElementById('bildeInput').click()" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">👁️</span> 2. AI Cover</button>
+            
+            <button type="button" onclick="startAutoRegistrering('tittel')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">🔍</span> 3. Nettsøk</button>
+            <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> 4. Diktering</button>
+            <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> 5. Fil-import</button>
+            <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">✍</span> 6. Manuell</button>
+          </div>
+
+          <!-- Skjulte fil-velgere -->
+          <input type="file" id="bildeInput" accept="image/*" capture="environment" class="hidden" onchange="simulerBildeAnalyse()" />
+          <input type="file" id="hylleInput" accept="image/*" capture="environment" class="hidden" onchange="simulerHylleAnalyse()" />
+          <input type="file" id="csvInput" accept=".csv" multiple class="hidden" onchange="importerCSV(event)" />
           </div>
 
           <input type="file" id="bildeInput" accept="image/*" capture="environment" class="hidden" onchange="simulerBildeAnalyse()" />
