@@ -1224,39 +1224,6 @@
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
     }
 
-    async function simulerApiOppslag(sokeord) {
-      if (aktivKategori !== 'film') { 
-          alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); 
-          return; 
-      }
-      
-      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
-      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
-
-      try {
-        const response = await fetch(sokUrl, options); 
-        const data = await response.json();
-        
-        if (data.results && data.results.length > 0) {
-          const film = data.results[0];
-          const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
-          const detaljResponse = await fetch(detaljerUrl, options); 
-          const detaljer = await detaljResponse.json();
-
-          document.getElementById('feltTittel').value = film.title || "";
-          document.getElementById('feltTittelOrig').value = film.original_title || "";
-          document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
-          document.getElementById('feltAar').value = film.release_date ? film.release_date.substring(0, 4) : "";
-          document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
-          
-          if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
-          if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
-          
-          alert("Fant " + film.title + "! Skjemaet er nå fylt ut med ekte data fra TMDb.");
-        } else { alert("Fant dessverre ingen filmer som passet med dette søket."); }
-      } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
-    }
-
  async function simulerApiOppslag(sokeord) {
       if (aktivKategori !== 'film') { 
           alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); 
@@ -1690,94 +1657,6 @@
         container.appendChild(rad);
       });
     }
-
-      // Viser nå opptil 2000 elementer om gangen i listen (økt fra 200 for store samlinger)
-      elementer.slice(0, 2000).forEach(item => {
-        const rad = document.createElement('div');
-        const eierIkke = item.status === 'Har ikke';
-        const erMin = item.eier === innloggetBruker;
-        let eierProfil = profiler[item.eier] || { land: 'Ukjent', spraak: 'Norsk', info: 'Ingen bio', standardSynlighet: 'offentlig' };
-        
-        let effektivSynlighet = item.synlighet && item.synlighet !== 'standard' ? item.synlighet : eierProfil.standardSynlighet;
-        let privatIkon = (erMin && effektivSynlighet === 'privat') ? '<span class="text-rose-400 text-[10px] border border-rose-900 bg-rose-950 px-1.5 py-0.5 rounded ml-2">🔒 Privat</span>' : '';
-
-        let kortStil = 'bg-slate-950 border p-3 rounded-lg flex flex-col sm:flex-row justify-between sm:items-center hover:border-slate-700 transition gap-2';
-        if (eierIkke) kortStil += ' border-slate-800/50 opacity-60 border-dashed hover:opacity-100';
-        else if (erMin) kortStil += ' border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.05)]';
-        else kortStil += ' border-slate-800';
-        rad.className = kortStil;
-
-        const eieBadge = eierIkke ? '<span class="bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ml-2">Ønsker seg</span>' : '';
-        let eierTekst = eierProfil.land ? item.eier + " (" + eierProfil.land + ")" : item.eier;
-        const eierBadge = '<span title="' + (eierProfil.info || 'Ingen info') + '" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700 flex items-center gap-1 w-fit cursor-help shrink-0">👤 ' + eierTekst + '</span>';
-
-        let tittelString = '<span class="font-bold text-base text-amber-400 group-hover:text-amber-300 transition block">' + (item.tittel || 'Uten tittel') + '</span>';
-        
-        let ekstraTitler = [];
-        if (item.tittel_eng && item.tittel_eng !== item.tittel) ekstraTitler.push("🇬🇧 " + item.tittel_eng);
-        if (item.tittel_orig && item.tittel_orig !== item.tittel && item.tittel_orig !== item.tittel_eng) ekstraTitler.push("🎬 " + item.tittel_orig);
-        
-        let tittelSub = '<div class="text-[9px] text-slate-500 font-mono mb-1">ID: ' + item.id + '</div>';
-        if (ekstraTitler.length > 0) {
-            tittelSub = '<span class="block text-[11px] text-slate-400 font-normal mt-0.5 flex flex-wrap gap-x-3 gap-y-1">';
-            ekstraTitler.forEach(t => { tittelSub += "<span>" + t + "</span>"; });
-            tittelSub += '</span>';
-        }
-
-        let tilstandTekst = item.tilstand && item.tilstand !== 'Ikke relevant' ? '<span class="text-slate-500">| Tilstand: ' + item.tilstand + '</span>' : '';
-        let kommentarHtml = item.kommentar ? '<div class="text-[11px] text-slate-400 mt-1 italic leading-tight bg-slate-900/50 p-1.5 rounded inline-block">💬 ' + item.kommentar + '</div>' : '';
-        let verdiTekst = item.verdi ? '<span class="text-emerald-400 font-bold ml-2">' + item.verdi + ' kr</span>' : '';
-        let ratingBadge = item.rating ? '<span class="text-amber-400 font-bold text-[11px] flex items-center gap-0.5 mr-2" title="TMDb Rating">⭐ ' + item.rating + '</span>' : '';
-        let lagretTekst = item.lagret ? '<span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1" title="Lagringsplass">📍 ' + item.lagret + '</span>' : '';
-
-        let sjekkPrisSok = encodeURIComponent(item.strekkode || item.tittel);
-        let finnSok = "https://www.finn.no/bap/forsale/search.html?q=" + sjekkPrisSok;
-        let ebaySok = "https://www.ebay.com/sch/i.html?_nkw=" + sjekkPrisSok;
-        let prisKnapper = '<div class="flex gap-2 mt-2"><a href="' + finnSok + '" target="_blank" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">🔍 Finn.no</a><a href="' + ebaySok + '" target="_blank" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700">🔍 eBay</a></div>';
-        
-        let oppdaterKnapp = (erMin && item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 hover:text-indigo-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0" title="Hent all info fra TMDb på nytt">🔄 TMDb</button>' : '';
-        let endreKnapp = erMin ? '<button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0" title="Rediger manuelt">✏️ Endre</button>' : '';
-
-        let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
-
-        let infoHtml = '';
-        if (item.kategori === 'film') {
-            let formatBadges = Array.isArray(item.format) ? item.format.map(f => '<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px]">' + f + '</span>').join(' ') : '';
-            infoHtml = '<div class="flex flex-wrap items-center mt-1.5 gap-2">' + ratingBadge + ' ' + formatBadges + ' <span class="text-[11px] text-slate-400">' + (item.sjanger || '') + '</span> ' + lagretTekst + ' ' + eieBadge + ' ' + privatIkon + ' ' + tilstandTekst + ' ' + verdiTekst + '</div>';
-        } else {
-            infoHtml = '<div class="flex flex-wrap items-center mt-1.5 text-[11px] text-slate-400 gap-2"><span class="font-bold text-slate-300">Serie: ' + (item.bladserie || '') + ' #' + (item.nr || '') + '</span><span>|</span><span>Utgitt: ' + (item.aar || '-') + '</span> ' + lagretTekst + ' ' + eieBadge + ' ' + privatIkon + ' ' + tilstandTekst + ' ' + verdiTekst + '</div>';
-        }
-
-        let adminKnapper = '';
-        if (erMin) {
-            adminKnapper = '<div class="flex flex-wrap sm:flex-col lg:flex-row gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + endreKnapp + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0">Slett</button></div>';
-        }
-
-  let bildeHtml = '';
-        if (item.kategori === 'film') {
-            bildeHtml = item.cover 
-              ? '<img src="' + item.cover + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
-              : '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">🎬</div>';
-        } else {
-            bildeHtml = '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">📚</div>';
-        }
-
-        let htmlString = '<div class="flex gap-3 w-full overflow-hidden flex-1">' +
-            bildeHtml + 
-            '<div class="space-y-1 w-full overflow-hidden flex-1">' +
-              '<div class="flex flex-wrap items-center justify-between gap-2">' +
-                '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block">' +
-                  tittelString + tittelSub +
-                '</a>' +
-                eierBadge +
-              '</div>' +
-              infoHtml + kommentarHtml + prisKnapper +
-            '</div>' +
-          '</div>' + adminKnapper;
-
-        rad.innerHTML = htmlString;
-        container.appendChild(rad);
-      });
 
     function toggleKopier(id) {
         const div = document.getElementById(id);
