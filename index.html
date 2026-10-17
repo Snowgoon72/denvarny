@@ -393,13 +393,9 @@
           <input type="file" id="bildeInput" accept="image/*" capture="environment" class="hidden" onchange="simulerBildeAnalyse()" />
           <input type="file" id="hylleInput" accept="image/*" capture="environment" class="hidden" onchange="simulerHylleAnalyse()" />
           <input type="file" id="csvInput" accept=".csv" multiple class="hidden" onchange="importerCSV(event)" />
-          </div>
-
-          <input type="file" id="bildeInput" accept="image/*" capture="environment" class="hidden" onchange="simulerBildeAnalyse()" />
-          <input type="file" id="hylleInput" accept="image/*" capture="environment" class="hidden" onchange="simulerHylleAnalyse()" />
-          <input type="file" id="csvInput" accept=".csv" multiple class="hidden" onchange="importerCSV(event)" />
 
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs">
+
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Strekkode / EAN</label>
@@ -1146,9 +1142,85 @@
             }
         }
         
-        // Tilbakestill teksten på laste-skjermen
+// Tilbakestill teksten på laste-skjermen
         if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
+    } // <-- DENNE PARENTESEN MANGLET FOR Å LUKKE STREKKODE-SØKET!
+
+    // ----------------------------------------------------
+    // NY MOTOR FOR AI-BILDEGJENKJENNING AV COVER (OpenAI)
+    // ----------------------------------------------------
+    async function simulerBildeAnalyse() {
+        const input = document.getElementById('bildeInput');
+        if (!input.files || input.files.length === 0) return;
+
+        const fil = input.files[0];
+        
+        // Vis laste-skjerm
+        const overlay = document.getElementById('loadingOverlay');
+        const tittelFelt = overlay ? overlay.querySelector('h2') : null;
+        const undertekstFelt = overlay ? overlay.querySelector('p') : null;
+
+        if (overlay) overlay.classList.remove('hidden');
+        if (tittelFelt) tittelFelt.innerText = "Ser på bildet... 👀";
+        if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer coveret";
+
+        try {
+            // Forminsker bildet før vi sender det
+            const reader = new FileReader();
+            reader.readAsDataURL(fil);
+            
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                
+                img.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    const maxBredde = 600; 
+                    const skala = maxBredde / img.width;
+                    canvas.width = maxBredde;
+                    canvas.height = img.height * skala;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
+
+                    // Sender til din sikre Vercel-server i bakgrunnen
+                    const response = await fetch('/api/bilde', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bildeBase64: forminsketBilde })
+                    });
+
+                    const data = await response.json();
+                    input.value = ''; // Nullstill filvelgeren
+
+                    if (data.tittel) {
+                        if (overlay) overlay.classList.add('hidden');
+                        
+                        let renTittel = data.tittel.replace(/"/g, ''); 
+                        const bekreft = prompt("🤖 AI-en tror dette er:\n\n" + renTittel + "\n\nTrykk OK for å søke opp denne filmen:", renTittel);
+                        
+                        if (bekreft && bekreft.trim() !== "") {
+                            simulerApiOppslag(bekreft.trim());
+                        }
+                    } else {
+                        throw new Error(data.error || "Fikk ikke svar fra AI.");
+                    }
+                };
+            };
+        } catch (error) {
+            console.error(error);
+            if (overlay) overlay.classList.add('hidden');
+            alert("Klarte ikke å gjenkjenne bildet. Prøv igjen med litt bedre lys!");
+            input.value = '';
+        }
+        
+        // Tilbakestill laste-skjermen
+        if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
+        if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
+    }
 
     async function simulerApiOppslag(sokeord) {
       if (aktivKategori !== 'film') { 
