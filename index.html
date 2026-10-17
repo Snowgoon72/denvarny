@@ -521,6 +521,29 @@
                </div>
             </div>
 
+            <div id="planteFelter" class="hidden space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Vitenskapelig navn</label>
+                   <input type="text" id="feltPlanteVitenskapelig" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Familie</label>
+                   <input type="text" id="feltPlanteFamilie" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-sky-400 uppercase tracking-wider mb-1">Vanning</label>
+                   <input type="text" id="feltPlanteVanning" placeholder="F.eks. Hver 7. dag" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sky-400" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-amber-400 uppercase tracking-wider mb-1">Sollys</label>
+                   <input type="text" id="feltPlanteSollys" placeholder="F.eks. Delvis skygge" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-amber-400" />
+                 </div>
+               </div>
+            </div>
+
             <div class="space-y-3 pt-3 border-t border-slate-800/50 mt-2">
               <div class="grid grid-cols-2 gap-2">
                 <div>
@@ -1244,43 +1267,91 @@ function apneEndreModal(id) {
     // ----------------------------------------------------
     // NY MOTOR FOR AI-BILDEGJENKJENNING AV COVER (OpenAI)
     // ----------------------------------------------------
-    async function simulerBildeAnalyse() {
+async function simulerBildeAnalyse() {
         const input = document.getElementById('bildeInput');
         if (!input.files || input.files.length === 0) return;
 
         const fil = input.files[0];
         
-        // Vis laste-skjerm
         const overlay = document.getElementById('loadingOverlay');
         const tittelFelt = overlay ? overlay.querySelector('h2') : null;
         const undertekstFelt = overlay ? overlay.querySelector('p') : null;
 
         if (overlay) overlay.classList.remove('hidden');
         if (tittelFelt) tittelFelt.innerText = "Ser på bildet... 👀";
-        if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer coveret";
+        if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer " + (aktivKategori === 'plante' ? 'bladene' : 'coveret');
 
         try {
-            // Forminsker bildet før vi sender det
+            // === LØSNING FOR PLANTER (PL@NTNET API) ===
+            if (aktivKategori === 'plante') {
+                const plantNetKey = "2b10K7RBwN7LiZxTLLMgEb4p3u"; // Lag gratis nøkkel på my.plantnet.org
+                
+                if (plantNetKey.includes("LIM_INN")) {
+                    alert("Du må legge inn din gratis Pl@ntNet API-nøkkel i koden for at dette skal fungere.");
+                    if (overlay) overlay.classList.add('hidden');
+                    return;
+                }
+
+                let formData = new FormData();
+                formData.append('images', fil);
+                formData.append('organs', 'auto'); // Finner automatisk ut om det er blad, blomst etc.
+
+                const response = await fetch('https://my-api.plantnet.org/v2/identify/all?api-key=' + plantNetKey, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    const besteTreff = data.results[0];
+                    const vitenskapeligNavn = besteTreff.species.scientificNameWithoutAuthor;
+                    const score = Math.round(besteTreff.score * 100);
+
+                    if (undertekstFelt) undertekstFelt.innerText = `Fant ${vitenskapeligNavn} (${score}% sikker). Leter etter norsk navn...`;
+
+                    // WIKIPEDIA-TRIKSET: Henter offisielt norsk navn basert på latin!
+                    let norskNavn = vitenskapeligNavn; 
+                    try {
+                        const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapeligNavn)}&utf8=&format=json&origin=*`);
+                        const wikiData = await wikiRes.json();
+                        if (wikiData.query.search.length > 0) {
+                            norskNavn = wikiData.query.search[0].title; 
+                        }
+                    } catch (e) { console.log("Kunne ikke nå Wikipedia", e); }
+
+                    if (overlay) overlay.classList.add('hidden');
+                    
+                    const bekreft = prompt(`🌿 AI-en er ${score}% sikker på at dette er:\n\nVitenskapelig: ${vitenskapeligNavn}\nNorsk navn: ${norskNavn}\n\nTrykk OK for å hente stell-info:`, vitenskapeligNavn);
+                    
+                    if (bekreft && bekreft.trim() !== "") {
+                        // Sender det vitenskapelige navnet videre for å hente vanningsinfo
+                        simulerApiOppslag(bekreft.trim()); 
+                    }
+                } else {
+                    throw new Error("Gjenkjente ingen planter på bildet.");
+                }
+                input.value = '';
+                return;
+            }
+
+            // === LØSNING FOR FILMER (Eksisterende OpenAI-server) ===
             const reader = new FileReader();
             reader.readAsDataURL(fil);
-            
             reader.onload = function(event) {
                 const img = new Image();
                 img.src = event.target.result;
-                
                 img.onload = async function() {
                     const canvas = document.createElement('canvas');
                     const maxBredde = 600; 
                     const skala = maxBredde / img.width;
                     canvas.width = maxBredde;
                     canvas.height = img.height * skala;
-                    
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
 
-                    // Sender til din sikre Vercel-server i bakgrunnen
                     const response = await fetch('/api/bilde', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1288,17 +1359,13 @@ function apneEndreModal(id) {
                     });
 
                     const data = await response.json();
-                    input.value = ''; // Nullstill filvelgeren
+                    input.value = ''; 
 
                     if (data.tittel) {
                         if (overlay) overlay.classList.add('hidden');
-                        
                         let renTittel = data.tittel.replace(/"/g, ''); 
                         const bekreft = prompt("🤖 AI-en tror dette er:\n\n" + renTittel + "\n\nTrykk OK for å søke opp denne filmen:", renTittel);
-                        
-                        if (bekreft && bekreft.trim() !== "") {
-                            simulerApiOppslag(bekreft.trim());
-                        }
+                        if (bekreft && bekreft.trim() !== "") simulerApiOppslag(bekreft.trim());
                     } else {
                         throw new Error(data.error || "Fikk ikke svar fra AI.");
                     }
@@ -1307,20 +1374,122 @@ function apneEndreModal(id) {
         } catch (error) {
             console.error(error);
             if (overlay) overlay.classList.add('hidden');
-            alert("Klarte ikke å gjenkjenne bildet. Prøv igjen med litt bedre lys!");
+            alert("Klarte ikke å gjenkjenne bildet. Sørg for godt lys og prøv igjen!");
             input.value = '';
         }
         
-        // Tilbakestill laste-skjermen
         if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
         if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
     }
 
- async function simulerApiOppslag(sokeord) {
+    async function simulerApiOppslag(sokeord) {
+      // === PLANTE-OPPSLAG (Perenual + Wikipedia) ===
+      if (aktivKategori === 'plante') {
+          const perenualKey = "sk-VAfQ6ad3dbae4ccfa20313"; // Fra perenual.com
+          
+          if (perenualKey.includes("LIM_INN")) {
+              alert("Du må legge inn Perenual API-nøkkelen i koden for å hente plante-info.");
+              return;
+          }
+
+          document.getElementById('loadingOverlay').classList.remove('hidden');
+          document.querySelector('#loadingInnhold h2').innerText = "Slår opp plantedata...";
+
+          try {
+              const response = await fetch("https://perenual.com/api/species-list?key=" + perenualKey + "&q=" + encodeURIComponent(sokeord));
+              const data = await response.json();
+              document.getElementById('loadingOverlay').classList.add('hidden');
+
+              if (data.data && data.data.length > 0) {
+                  const plante = data.data[0];
+                  let vitenskapelig = plante.scientific_name ? plante.scientific_name[0] : sokeord;
+                  
+                  // Wikipedia-søk etter Norsk navn
+                  let norskNavn = plante.common_name; // Bruker engelsk hvis Wikipedia feiler
+                  try {
+                      const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
+                      const wikiData = await wikiRes.json();
+                      if (wikiData.query.search.length > 0) {
+                          let wikiTittel = wikiData.query.search[0].title;
+                          norskNavn = wikiTittel.charAt(0).toUpperCase() + wikiTittel.slice(1);
+                      }
+                  } catch(e) {}
+
+                  // Fyller inn skjemaet
+                  document.getElementById('feltTittel').value = norskNavn;
+                  document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
+                  
+                  // Oversetter enkle API-termer til norsk
+                  let vann = plante.watering || "";
+                  vann = vann.replace("Frequent", "Ofte").replace("Average", "Middels").replace("Minimum", "Sjelden");
+                  
+                  let sol = plante.sunlight ? plante.sunlight.join(', ') : "";
+                  sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+
+                  document.getElementById('feltPlanteVanning').value = vann;
+                  document.getElementById('feltPlanteSollys').value = sol;
+
+                  // Henter det offisielle bildet!
+                  if (plante.default_image && plante.default_image.regular_url) {
+                      document.getElementById('feltCover').value = plante.default_image.regular_url;
+                  }
+                  
+                  alert("Fant " + norskNavn + "! Skjemaet er fylt ut med info og bilde.");
+              } else {
+                  alert("Fant ingen planter som passet. Prøv det engelske eller vitenskapelige navnet.");
+              }
+          } catch (error) { 
+              document.getElementById('loadingOverlay').classList.add('hidden');
+              alert("Kunne ikke koble til plantedatabasen."); 
+          }
+          return;
+      }
+
+      // === FILM-OPPSLAG ===
       if (aktivKategori !== 'film') { 
-          alert("Automatiske oppslag er kun tilgjengelig for filmer foreløpig. Fyll inn skjemaet manuelt for tegneserier."); 
+          alert("Automatiske oppslag fungerer nå for filmer og planter. Fyll inn skjemaet manuelt for tegneserier."); 
           return; 
       }
+      
+      const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
+
+      try {
+        const response = await fetch(sokUrl, options); 
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const film = data.results[0];
+          const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
+          const detaljResponse = await fetch(detaljerUrl, options); 
+          const detaljer = await detaljResponse.json();
+
+          document.getElementById('feltTittel').value = film.title || "";
+          document.getElementById('feltTittelOrig').value = film.original_title || "";
+          document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
+          document.getElementById('feltAar').value = film.release_date ? film.release_date.substring(0, 4) : "";
+          document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
+          
+          if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
+          if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
+          
+          if (film.poster_path) {
+              document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
+          } else {
+              document.getElementById('feltCover').value = "";
+          }
+          
+          alert("Fant " + film.title + "! Skjemaet er nå fylt ut med ekte data og plakat fra TMDb.");
+        } else { alert("Fant dessverre ingen filmer som passet med dette søket."); }
+      } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
+    }
+
+      if (aktivKategori !== 'film') { 
+          alert("Automatiske oppslag fungerer nå for filmer og planter. Fyll inn skjemaet manuelt for tegneserier."); 
+          return; 
+      }
+      
+      // ... (Her fortsetter den vanlige TMDb-koden din urørt nedover) 
       
       const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
       const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
@@ -1638,6 +1807,7 @@ function apneEndreModal(id) {
       // Skjul/vis felter basert på kategori (Vi utvider denne senere for planter/brettspill)
       document.getElementById('filmFelter').classList.toggle('hidden', kat !== 'film');
       document.getElementById('tegneserieFelter').classList.toggle('hidden', kat !== 'tegneserie');
+      document.getElementById('planteFelter').classList.toggle('hidden', kat !== 'plante');
       
       // Oppdater tittel
       let titler = { 'film': 'Registrer ny film', 'tegneserie': 'Registrer tegneserie', 'plante': 'Registrer plante', 'brettspill': 'Registrer brettspill' };
@@ -1701,14 +1871,10 @@ function apneEndreModal(id) {
             ? '<div class="text-[9px] text-slate-500 font-mono mb-1 mt-0.5">ID: ' + item.id + '</div>' 
             : '<div class="text-[9px] text-slate-500 font-mono mb-1 mt-0.5">Flere unike eksemplarer (' + antallKopier + ')</div>';
         
-        let bildeHtml = '';
-        if (item.kategori === 'film') {
-            bildeHtml = item.cover 
-              ? '<img src="' + item.cover + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
-              : '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">🎬</div>';
-        } else {
-            bildeHtml = '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">📚</div>';
-        }
+        let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
+        let bildeHtml = item.cover 
+            ? '<img src="' + item.cover + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
+            : '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">' + fallbackIkon + '</div>';
         
         let rad = document.createElement('div');
         rad.className = 'bg-slate-950 border border-slate-800 p-3 rounded-lg hover:border-slate-700 transition flex flex-col gap-2';
@@ -1886,9 +2052,17 @@ function lagreNyttElement(e) {
           ny.sjanger = document.getElementById('feltSjanger').value; 
           ny.rating = document.getElementById('feltRating').value; 
           ny.format = valgteFormater; 
-      } else { 
+      } else if (aktivKategori === 'tegneserie') { 
           ny.bladserie = document.getElementById('feltBladserie').value; 
           ny.nr = document.getElementById('feltNummer').value; 
+      } else if (aktivKategori === 'plante') {
+          ny.tittel_orig = document.getElementById('feltPlanteVitenskapelig').value;
+          ny.sjanger = document.getElementById('feltPlanteFamilie').value; 
+          
+          let vann = document.getElementById('feltPlanteVanning').value;
+          let sol = document.getElementById('feltPlanteSollys').value;
+          let eksisterendeKommentar = document.getElementById('feltKommentar').value;
+          ny.kommentar = (vann || sol) ? `💧 ${vann || '?'} | ☀️ ${sol || '?'} \n${eksisterendeKommentar}` : eksisterendeKommentar;
       }
 
       database.unshift(ny); 
