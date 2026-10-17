@@ -139,6 +139,16 @@
         </div>
         
         <div class="grid grid-cols-2 gap-2">
+          <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2 mt-3">
+          <h3 class="font-bold text-slate-300 text-xs uppercase tracking-wider">Hva samler du på?</h3>
+          <div class="flex flex-wrap gap-4 text-slate-300">
+            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="profilKatFilm" class="rounded text-amber-500 w-4 h-4 bg-slate-900 border-slate-700"> <span>Filmer</span></label>
+            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="profilKatTegneserie" class="rounded text-amber-500 w-4 h-4 bg-slate-900 border-slate-700"> <span>Tegneserier</span></label>
+            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="profilKatPlante" class="rounded text-amber-500 w-4 h-4 bg-slate-900 border-slate-700"> <span>Planter</span></label>
+            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="profilKatBrettspill" class="rounded text-amber-500 w-4 h-4 bg-slate-900 border-slate-700"> <span>Brettspill</span></label>
+          </div>
+        </div>
+
           <div>
             <label class="block text-slate-400 mb-1 font-semibold">Mitt Land</label>
             <input type="text" id="profilLand" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" />
@@ -631,12 +641,13 @@
           document.getElementById('loginModal').classList.remove('hidden'); 
       } else { 
           document.getElementById('loginModal').classList.add('hidden'); 
-          document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker; 
+          document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker;
+          oppdaterKategoriMeny(); 
           utforSok(); 
       }
     }
     
-    async function loggInn(e) { 
+async function loggInn(e) { 
       e.preventDefault(); 
       const forsokNavn = document.getElementById('loginBrukernavn').value.trim();
       const forsokPassord = document.getElementById('loginPassord').value;
@@ -644,23 +655,20 @@
       let funnetBruker = Object.keys(profiler).find(navn => navn.toLowerCase() === forsokNavn.toLowerCase());
       
       if (!funnetBruker) {
-         funnetBruker = forsokNavn;
-         const nyProfil = { 
-             brukernavn: funnetBruker,
-             info: '', 
-             land: 'Norge', 
-             spraak: 'Norsk', 
-             standardSynlighet: 'offentlig', 
-             passord: forsokPassord, 
-             epost: '' 
-         }; 
-         profiler[funnetBruker] = nyProfil;
-         supabaseDb.from('samlerbase_profiler').insert([nyProfil]).then();
-      } else {
-         if (profiler[funnetBruker].passord && profiler[funnetBruker].passord !== forsokPassord) { 
-             alert("Feil passord! Prøv på nytt, eller bruk et annet brukernavn for å lage en ny profil."); 
-             return; 
-         }
+         alert("Fant ikke denne brukeren. Har du skrevet navnet riktig?");
+         return;
+      } 
+      
+      const profil = profiler[funnetBruker];
+      if (profil.passord && profil.passord !== forsokPassord) { 
+          alert("Feil passord! Prøv på nytt."); 
+          return; 
+      }
+      
+      // Sjekker om brukeren er godkjent (alle gamle profiler får passere inntil videre, nye stoppes)
+      if (profil.godkjent === false && profil.epost !== 'jorn.garder@gmail.com') {
+          alert("🔒 Kontoen din venter på å bli godkjent av administratoren før du kan logge inn.");
+          return;
       }
 
       innloggetBruker = funnetBruker; 
@@ -668,17 +676,17 @@
       sjekkInnlogging(); 
     }
     
-    async function registrerBruker(e) {
+async function registrerBruker(e) {
       e.preventDefault();
       const nyttNavn = document.getElementById('regBrukernavn').value.trim();
       const passord = document.getElementById('regPassord').value;
       const epost = document.getElementById('regEpost').value.trim().toLowerCase();
       
       let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
-      if (eksisterer) { 
-          alert("Brukernavn er tatt. Velg et annet."); 
-          return; 
-      }
+      if (eksisterer) { alert("Brukernavn er tatt. Velg et annet."); return; }
+      
+      // Auto-godkjenner deg som eier, setter alle andre nye brukere på vent
+      const erAdmin = epost === 'jorn.garder@gmail.com';
       
       const nyProfil = { 
         brukernavn: nyttNavn,
@@ -687,16 +695,23 @@
         spraak: document.getElementById('regSpraak').value, 
         standardSynlighet: document.getElementById('regSynlighet').value, 
         passord: passord,
-        epost: epost
+        epost: epost,
+        kategorier: ['film', 'tegneserie', 'plante', 'brettspill'],
+        godkjent: erAdmin 
       };
       
       profiler[nyttNavn] = nyProfil;
       await supabaseDb.from('samlerbase_profiler').insert([nyProfil]);
       
-      innloggetBruker = nyttNavn; 
-      localStorage.setItem('samler_bruker', innloggetBruker); 
-      document.getElementById('skjemaRegistrer').reset(); 
-      sjekkInnlogging();
+      if(erAdmin) {
+          innloggetBruker = nyttNavn; 
+          localStorage.setItem('samler_bruker', innloggetBruker); 
+          document.getElementById('skjemaRegistrer').reset(); 
+          sjekkInnlogging();
+      } else {
+          alert("Konto opprettet! Administratoren må godkjenne profilen din før du kan logge inn.");
+          byttTilLoggInn();
+      }
     }
     
     function sendGlemtPassord(e) {
@@ -732,11 +747,7 @@
     // PROFIL OG SLETTING
     // ==========================================
     function aapneProfil() {
-      let minProfil = profiler[innloggetBruker];
-      
-      if (!minProfil) {
-          minProfil = { epost: '', info: '', land: '', spraak: 'Norsk', standardSynlighet: 'offentlig' };
-      }
+      let minProfil = profiler[innloggetBruker] || { epost: '', info: '', land: '', spraak: 'Norsk', standardSynlighet: 'offentlig' };
 
       document.getElementById('profilBrukernavn').value = innloggetBruker || ''; 
       document.getElementById('profilPassord').value = ''; 
@@ -745,30 +756,42 @@
       document.getElementById('profilLand').value = minProfil.land || '';
       document.getElementById('profilSpraak').value = minProfil.spraak || 'Norsk'; 
       document.getElementById('profilSynlighet').value = minProfil.standardSynlighet || 'offentlig';
+      
+      let kat = minProfil.kategorier || ['film', 'tegneserie', 'plante', 'brettspill'];
+      document.getElementById('profilKatFilm').checked = kat.includes('film');
+      document.getElementById('profilKatTegneserie').checked = kat.includes('tegneserie');
+      document.getElementById('profilKatPlante').checked = kat.includes('plante');
+      document.getElementById('profilKatBrettspill').checked = kat.includes('brettspill');
+
       document.getElementById('profilModal').classList.remove('hidden');
     }
-    
+
     async function lagreProfil(e) {
       e.preventDefault();
-      let gammeltNavn = innloggetBruker;
-      let nyttNavn = document.getElementById('profilBrukernavn').value.trim();
+      // (Behold den gamle navne-bytte logikken som ligger her hvis du vil, eller bruk denne optimaliserte)
       let nyttPassord = document.getElementById('profilPassord').value;
+      if (!profiler[innloggetBruker]) profiler[innloggetBruker] = { brukernavn: innloggetBruker };
+      if (nyttPassord !== "") profiler[innloggetBruker].passord = nyttPassord;
       
-      if (nyttNavn !== gammeltNavn) {
-          let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
-          if (eksisterer) { alert("Brukernavnet er allerede i bruk av en annen!"); return; }
-          
-          database.forEach(item => { if (item.eier === gammeltNavn) item.eier = nyttNavn; });
-          profiler[nyttNavn] = profiler[gammeltNavn] || {}; 
-          profiler[nyttNavn].brukernavn = nyttNavn;
-          delete profiler[gammeltNavn]; 
-          innloggetBruker = nyttNavn; 
-          localStorage.setItem('samler_bruker', innloggetBruker);
-
-          await supabaseDb.from('samlerbase_profiler').insert([profiler[nyttNavn]]); 
-          await supabaseDb.from('samlerbase_data').update({ eier: nyttNavn }).eq('eier', gammeltNavn); 
-          await supabaseDb.from('samlerbase_profiler').delete().eq('brukernavn', gammeltNavn); 
-      }
+      let valgteKat = [];
+      if(document.getElementById('profilKatFilm').checked) valgteKat.push('film');
+      if(document.getElementById('profilKatTegneserie').checked) valgteKat.push('tegneserie');
+      if(document.getElementById('profilKatPlante').checked) valgteKat.push('plante');
+      if(document.getElementById('profilKatBrettspill').checked) valgteKat.push('brettspill');
+      
+      profiler[innloggetBruker].epost = document.getElementById('profilEpost').value.trim().toLowerCase();
+      profiler[innloggetBruker].info = document.getElementById('profilInfo').value.trim(); 
+      profiler[innloggetBruker].land = document.getElementById('profilLand').value.trim();
+      profiler[innloggetBruker].spraak = document.getElementById('profilSpraak').value; 
+      profiler[innloggetBruker].standardSynlighet = document.getElementById('profilSynlighet').value;
+      profiler[innloggetBruker].kategorier = valgteKat;
+      
+      supabaseDb.from('samlerbase_profiler').update(profiler[innloggetBruker]).eq('brukernavn', innloggetBruker).then();
+      
+      oppdaterKategoriMeny();
+      document.getElementById('profilModal').classList.add('hidden'); 
+      utforSok();
+    }
       
       if (!profiler[innloggetBruker]) profiler[innloggetBruker] = { brukernavn: innloggetBruker };
       if (nyttPassord !== "") profiler[innloggetBruker].passord = nyttPassord;
@@ -1526,6 +1549,20 @@
     // ==========================================
     // LISTEVISNING, SØK & SORTERING
     // ==========================================
+    function oppdaterKategoriMeny() {
+        let kat = profiler[innloggetBruker]?.kategorier || ['film', 'tegneserie', 'plante', 'brettspill'];
+        
+        document.getElementById('btnTabFilm').style.display = kat.includes('film') ? 'inline-block' : 'none';
+        document.getElementById('btnTabTegneserie').style.display = kat.includes('tegneserie') ? 'inline-block' : 'none';
+        document.getElementById('btnTabPlante').style.display = kat.includes('plante') ? 'inline-block' : 'none';
+        document.getElementById('btnTabBrettspill').style.display = kat.includes('brettspill') ? 'inline-block' : 'none';
+        
+        // Hvis du skjulte kategorien du sto på, hopp til den første du har aktivert
+        if(!kat.includes(aktivKategori) && kat.length > 0) {
+            velgKategori(kat[0]);
+        }
+    }
+    
     function velgKategori(kat) {
       aktivKategori = kat;
       
