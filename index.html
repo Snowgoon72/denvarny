@@ -313,6 +313,34 @@
     </div>
   </div>
 
+  <!-- DETALJER-MODAL (Lokal vs TMDb) -->
+  <div id="detaljerModal" class="hidden fixed inset-0 bg-black/85 z-[80] flex flex-col items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[90vh]">
+      <button onclick="lukkDetaljerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-black text-xl px-2">✕</button>
+
+      <div class="flex gap-4 mb-4 items-start pr-8">
+          <div id="detBilde" class="shrink-0"></div>
+          <div>
+              <h2 id="detTittel" class="text-xl font-black text-amber-400 leading-tight mb-1"></h2>
+              <p id="detSub" class="text-xs text-slate-400 font-mono"></p>
+          </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="flex border-b border-slate-800 mb-4 shrink-0">
+          <button id="tabLokal" onclick="byttDetaljerTab('lokal')" class="flex-1 py-2.5 text-sm font-bold text-amber-500 border-b-2 border-amber-500 transition">Min Database</button>
+          <button id="tabTmdb" onclick="byttDetaljerTab('tmdb')" class="flex-1 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent transition">TMDb Info</button>
+      </div>
+
+      <!-- INNHOLD -->
+      <div id="innholdLokal" class="overflow-y-auto space-y-3 text-sm text-slate-300 flex-1 hide-scrollbar"></div>
+      <div id="innholdTmdb" class="hidden overflow-y-auto space-y-3 text-sm text-slate-300 flex-1 hide-scrollbar">
+          <div id="tmdbLaster" class="text-center py-8 text-slate-500 animate-pulse">Henter live-data fra filmdatabasen... ⏳</div>
+          <div id="tmdbData" class="hidden space-y-4"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- HOVEDAPP HEADER -->
   <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-3">
@@ -1635,13 +1663,17 @@ async function registrerBruker(e) {
         let rad = document.createElement('div');
         rad.className = 'bg-slate-950 border border-slate-800 p-3 rounded-lg hover:border-slate-700 transition flex flex-col gap-2';
 
-        // Bestemmer hvilke knapper som skal vises på hovedkortet
+      // Bestemmer hvilke knapper som skal vises på hovedkortet
+        let detaljerKnapp = '<button onclick="apneDetaljerModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0 mt-2 sm:mt-0 font-bold">📖 Detaljer</button>';
+        
         let adminKnapper = '';
         if (antallKopier > 1) {
-            adminKnapper = '<button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0 mt-2 sm:mt-0 font-bold">Se eksemplarer ▼</button>';
+            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + detaljerKnapp + '<button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
         } else if (erMin) {
             let oppdaterKnapp = (item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition" title="Hent info fra TMDb">🔄 TMDb</button>' : '';
-            adminKnapper = '<div class="flex gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">✏️ Endre</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
+            adminKnapper = '<div class="flex flex-wrap sm:flex-nowrap gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + detaljerKnapp + '<button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">✏️</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
+        } else {
+            adminKnapper = '<div class="shrink-0 self-start sm:self-center mt-2 sm:mt-0">' + detaljerKnapp + '</div>'; // Vennene dine får også se detaljer
         }
 
         // Bygger HTML for hovedvisningen
@@ -1824,6 +1856,119 @@ function lagreNyttElement(e) {
         utforSok(); 
     }
     
+// ==========================================
+    // DETALJER-MODAL (LOKAL VS TMDB)
+    // ==========================================
+    let aktivtDetaljObjekt = null;
+
+    function apneDetaljerModal(id) {
+        const item = database.find(i => i.id === id);
+        if (!item) return;
+        aktivtDetaljObjekt = item;
+
+        document.getElementById('detTittel').innerText = item.tittel || 'Uten tittel';
+        
+        let subTekst = item.kategori === 'film' ? 'År: ' + (item.aar || 'Ukjent') : 'Serie: ' + (item.bladserie || '');
+        document.getElementById('detSub').innerText = 'ID: ' + item.id + ' | ' + subTekst;
+
+        let bildeHtml = '';
+        if (item.kategori === 'film') {
+            bildeHtml = item.cover 
+              ? '<img src="' + item.cover + '" class="w-16 h-24 object-cover rounded shadow-md border border-slate-700">' 
+              : '<div class="w-16 h-24 bg-slate-800 rounded flex items-center justify-center text-2xl border border-slate-700">🎬</div>';
+        } else {
+            bildeHtml = '<div class="w-16 h-24 bg-slate-800 rounded flex items-center justify-center text-2xl border border-slate-700">📚</div>';
+        }
+        document.getElementById('detBilde').innerHTML = bildeHtml;
+
+        // Fyller inn din lokale informasjon
+        let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
+        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
+        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Lagringsplass</span><span class="font-bold text-indigo-400">' + (item.lagret || 'Ikke oppgitt') + '</span></div>';
+        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Antatt verdi</span><span class="font-bold text-emerald-400">' + (item.verdi ? item.verdi + ' kr' : '-') + '</span></div>';
+        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
+        lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Kommentar / Notater</span><span class="text-slate-300 italic">' + (item.kommentar || 'Ingen notater.') + '</span></div>';
+        lokalHtml += '</div>';
+
+        document.getElementById('innholdLokal').innerHTML = lokalHtml;
+        document.getElementById('tabTmdb').style.display = item.kategori === 'film' ? 'block' : 'none';
+        
+        byttDetaljerTab('lokal');
+        document.getElementById('detaljerModal').classList.remove('hidden');
+    }
+
+    function lukkDetaljerModal() { document.getElementById('detaljerModal').classList.add('hidden'); }
+
+    function byttDetaljerTab(tab) {
+        const tLokal = document.getElementById('tabLokal');
+        const tTmdb = document.getElementById('tabTmdb');
+        const iLokal = document.getElementById('innholdLokal');
+        const iTmdb = document.getElementById('innholdTmdb');
+
+        if (tab === 'lokal') {
+            tLokal.className = "flex-1 py-2.5 text-sm font-bold text-amber-500 border-b-2 border-amber-500 transition";
+            tTmdb.className = "flex-1 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent transition";
+            iLokal.classList.remove('hidden');
+            iTmdb.classList.add('hidden');
+        } else {
+            tTmdb.className = "flex-1 py-2.5 text-sm font-bold text-amber-500 border-b-2 border-amber-500 transition";
+            tLokal.className = "flex-1 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent transition";
+            iTmdb.classList.remove('hidden');
+            iLokal.classList.add('hidden');
+            hentTMDbForModal(aktivtDetaljObjekt);
+        }
+    }
+
+    async function hentTMDbForModal(item) {
+        const laster = document.getElementById('tmdbLaster');
+        const dataBoks = document.getElementById('tmdbData');
+        
+        laster.classList.remove('hidden');
+        dataBoks.classList.add('hidden');
+
+        let sokeord = item.tittel_orig || item.tittel_eng || item.tittel;
+        let renTittel = sokeord.replace(/[^\w\sæøåÆØÅ]/g, ' '); 
+        let yearQuery = item.aar ? "&primary_release_year=" + item.aar : '';
+        const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+        const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO" + yearQuery;
+
+        try {
+            const response = await fetch(sokUrl, options);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                const film = data.results[0];
+                const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
+                const detaljResponse = await fetch(detaljerUrl, options); 
+                const d = await detaljResponse.json();
+
+                let html = '<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">';
+                html += '<p class="text-sm text-slate-300 italic leading-relaxed mb-4">"' + (d.overview || 'Ingen handlingsreferat tilgjengelig på norsk.') + '"</p>';
+                html += '<div class="grid grid-cols-2 gap-3 text-xs">';
+                html += '<div><span class="block text-[10px] text-slate-500 uppercase">Originaltittel</span><span class="font-bold text-white">' + (d.original_title || '-') + '</span></div>';
+                html += '<div><span class="block text-[10px] text-slate-500 uppercase">Spilletid</span><span class="font-bold text-white">' + (d.runtime ? d.runtime + ' min' : '-') + '</span></div>';
+                html += '<div><span class="block text-[10px] text-slate-500 uppercase">Utgivelsesdato</span><span class="font-bold text-white">' + (d.release_date || '-') + '</span></div>';
+                html += '<div><span class="block text-[10px] text-slate-500 uppercase">TMDb Rating</span><span class="font-bold text-amber-400">⭐ ' + (d.vote_average ? d.vote_average.toFixed(1) : '-') + '</span></div>';
+                html += '</div>';
+
+                if (d.genres && d.genres.length > 0) {
+                    html += '<div class="mt-4 pt-3 border-t border-slate-800/50"><span class="block text-[10px] text-slate-500 uppercase mb-2">Offisielle sjangere</span><div class="flex flex-wrap gap-1.5">';
+                    d.genres.forEach(g => { html += '<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] border border-slate-700">' + g.name + '</span>'; });
+                    html += '</div></div>';
+                }
+                html += '</div>';
+                dataBoks.innerHTML = html;
+            } else {
+                dataBoks.innerHTML = '<div class="text-center py-8 text-slate-500">Fant dessverre ingen ekstra informasjon om denne på TMDb.</div>';
+            }
+        } catch (e) {
+            dataBoks.innerHTML = '<div class="text-center py-8 text-rose-500">Klarte ikke å koble til TMDb akkurat nå.</div>';
+        }
+        
+        laster.classList.add('hidden');
+        dataBoks.classList.remove('hidden');
+    }
+
     // START APPEN NÅR SIDEN LASTER
     window.onload = startApp;
   </script>
