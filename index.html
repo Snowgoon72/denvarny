@@ -792,21 +792,6 @@ async function registrerBruker(e) {
       document.getElementById('profilModal').classList.add('hidden'); 
       utforSok();
     }
-      
-      if (!profiler[innloggetBruker]) profiler[innloggetBruker] = { brukernavn: innloggetBruker };
-      if (nyttPassord !== "") profiler[innloggetBruker].passord = nyttPassord;
-      
-      profiler[innloggetBruker].epost = document.getElementById('profilEpost').value.trim().toLowerCase();
-      profiler[innloggetBruker].info = document.getElementById('profilInfo').value.trim(); 
-      profiler[innloggetBruker].land = document.getElementById('profilLand').value.trim();
-      profiler[innloggetBruker].spraak = document.getElementById('profilSpraak').value; 
-      profiler[innloggetBruker].standardSynlighet = document.getElementById('profilSynlighet').value;
-      
-      supabaseDb.from('samlerbase_profiler').update(profiler[innloggetBruker]).eq('brukernavn', innloggetBruker).then();
-      
-      document.getElementById('profilModal').classList.add('hidden'); 
-      sjekkInnlogging(); 
-      utforSok();
 
     function slettMinSamling() {
       if(confirm("⚠ ER DU HELT SIKKER?\n\nDette vil slette alle filmer og tegneserier i din samling permanent. Dette kan ikke angres!")) {
