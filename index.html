@@ -1386,11 +1386,7 @@ function apneEndreModal(id) {
         };
     }
 
-        if (tittelFelt) tittelFelt.innerText = "Kobler til skyen...";
-        if (undertekstFelt) undertekstFelt.innerText = "Henter samlinger fra Supabase";
-    }
-
-    async function simulerApiOppslag(sokeord) {
+async function simulerApiOppslag(sokeord) {
       // === PLANTE-OPPSLAG (Perenual + Wikipedia) ===
       if (aktivKategori === 'plante') {
           const perenualKey = "sk-VAfQ6ad3dbae4ccfa20313"; // Fra perenual.com
@@ -1492,6 +1488,7 @@ function apneEndreModal(id) {
       } catch (error) { console.error(error); alert("Kunne ikke koble til filmdatabasen."); }
     }
 
+      // === FILM-OPPSLAG ===
     async function oppdaterEnkelFilmTMDb(id) {
        const itemIndex = database.findIndex(i => i.id === id);
        if (itemIndex === -1) return;
