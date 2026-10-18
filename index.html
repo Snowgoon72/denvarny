@@ -224,8 +224,52 @@
               <input type="number" id="endreAar" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
             </div>
             <!-- Skjult for film, vises for tegneserie -->
-            <div id="endreTegneserieFelter" class="hidden grid-cols-2 gap-2 col-span-2 sm:col-span-1 w-full">
-                <div>
+<div id="endrePlanteFelter" class="hidden col-span-2 w-full space-y-3 mt-3 border-t border-indigo-900/50 pt-3">
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-sky-400 mb-1">Vanning</label>
+                   <input type="text" id="endrePlanteVanning" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sky-400" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-amber-400 mb-1">Sollys</label>
+                   <input type="text" id="endrePlanteSollys" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-amber-400" />
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-slate-400 mb-1">Opprinnelse</label>
+                   <input type="text" id="endrePlanteOpprinnelse" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-rose-400 mb-1">Blomstring</label>
+                   <input type="text" id="endrePlanteBlomstring" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-400" />
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-slate-400 mb-1">Formering</label>
+                   <input type="text" id="endrePlanteFormering" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-emerald-400 mb-1">Klimasone</label>
+                   <input type="text" id="endrePlanteHardforhet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-emerald-400" />
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-purple-400 mb-1">Dele/Selge?</label>
+                   <input type="text" id="endrePlanteDeleSelge" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-purple-400 font-bold" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-rose-500 mb-1">Giftig for dyr?</label>
+                   <input type="text" id="endrePlanteGiftig" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-500" />
+                 </div>
+               </div>
+               <div>
+                   <label class="block font-semibold text-slate-400 mb-1">Plantefamilie</label>
+                   <input type="text" id="endrePlanteFamilie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+               </div>
+            </div>
                   <label class="block font-semibold text-slate-400 mb-1">Bladserie</label>
                   <input type="text" id="endreBladserie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
                 </div>
@@ -521,15 +565,15 @@
                </div>
             </div>
 
-            <div id="planteFelter" class="hidden space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
+<div id="planteFelter" class="hidden space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
                <div class="grid grid-cols-2 gap-2">
                  <div>
                    <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Vitenskapelig navn</label>
                    <input type="text" id="feltPlanteVitenskapelig" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
                  </div>
                  <div>
-                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Familie</label>
-                   <input type="text" id="feltPlanteFamilie" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
+                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Engelsk navn</label>
+                   <input type="text" id="feltPlanteEngelsk" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
                  </div>
                </div>
                <div class="grid grid-cols-2 gap-2">
@@ -538,9 +582,43 @@
                    <input type="text" id="feltPlanteVanning" placeholder="F.eks. Hver 7. dag" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sky-400" />
                  </div>
                  <div>
-                   <label class="block font-semibold text-amber-400 uppercase tracking-wider mb-1">Sollys</label>
+                   <label class="block font-semibold text-amber-400 uppercase tracking-wider mb-1">Sollys / Skygge</label>
                    <input type="text" id="feltPlanteSollys" placeholder="F.eks. Delvis skygge" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-amber-400" />
                  </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Opprinnelse</label>
+                   <input type="text" id="feltPlanteOpprinnelse" placeholder="F.eks. Sør-Amerika" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-rose-400 uppercase tracking-wider mb-1">Blomstring</label>
+                   <input type="text" id="feltPlanteBlomstring" placeholder="F.eks. Sommer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-400" />
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Formering (Frø/Deling)</label>
+                   <input type="text" id="feltPlanteFormering" placeholder="F.eks. Stiklinger" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-emerald-400 uppercase tracking-wider mb-1">Klimasone / Kulde</label>
+                   <input type="text" id="feltPlanteHardforhet" placeholder="F.eks. Innendørs" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-emerald-400" />
+                 </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div>
+                   <label class="block font-semibold text-purple-400 uppercase tracking-wider mb-1">Dele / Selge?</label>
+                   <input type="text" id="feltPlanteDeleSelge" placeholder="Eks: Stiklinger 50 kr" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-purple-400 font-bold" />
+                 </div>
+                 <div>
+                   <label class="block font-semibold text-rose-500 uppercase tracking-wider mb-1">Giftig for dyr?</label>
+                   <input type="text" id="feltPlanteGiftig" placeholder="F.eks. Ja" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-500" />
+                 </div>
+               </div>
+               <div>
+                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Plantefamilie</label>
+                   <input type="text" id="feltPlanteFamilie" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" />
                </div>
             </div>
 
@@ -941,7 +1019,18 @@ function apneEndreModal(id) {
         document.getElementById('endreBladserie').value = item.bladserie || '';
         document.getElementById('endreNummer').value = item.nr || '';
       }
-
+        document.getElementById('endrePlanteFelter').classList.toggle('hidden', item.kategori !== 'plante');
+      if (item.kategori === 'plante') {
+          document.getElementById('endrePlanteVanning').value = item.vanning || '';
+          document.getElementById('endrePlanteSollys').value = item.sollys || '';
+          document.getElementById('endrePlanteOpprinnelse').value = item.opprinnelse || '';
+          document.getElementById('endrePlanteBlomstring').value = item.blomstring || '';
+          document.getElementById('endrePlanteFormering').value = item.formering || '';
+          document.getElementById('endrePlanteHardforhet').value = item.hardforhet || '';
+          document.getElementById('endrePlanteDeleSelge').value = item.dele_selge || '';
+          document.getElementById('endrePlanteGiftig').value = item.giftig || '';
+          document.getElementById('endrePlanteFamilie').value = item.sjanger || '';
+      }
       // Lås feltene for redigering hvis det er en venns samling man ser på
       const skjema = document.getElementById('skjemaEndre');
       skjema.querySelectorAll('input, select, textarea').forEach(el => {
@@ -981,17 +1070,28 @@ function apneEndreModal(id) {
       item.synlighet = document.getElementById('endreSynlighet').value;
       item.kommentar = document.getElementById('endreKommentar').value.trim();
 
-      if (item.kategori === 'film') {
+if (item.kategori === 'film') {
         item.sjanger = document.getElementById('endreSjanger').value.trim();
         item.rating = document.getElementById('endreRating').value;
         item.imdb = document.getElementById('endreImdb').value.trim();
-      } else {
+      } else if (item.kategori === 'tegneserie') {
         item.bladserie = document.getElementById('endreBladserie').value.trim();
         item.nr = document.getElementById('endreNummer').value.trim();
+      } else if (item.kategori === 'plante') {
+          item.vanning = document.getElementById('endrePlanteVanning').value.trim();
+          item.sollys = document.getElementById('endrePlanteSollys').value.trim();
+          item.opprinnelse = document.getElementById('endrePlanteOpprinnelse').value.trim();
+          item.blomstring = document.getElementById('endrePlanteBlomstring').value.trim();
+          item.formering = document.getElementById('endrePlanteFormering').value.trim();
+          item.hardforhet = document.getElementById('endrePlanteHardforhet').value.trim();
+          item.dele_selge = document.getElementById('endrePlanteDeleSelge').value.trim();
+          item.giftig = document.getElementById('endrePlanteGiftig').value.trim();
+          item.sjanger = document.getElementById('endrePlanteFamilie').value.trim();
       }
 
       database[index] = item;
       supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
+      
       
       lukkEndreModal();
       utforSok();
@@ -1407,70 +1507,61 @@ if (aktivKategori === 'plante') {
 
           try {
               let sokeTekst = sokeord;
-              
-              // 1. Første forsøk: Send søket til din Vercel-server
-              let response = await fetch("/api/plante2", {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ sokeord: sokeTekst })
-              });
+              let response = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: sokeTekst }) });
               let data = await response.json();
               
-              // 2. Andre forsøk (Fallback): Hvis ingen treff, prøv kun slekten
               if ((!data.data || data.data.length === 0) && sokeTekst.includes(" ")) {
                   document.querySelector('#loadingInnhold h2').innerText = "Utvider søket...";
                   sokeTekst = sokeTekst.split(" ")[0]; 
-                  response = await fetch("/api/plante2", {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ sokeord: sokeTekst })
-                  });
+                  response = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: sokeTekst }) });
                   data = await response.json();
               }
-
               document.getElementById('loadingOverlay').classList.add('hidden');
+              if (response.status !== 200) { alert("Perenual databasen sier: " + (data.message || data.error || "Ukjent feil")); return; }
+
               if (data.data && data.data.length > 0) {
                   const plante = data.data[0];
                   let vitenskapelig = plante.scientific_name ? plante.scientific_name[0] : sokeord;
-                  
-                  // Wikipedia-søk etter Norsk navn
-                  let norskNavn = plante.common_name; // Bruker engelsk hvis Wikipedia feiler
+                  let engelskNavn = plante.common_name || "";
+                  let familie = plante.family || "";
+
+                  // Norsk navn
+                  let norskNavn = engelskNavn; 
                   try {
                       const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
                       const wikiData = await wikiRes.json();
-                      if (wikiData.query.search.length > 0) {
-                          let wikiTittel = wikiData.query.search[0].title;
-                          norskNavn = wikiTittel.charAt(0).toUpperCase() + wikiTittel.slice(1);
-                      }
+                      if (wikiData.query.search.length > 0) { let w = wikiData.query.search[0].title; norskNavn = w.charAt(0).toUpperCase() + w.slice(1); }
                   } catch(e) {}
 
-                  // Fyller inn skjemaet
+                  // Fyll inn
                   document.getElementById('feltTittel').value = norskNavn;
+                  document.getElementById('feltPlanteEngelsk').value = engelskNavn;
                   document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
+                  document.getElementById('feltPlanteFamilie').value = familie;
                   
-                  // Oversetter enkle API-termer til norsk
-                  let vann = plante.watering || "";
-                  vann = vann.replace("Frequent", "Ofte").replace("Average", "Middels").replace("Minimum", "Sjelden");
-                  
-                  let sol = plante.sunlight ? plante.sunlight.join(', ') : "";
-                  sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+                  // Oversettelser
+                  let vann = plante.watering || ""; vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
+                  let sol = plante.sunlight ? (Array.isArray(plante.sunlight) ? plante.sunlight.join(', ') : plante.sunlight) : ""; sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+                  let opprinnelse = plante.origin ? plante.origin.join(', ') : "Ukjent";
+                  let form = plante.propagation ? plante.propagation.join(', ') : ""; form = form.replace(/Seed/gi, "Frø").replace(/Cutting/gi, "Stiklinger").replace(/Division/gi, "Deling av rot");
+                  let blomst = plante.flowers ? (plante.flowering_season || "Ja, blomstrer") : "Nei, grønn plante"; blomst = blomst.replace(/Spring/gi, "Vår").replace(/Summer/gi, "Sommer").replace(/Autumn/gi,"Høst").replace(/Winter/gi,"Vinter");
+                  let hard = plante.hardiness ? `Sone ${plante.hardiness.min} til ${plante.hardiness.max}` : "Innendørs / Ukjent";
+                  let giftig = plante.poisonous_to_pets ? "⚠️ Ja, giftig for dyr" : "Trygg for kjæledyr 🐾";
 
                   document.getElementById('feltPlanteVanning').value = vann;
                   document.getElementById('feltPlanteSollys').value = sol;
+                  document.getElementById('feltPlanteOpprinnelse').value = opprinnelse;
+                  document.getElementById('feltPlanteFormering').value = form;
+                  document.getElementById('feltPlanteBlomstring').value = blomst;
+                  document.getElementById('feltPlanteHardforhet').value = hard;
+                  document.getElementById('feltPlanteGiftig').value = giftig;
+                  document.getElementById('feltPlanteDeleSelge').value = ""; // Tom med vilje
 
-                  // Henter det offisielle bildet!
-                  if (plante.default_image && plante.default_image.regular_url) {
-                      document.getElementById('feltCover').value = plante.default_image.regular_url;
-                  }
+                  if (plante.default_image && plante.default_image.regular_url) document.getElementById('feltCover').value = plante.default_image.regular_url;
                   
-                  alert("Fant " + norskNavn + "! Skjemaet er fylt ut med info og bilde.");
-              } else {
-                  alert("Fant ingen planter som passet. Prøv det engelske eller vitenskapelige navnet.");
-              }
-          } catch (error) { 
-              document.getElementById('loadingOverlay').classList.add('hidden');
-              alert("Kunne ikke koble til plantedatabasen."); 
-          }
+                  alert("Fant " + norskNavn + "!\nSkjemaet er fylt ut med info og bilde.");
+              } else { alert("Fant dessverre ingen planter i Perenual-databasen for '" + sokeord + "'."); }
+          } catch (error) { document.getElementById('loadingOverlay').classList.add('hidden'); alert("Klarte ikke koble til plantedatabasen: " + error.message); }
           return;
       }
 
@@ -2044,14 +2135,18 @@ function lagreNyttElement(e) {
       } else if (aktivKategori === 'tegneserie') { 
           ny.bladserie = document.getElementById('feltBladserie').value; 
           ny.nr = document.getElementById('feltNummer').value; 
-      } else if (aktivKategori === 'plante') {
-          ny.tittel_orig = document.getElementById('feltPlanteVitenskapelig').value;
-          ny.sjanger = document.getElementById('feltPlanteFamilie').value; 
-          
-          let vann = document.getElementById('feltPlanteVanning').value;
-          let sol = document.getElementById('feltPlanteSollys').value;
-          let eksisterendeKommentar = document.getElementById('feltKommentar').value;
-          ny.kommentar = (vann || sol) ? `💧 ${vann || '?'} | ☀️ ${sol || '?'} \n${eksisterendeKommentar}` : eksisterendeKommentar;
+} else if (aktivKategori === 'plante') {
+          ny.tittel_eng = document.getElementById('feltPlanteEngelsk').value.trim();
+          ny.tittel_orig = document.getElementById('feltPlanteVitenskapelig').value.trim();
+          ny.sjanger = document.getElementById('feltPlanteFamilie').value.trim(); 
+          ny.vanning = document.getElementById('feltPlanteVanning').value.trim();
+          ny.sollys = document.getElementById('feltPlanteSollys').value.trim();
+          ny.opprinnelse = document.getElementById('feltPlanteOpprinnelse').value.trim();
+          ny.formering = document.getElementById('feltPlanteFormering').value.trim();
+          ny.blomstring = document.getElementById('feltPlanteBlomstring').value.trim();
+          ny.hardforhet = document.getElementById('feltPlanteHardforhet').value.trim();
+          ny.giftig = document.getElementById('feltPlanteGiftig').value.trim();
+          ny.dele_selge = document.getElementById('feltPlanteDeleSelge').value.trim();
       }
 
       database.unshift(ny); 
@@ -2090,22 +2185,31 @@ function lagreNyttElement(e) {
         let subTekst = item.kategori === 'film' ? 'År: ' + (item.aar || 'Ukjent') : 'Serie: ' + (item.bladserie || '');
         document.getElementById('detSub').innerText = 'ID: ' + item.id + ' | ' + subTekst;
 
-        let bildeHtml = '';
-        if (item.kategori === 'film') {
-            bildeHtml = item.cover 
-              ? '<img src="' + item.cover + '" class="w-16 h-24 object-cover rounded shadow-md border border-slate-700">' 
-              : '<div class="w-16 h-24 bg-slate-800 rounded flex items-center justify-center text-2xl border border-slate-700">🎬</div>';
-        } else {
-            bildeHtml = '<div class="w-16 h-24 bg-slate-800 rounded flex items-center justify-center text-2xl border border-slate-700">📚</div>';
-        }
+let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
+        let bildeHtml = item.cover 
+            ? '<img src="' + item.cover + '" class="w-20 h-28 object-cover rounded shadow-md border border-slate-700">' 
+            : '<div class="w-20 h-28 bg-slate-800 rounded flex items-center justify-center text-4xl border border-slate-700">' + fallbackIkon + '</div>';
+        
         document.getElementById('detBilde').innerHTML = bildeHtml;
 
-        // Fyller inn din lokale informasjon
         let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
-        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
+        
+        if (item.kategori === 'plante') {
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Vanning</span><span class="font-bold text-sky-400">' + (item.vanning || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sollys</span><span class="font-bold text-amber-400">' + (item.sollys || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Blomstring</span><span class="font-bold text-rose-400">' + (item.blomstring || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Opprinnelse</span><span class="font-bold text-slate-300">' + (item.opprinnelse || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Formering (Deles/Frø)</span><span class="font-bold text-slate-300">' + (item.formering || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Klimasone</span><span class="font-bold text-emerald-400">' + (item.hardforhet || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Kjæledyr</span><span class="font-bold text-rose-500">' + (item.giftig || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Deles / Selges for</span><span class="font-bold text-purple-400">' + (item.dele_selge || 'Nei / Ikke oppgitt') + '</span></div>';
+        } else {
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
+        }
+
         lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Lagringsplass</span><span class="font-bold text-indigo-400">' + (item.lagret || 'Ikke oppgitt') + '</span></div>';
         lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Antatt verdi</span><span class="font-bold text-emerald-400">' + (item.verdi ? item.verdi + ' kr' : '-') + '</span></div>';
-        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
         lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Kommentar / Notater</span><span class="text-slate-300 italic">' + (item.kommentar || 'Ingen notater.') + '</span></div>';
         lokalHtml += '</div>';
 
