@@ -1309,8 +1309,11 @@ async function simulerBildeAnalyse() {
                     if (aktivKategori === 'plante') {
                         if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer bladet/blomsten...";
                         
+                        const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
+                        
                         try {
-                            const response = await fetch('/api/plante', {
+                            // HER ER ENDRINGEN: Peker på plante2.js
+                            const response = await fetch('/api/plante2', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ bildeBase64: forminsketBilde })
@@ -1319,7 +1322,7 @@ async function simulerBildeAnalyse() {
                             const data = await response.json();
                             
                             if (response.status !== 200) {
-                                throw new Error(data.error || "Ukjent serverfeil.");
+                                throw new Error(data.error || "Ukjent serverfeil fra Vercel.");
                             }
                             
                             if (data.results && data.results.length > 0) {
@@ -1329,7 +1332,7 @@ async function simulerBildeAnalyse() {
 
                                 if (undertekstFelt) undertekstFelt.innerText = `Fant ${vitenskapeligNavn} (${score}% sikker). Leter etter norsk navn...`;
 
-                                // Wikipedia-oversettelse
+                                // WIKIPEDIA-TRIKSET: Finner det norske navnet
                                 let norskNavn = vitenskapeligNavn; 
                                 try {
                                     const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapeligNavn)}&utf8=&format=json&origin=*`);
