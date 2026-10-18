@@ -1371,10 +1371,13 @@ async function simulerBildeAnalyse() {
                     }
                 };
             };
-        } catch (error) {
+} catch (error) {
             console.error(error);
             if (overlay) overlay.classList.add('hidden');
-            alert("Klarte ikke å gjenkjenne bildet. Sørg for godt lys og prøv igjen!");
+            
+            // Nå tvinger vi appen til å vise den FAKTISKE feilmeldingen fra serveren
+            alert("Noe gikk galt:\n\n" + error.message);
+            
             input.value = '';
         }
         
