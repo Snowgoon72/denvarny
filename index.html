@@ -1313,7 +1313,7 @@ async function simulerBildeAnalyse() {
                         
                         try {
                             // HER ER ENDRINGEN: Peker på plante2.js
-                            const response = await fetch('/api/plante2', {
+                            const response = await fetch('/api/plante', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ bildeBase64: forminsketBilde })
@@ -1401,22 +1401,34 @@ async function simulerBildeAnalyse() {
 
     async function simulerApiOppslag(sokeord) {
       // === PLANTE-OPPSLAG (Perenual + Wikipedia) ===
-      if (aktivKategori === 'plante') {
-          const perenualKey = "sk-VAfQ6ad3dbae4ccfa20313"; // Fra perenual.com
-          
-          if (perenualKey.includes("LIM_INN")) {
-              alert("Du må legge inn Perenual API-nøkkelen i koden for å hente plante-info.");
-              return;
-          }
-
+if (aktivKategori === 'plante') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
-          document.querySelector('#loadingInnhold h2').innerText = "Slår opp plantedata...";
+          document.querySelector('#loadingInnhold h2').innerText = "Slår opp i plantedatabasen...";
 
           try {
-              const response = await fetch("https://perenual.com/api/species-list?key=" + perenualKey + "&q=" + encodeURIComponent(sokeord));
-              const data = await response.json();
-              document.getElementById('loadingOverlay').classList.add('hidden');
+              let sokeTekst = sokeord;
+              
+              // 1. Første forsøk: Send søket til din Vercel-server
+              let response = await fetch("/api/plante2", {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ sokeord: sokeTekst })
+              });
+              let data = await response.json();
+              
+              // 2. Andre forsøk (Fallback): Hvis ingen treff, prøv kun slekten
+              if ((!data.data || data.data.length === 0) && sokeTekst.includes(" ")) {
+                  document.querySelector('#loadingInnhold h2').innerText = "Utvider søket...";
+                  sokeTekst = sokeTekst.split(" ")[0]; 
+                  response = await fetch("/api/plante2", {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ sokeord: sokeTekst })
+                  });
+                  data = await response.json();
+              }
 
+              document.getElementById('loadingOverlay').classList.add('hidden');
               if (data.data && data.data.length > 0) {
                   const plante = data.data[0];
                   let vitenskapelig = plante.scientific_name ? plante.scientific_name[0] : sokeord;
