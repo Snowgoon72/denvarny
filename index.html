@@ -242,6 +242,12 @@
 
             <!-- Plante-felter for redigering -->
             <div id="endrePlanteFelter" class="hidden col-span-2 w-full space-y-3 mt-3 border-t border-indigo-900/50 pt-3">
+               <!-- NYTT: Datoer for redigering -->
+               <div class="grid grid-cols-2 gap-2 text-xs">
+                 <div><label class="block font-semibold text-slate-400 mb-1">Spiredato</label><input type="date" id="endrePlanteSpiredato" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-300" /></div>
+                 <div><label class="block font-semibold text-slate-400 mb-1">Eid fra dato</label><input type="date" id="endrePlanteEidFra" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-300" /></div>
+               </div>
+               
                <div class="grid grid-cols-2 gap-2 text-xs">
                    <div><label class="block font-semibold text-indigo-400 mb-1">Divisjon</label><input type="text" id="endrePlanteDivisjon" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
                    <div><label class="block font-semibold text-indigo-400 mb-1">Klasse</label><input type="text" id="endrePlanteKlasse" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
@@ -1007,37 +1013,29 @@ function apneEndreModal(id) {
       document.getElementById('endreKommentar').value = item.kommentar || '';
 
       const erFilm = (item.kategori === 'film');
-      document.getElementById('endreFilmSeksjon').classList.toggle('hidden', !erFilm);
-      document.getElementById('endreTegneserieFelter').classList.toggle('hidden', erFilm);
-      document.getElementById('endreTegneserieFelter').style.display = erFilm ? 'none' : 'flex';
+      const erTegne = (item.kategori === 'tegneserie');
+      const erPlante = (item.kategori === 'plante');
 
-      if (erFilm) {
-        document.getElementById('endreSjanger').value = item.sjanger || '';
-        document.getElementById('endreRating').value = item.rating || '';
-        
-        const imdbFelt = document.getElementById('endreImdb');
-        const imdbKnapp = document.getElementById('endreImdbLinkBtn');
-        imdbFelt.value = item.imdb || '';
-        
-        // Sjekker kontinuerlig om IMDb-lenken er gyldig, og slår knappen av/på
-        const oppdaterLenke = () => {
-            if(imdbFelt.value.includes('http')) {
-                imdbKnapp.href = imdbFelt.value;
-                imdbKnapp.style.opacity = '1';
-                imdbKnapp.style.pointerEvents = 'auto';
-            } else {
-                imdbKnapp.href = '#';
-                imdbKnapp.style.opacity = '0.3';
-                imdbKnapp.style.pointerEvents = 'none';
-            }
-        };
-        imdbFelt.oninput = oppdaterLenke;
-        oppdaterLenke();
-      } else {
-        document.getElementById('endreBladserie').value = item.bladserie || '';
-        document.getElementById('endreNummer').value = item.nr || '';
-      }
-        document.getElementById('endrePlanteFelter').classList.toggle('hidden', item.kategori !== 'plante');
+      // Skjuler og viser riktige seksjoner strengt!
+      document.getElementById('endreFilmSeksjon').classList.toggle('hidden', !erFilm);
+      
+      document.getElementById('endreTegneserieFelter').classList.toggle('hidden', !erTegne);
+      document.getElementById('endreTegneserieFelter').style.display = erTegne ? 'grid' : 'none';
+
+      document.getElementById('endrePlanteFelter').classList.toggle('hidden', !erPlante);
+
+      // Endrer teksten på feltene dynamisk i stedet for å skjule dem
+      document.getElementById('endreLabelTittel').innerText = erPlante ? 'Norsk navn' : 'Tittel (Lokal)';
+      document.getElementById('endreTittelEng').previousElementSibling.innerText = erPlante ? 'Engelsk navn' : 'Engelsk Tittel';
+      document.getElementById('endreTittelOrig').previousElementSibling.innerText = erPlante ? 'Vitenskapelig navn' : 'Originaltittel';
+      
+      const aarLabelEndre = document.getElementById('endreAar').previousElementSibling;
+      if (aarLabelEndre) aarLabelEndre.innerText = erPlante ? 'Oppdagelsesår' : 'Utgivelsesår';
+
+      // Sørg for at feltene for vitenskapelig/engelsk ALLTID vises
+      document.getElementById('endreTittelEkstra').style.display = 'grid';
+      document.getElementById('endreTittelEkstra').classList.remove('hidden');
+
       if (item.kategori === 'plante') {
           document.getElementById('endrePlanteVanning').value = item.vanning || '';
           document.getElementById('endrePlanteSollys').value = item.sollys || '';
@@ -1053,6 +1051,8 @@ function apneEndreModal(id) {
           document.getElementById('endrePlanteOrden').value = item.orden || '';
           document.getElementById('endrePlanteUnderfamilie').value = item.underfamilie || '';
           document.getElementById('endrePlantePlassering').value = item.plassering || '';
+          document.getElementById('endrePlanteSpiredato').value = item.spiredato || '';
+          document.getElementById('endrePlanteEidFra').value = item.eid_fra || '';
       }
       // Lås feltene for redigering hvis det er en venns samling man ser på
       const skjema = document.getElementById('skjemaEndre');
@@ -1112,6 +1112,8 @@ if (item.kategori === 'film') {
           item.dele_selge = document.getElementById('endrePlanteDeleSelge').value.trim();
           item.giftig = document.getElementById('endrePlanteGiftig').value.trim();
           item.sjanger = document.getElementById('endrePlanteFamilie').value.trim();
+          item.spiredato = document.getElementById('endrePlanteSpiredato').value;
+          item.eid_fra = document.getElementById('endrePlanteEidFra').value;
       }
 
       database[index] = item;
