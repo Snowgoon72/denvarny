@@ -1522,13 +1522,17 @@ async function simulerBildeAnalyse() {
 
                                     // Fargekoder prosenten grønn hvis over 50%, gul hvis under
                                     let prosentFarge = score > 50 ? 'text-emerald-400' : 'text-amber-400';
+                                    
+                                    // Lager en Google-lenke for å la deg sjekke planten manuelt
+                                    let googleLink = 'https://www.google.com/search?q=' + encodeURIComponent(vitenskapeligNavn);
 
-                                    valgHtml += '<div onclick="velgPlanteFraListe(\'' + vitenskapeligNavn + '\')" class="bg-slate-950 p-3 rounded-lg border border-slate-800 hover:border-amber-500 cursor-pointer transition flex gap-4 items-center">' +
+                                    valgHtml += '<div onclick="velgPlanteFraListe(\'' + vitenskapeligNavn + '\')" class="bg-slate-950 p-3 rounded-lg border border-slate-800 hover:border-amber-500 cursor-pointer transition flex gap-3 items-center">' +
                                         bildeTag +
-                                        '<div>' +
-                                            '<h3 class="font-bold text-white text-sm">' + vitenskapeligNavn + '</h3>' +
-                                            '<p class="text-xs text-slate-400 mt-1"><span class="font-bold ' + prosentFarge + '">' + score + '%</span> sannsynlighet</p>' +
+                                        '<div class="flex-1">' +
+                                            '<h3 class="font-bold text-white text-sm leading-tight">' + vitenskapeligNavn + '</h3>' +
+                                            '<p class="text-xs text-slate-400 mt-1"><span class="font-bold ' + prosentFarge + '">' + score + '%</span> match</p>' +
                                         '</div>' +
+                                        '<a href="' + googleLink + '" target="_blank" onclick="event.stopPropagation()" title="Søk på nettet for å bekrefte" class="bg-slate-800 text-cyan-400 hover:text-cyan-300 text-[11px] px-2.5 py-1.5 rounded border border-slate-700 hover:bg-slate-900 transition shrink-0 font-bold">🔍 Info</a>' +
                                     '</div>';
                                 });
                                 
