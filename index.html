@@ -1624,7 +1624,7 @@ async function simulerBildeAnalyse() {
               if (document.getElementById('feltPlanteDeleSelge')) document.getElementById('feltPlanteDeleSelge').value = ""; // Tom med vilje for manuelt utfylling
               }
 
-              let norskNavn = sokeord; 
+              let norskNavn = sokeord; // Standard er opprinnelig navn
               let wikiSokeTittel = vitenskapelig;
               try {
                   const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
@@ -1632,7 +1632,10 @@ async function simulerBildeAnalyse() {
                   
                   if (wikiData.query.search.length > 0) { 
                       wikiSokeTittel = wikiData.query.search[0].title; 
-                      norskNavn = wikiSokeTittel.charAt(0).toUpperCase() + wikiSokeTittel.slice(1); 
+                      // Sjekk at Wikipedia ikke returnerte noe urelatert. Veldig korte eller rare treff ignoreres.
+                      if (wikiSokeTittel.length > 2 && !wikiSokeTittel.includes(':')) {
+                          norskNavn = wikiSokeTittel.charAt(0).toUpperCase() + wikiSokeTittel.slice(1);
+                      } 
                   }
                   
                   if (!bildeSvar) {
@@ -2323,8 +2326,9 @@ async function simulerBildeAnalyse() {
         document.getElementById('detSub').innerText = 'ID: ' + item.id + ' | ' + subTekst;
 
         let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
-        let bildeHtml = item.cover 
-            ? '<img src="' + item.cover + '" class="w-20 h-28 object-cover rounded shadow-md border border-slate-700">' 
+        let valgtBilde = item.bruker_bilde || item.cover;
+        let bildeHtml = valgtBilde 
+            ? '<a href="' + valgtBilde + '" target="_blank" title="Klikk for å se full størrelse"><img src="' + valgtBilde + '" class="w-20 h-28 object-cover rounded shadow-md border border-slate-700 hover:opacity-80 transition cursor-pointer"></a>' 
             : '<div class="w-20 h-28 bg-slate-800 rounded flex items-center justify-center text-4xl border border-slate-700">' + fallbackIkon + '</div>';
         
         document.getElementById('detBilde').innerHTML = bildeHtml;
