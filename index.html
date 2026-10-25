@@ -502,6 +502,11 @@
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs">
             <input type="hidden" id="feltCover" />
             <input type="hidden" id="feltBrukerBilde" />
+            <!-- FORHÅNDSVISNING AV BILDE OG ANGRE-KNAPP -->
+            <div id="regBildeBoks" class="hidden flex-col items-center justify-center mb-4 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
+                <img id="regBildeForhandsvisning" src="" class="w-32 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl mb-3" />
+                <button type="button" id="btnAngreAI" onclick="document.getElementById('planteValgModal').classList.remove('hidden')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition shadow">🔙 Feil plante? Vis andre AI-forslag</button>
+            </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Strekkode / EAN</label>
@@ -1158,7 +1163,8 @@ if (item.kategori === 'film') {
     }
 
     function startAutoRegistrering(metode) {
-      document.getElementById('hovedSkjema').reset(); 
+      document.getElementById('hovedSkjema').reset();
+      document.getElementById('regBildeBoks').classList.add('hidden'); 
       document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
       
       if (metode === 'strekkode') {
@@ -1693,6 +1699,13 @@ async function simulerBildeAnalyse() {
               if (document.getElementById('feltPlanteDeleSelge')) document.getElementById('feltPlanteDeleSelge').value = ""; 
 
               if (bildeSvar) document.getElementById('feltCover').value = bildeSvar;
+              
+              // Slår på bildevisning i skjemaet
+              let visBilde = document.getElementById('feltBrukerBilde').value || bildeSvar;
+              if (visBilde) {
+                  document.getElementById('regBildeBoks').classList.remove('hidden');
+                  document.getElementById('regBildeForhandsvisning').src = visBilde;
+              }
               
               alert("Klar! Hentet inn " + norskNavn + ".\n\nSjekk giftighet manuelt, da dette krever Premium hos Perenual.");
           } catch (error) { 
@@ -2316,7 +2329,8 @@ async function simulerBildeAnalyse() {
           }
       });
       
-      document.getElementById('hovedSkjema').reset(); 
+      document.getElementById('hovedSkjema').reset();
+      document.getElementById('regBildeBoks').classList.add('hidden'); 
       document.getElementById('feltCover').value = '';
       document.getElementById('feltSynlighet').value = 'standard';
       document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -2357,6 +2371,8 @@ async function simulerBildeAnalyse() {
         let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
         
         if (item.kategori === 'plante') {
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Vitenskapelig navn</span><span class="font-bold text-white italic">' + (item.tittel_orig || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Engelsk navn</span><span class="font-bold text-slate-300">' + (item.tittel_eng || '-') + '</span></div>';
             lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-indigo-900/50"><span class="block text-[10px] text-indigo-400 uppercase tracking-wider">Taksonomi</span><span class="font-bold text-slate-300 text-xs">' + (item.divisjon ? item.divisjon + ' ➔ ' : '') + (item.klasse ? item.klasse + ' ➔ ' : '') + (item.orden ? item.orden + ' ➔ ' : '') + (item.sjanger || 'Ukjent familie') + (item.underfamilie ? ' ➔ ' + item.underfamilie : '') + '</span></div>';
             lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Plassering</span><span class="font-bold text-emerald-400">' + (item.plassering || 'Ikke angitt') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Vanning</span><span class="font-bold text-sky-400">' + (item.vanning || '-') + '</span></div>';
