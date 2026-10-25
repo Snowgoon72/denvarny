@@ -202,12 +202,12 @@
         <div class="bg-slate-950 p-4 rounded-lg border border-indigo-900/50 space-y-3 relative overflow-hidden">
           <div class="absolute top-0 right-0 bg-indigo-900/30 text-indigo-400 px-3 py-1 rounded-bl-lg font-bold text-[10px] uppercase tracking-wider">Generell Info (Kan auto-hentes)</div>
           
-          <div class="pt-2">
-            <label class="block font-semibold text-slate-400 mb-1">Tittel (Lokal)</label>
+        <div class="pt-2">
+            <label id="endreLabelTittel" class="block font-semibold text-slate-400 mb-1">Tittel (Lokal)</label>
             <input type="text" id="endreTittel" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold" />
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
+          <div id="endreTittelEkstra" class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-semibold text-slate-400 mb-1">Engelsk Tittel</label>
               <input type="text" id="endreTittelEng" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
@@ -238,52 +238,33 @@
 
             <!-- Plante-felter for redigering -->
             <div id="endrePlanteFelter" class="hidden col-span-2 w-full space-y-3 mt-3 border-t border-indigo-900/50 pt-3">
-               <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-sky-400 mb-1">Vanning</label>
-                   <input type="text" id="endrePlanteVanning" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sky-400" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-amber-400 mb-1">Sollys</label>
-                   <input type="text" id="endrePlanteSollys" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-amber-400" />
-                 </div>
+               <div class="grid grid-cols-2 gap-2 text-xs">
+                   <div><label class="block font-semibold text-indigo-400 mb-1">Divisjon</label><input type="text" id="endrePlanteDivisjon" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
+                   <div><label class="block font-semibold text-indigo-400 mb-1">Klasse</label><input type="text" id="endrePlanteKlasse" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
+               </div>
+               <div class="grid grid-cols-3 gap-2 text-xs">
+                   <div><label class="block font-semibold text-indigo-400 mb-1">Orden</label><input type="text" id="endrePlanteOrden" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
+                   <div><label class="block font-semibold text-indigo-400 mb-1">Familie</label><input type="text" id="endrePlanteFamilie" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
+                   <div><label class="block font-semibold text-indigo-400 mb-1">Underfamilie</label><input type="text" id="endrePlanteUnderfamilie" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-300" /></div>
                </div>
                <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-slate-400 mb-1">Opprinnelse</label>
-                   <input type="text" id="endrePlanteOpprinnelse" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-rose-400 mb-1">Blomstring</label>
-                   <input type="text" id="endrePlanteBlomstring" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-400" />
-                 </div>
+                 <div><label class="block font-semibold text-emerald-400 mb-1">Plassering</label><input type="text" id="endrePlantePlassering" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-emerald-300" /></div>
+                 <div><label class="block font-semibold text-emerald-500 mb-1">Klimasone</label><input type="text" id="endrePlanteHardforhet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-emerald-500" /></div>
                </div>
                <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-slate-400 mb-1">Formering</label>
-                   <input type="text" id="endrePlanteFormering" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-emerald-400 mb-1">Klimasone</label>
-                   <input type="text" id="endrePlanteHardforhet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-emerald-400" />
-                 </div>
+                 <div><label class="block font-semibold text-sky-400 mb-1">Vanning</label><input type="text" id="endrePlanteVanning" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sky-400" /></div>
+                 <div><label class="block font-semibold text-amber-400 mb-1">Sollys</label><input type="text" id="endrePlanteSollys" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-amber-400" /></div>
                </div>
                <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-purple-400 mb-1">Dele/Selge?</label>
-                   <input type="text" id="endrePlanteDeleSelge" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-purple-400 font-bold" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-rose-500 mb-1">Giftig for dyr?</label>
-                   <input type="text" id="endrePlanteGiftig" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-500" />
-                 </div>
+                 <div><label class="block font-semibold text-slate-400 mb-1">Opprinnelse</label><input type="text" id="endrePlanteOpprinnelse" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                 <div><label class="block font-semibold text-rose-400 mb-1">Blomstring</label><input type="text" id="endrePlanteBlomstring" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-400" /></div>
                </div>
-               <div>
-                   <label class="block font-semibold text-slate-400 mb-1">Plantefamilie</label>
-                   <input type="text" id="endrePlanteFamilie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+               <div class="grid grid-cols-3 gap-2">
+                 <div><label class="block font-semibold text-slate-400 mb-1">Formering</label><input type="text" id="endrePlanteFormering" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                 <div><label class="block font-semibold text-purple-400 mb-1">Dele/Selge?</label><input type="text" id="endrePlanteDeleSelge" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-purple-400 font-bold" /></div>
+                 <div><label class="block font-semibold text-rose-500 mb-1">Giftig for dyr?</label><input type="text" id="endrePlanteGiftig" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-500" /></div>
                </div>
             </div>
-          </div>
 
           <div id="endreFilmSeksjon" class="space-y-3">
             <div class="grid grid-cols-2 gap-2">
@@ -525,10 +506,10 @@
 
             <div class="space-y-2 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
               <div>
-                <label class="block font-semibold text-amber-500 uppercase tracking-wider mb-1">Tittel (Lokal)</label>
+                <label id="labelTittel" class="block font-semibold text-amber-500 uppercase tracking-wider mb-1">Tittel (Lokal)</label>
                 <input type="text" id="feltTittel" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:border-amber-500" />
               </div>
-              <div class="grid grid-cols-2 gap-2">
+              <div id="feltTittelEkstra" class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Engelsk Tittel</label>
                   <input type="text" id="feltTittelEng" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" />
@@ -583,6 +564,7 @@
             </div>
 
 <div id="planteFelter" class="hidden space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
+               <!-- Navn & Plassering -->
                <div class="grid grid-cols-2 gap-2">
                  <div>
                    <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Vitenskapelig navn</label>
@@ -593,49 +575,43 @@
                    <input type="text" id="feltPlanteEngelsk" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
                  </div>
                </div>
+               
+               <!-- TAKSONOMI -->
+               <div class="p-2 border border-indigo-900/30 bg-slate-900/30 rounded-lg space-y-2">
+                   <div class="grid grid-cols-2 gap-2">
+                     <div><label class="block font-semibold text-[10px] text-indigo-400 uppercase mb-1">Divisjon (Rekke)</label><input type="text" id="feltPlanteDivisjon" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-slate-300" /></div>
+                     <div><label class="block font-semibold text-[10px] text-indigo-400 uppercase mb-1">Klasse</label><input type="text" id="feltPlanteKlasse" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-slate-300" /></div>
+                   </div>
+                   <div class="grid grid-cols-3 gap-2">
+                     <div><label class="block font-semibold text-[10px] text-indigo-400 uppercase mb-1">Orden</label><input type="text" id="feltPlanteOrden" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-slate-300" /></div>
+                     <div><label class="block font-semibold text-[10px] text-indigo-400 uppercase mb-1">Familie</label><input type="text" id="feltPlanteFamilie" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-slate-300" /></div>
+                     <div><label class="block font-semibold text-[10px] text-indigo-400 uppercase mb-1">Underfamilie</label><input type="text" id="feltPlanteUnderfamilie" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-slate-300" /></div>
+                   </div>
+               </div>
+
+               <!-- Stell & Info -->
                <div class="grid grid-cols-2 gap-2">
                  <div>
-                   <label class="block font-semibold text-sky-400 uppercase tracking-wider mb-1">Vanning</label>
-                   <input type="text" id="feltPlanteVanning" placeholder="F.eks. Hver 7. dag" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sky-400" />
+                   <label class="block font-semibold text-emerald-400 uppercase tracking-wider mb-1">Plassering (Inne/Ute/Potte)</label>
+                   <input type="text" id="feltPlantePlassering" placeholder="F.eks. Potteplante inne" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-emerald-300" />
                  </div>
                  <div>
-                   <label class="block font-semibold text-amber-400 uppercase tracking-wider mb-1">Sollys / Skygge</label>
-                   <input type="text" id="feltPlanteSollys" placeholder="F.eks. Delvis skygge" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-amber-400" />
+                   <label class="block font-semibold text-emerald-500 uppercase tracking-wider mb-1">Klimasone / Kulde</label>
+                   <input type="text" id="feltPlanteHardforhet" placeholder="F.eks. Tåler ikke frost" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-emerald-500" />
                  </div>
                </div>
                <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Opprinnelse</label>
-                   <input type="text" id="feltPlanteOpprinnelse" placeholder="F.eks. Sør-Amerika" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-rose-400 uppercase tracking-wider mb-1">Blomstring</label>
-                   <input type="text" id="feltPlanteBlomstring" placeholder="F.eks. Sommer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-400" />
-                 </div>
+                 <div><label class="block font-semibold text-sky-400 uppercase tracking-wider mb-1">Vanning</label><input type="text" id="feltPlanteVanning" placeholder="Hver 7. dag" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sky-400" /></div>
+                 <div><label class="block font-semibold text-amber-400 uppercase tracking-wider mb-1">Sollys / Skygge</label><input type="text" id="feltPlanteSollys" placeholder="Delvis skygge" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-amber-400" /></div>
                </div>
                <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Formering (Frø/Deling)</label>
-                   <input type="text" id="feltPlanteFormering" placeholder="F.eks. Stiklinger" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-emerald-400 uppercase tracking-wider mb-1">Klimasone / Kulde</label>
-                   <input type="text" id="feltPlanteHardforhet" placeholder="F.eks. Innendørs" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-emerald-400" />
-                 </div>
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Opprinnelse</label><input type="text" id="feltPlanteOpprinnelse" placeholder="Sør-Amerika" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" /></div>
+                 <div><label class="block font-semibold text-rose-400 uppercase tracking-wider mb-1">Blomstring</label><input type="text" id="feltPlanteBlomstring" placeholder="Sommer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-400" /></div>
                </div>
-               <div class="grid grid-cols-2 gap-2">
-                 <div>
-                   <label class="block font-semibold text-purple-400 uppercase tracking-wider mb-1">Dele / Selge?</label>
-                   <input type="text" id="feltPlanteDeleSelge" placeholder="Eks: Stiklinger 50 kr" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-purple-400 font-bold" />
-                 </div>
-                 <div>
-                   <label class="block font-semibold text-rose-500 uppercase tracking-wider mb-1">Giftig for dyr?</label>
-                   <input type="text" id="feltPlanteGiftig" placeholder="F.eks. Ja" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-500" />
-                 </div>
-               </div>
-               <div>
-                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Plantefamilie</label>
-                   <input type="text" id="feltPlanteFamilie" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" />
+               <div class="grid grid-cols-3 gap-2">
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Formering</label><input type="text" id="feltPlanteFormering" placeholder="Stiklinger" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" /></div>
+                 <div><label class="block font-semibold text-purple-400 uppercase tracking-wider mb-1">Dele / Selge?</label><input type="text" id="feltPlanteDeleSelge" placeholder="Eks: 50 kr" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-purple-400 font-bold" /></div>
+                 <div><label class="block font-semibold text-rose-500 uppercase tracking-wider mb-1">Giftig?</label><input type="text" id="feltPlanteGiftig" placeholder="Ja/Nei" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-500" /></div>
                </div>
             </div>
 
@@ -1047,6 +1023,11 @@ function apneEndreModal(id) {
           document.getElementById('endrePlanteDeleSelge').value = item.dele_selge || '';
           document.getElementById('endrePlanteGiftig').value = item.giftig || '';
           document.getElementById('endrePlanteFamilie').value = item.sjanger || '';
+          document.getElementById('endrePlanteDivisjon').value = item.divisjon || '';
+          document.getElementById('endrePlanteKlasse').value = item.klasse || '';
+          document.getElementById('endrePlanteOrden').value = item.orden || '';
+          document.getElementById('endrePlanteUnderfamilie').value = item.underfamilie || '';
+          document.getElementById('endrePlantePlassering').value = item.plassering || '';
       }
       // Lås feltene for redigering hvis det er en venns samling man ser på
       const skjema = document.getElementById('skjemaEndre');
@@ -1062,6 +1043,8 @@ function apneEndreModal(id) {
       document.getElementById('btnLagreEndring').style.display = erMin ? 'block' : 'none';
       document.getElementById('endreModalTittelTekst').innerText = erMin ? '✏️ Rediger / Detaljer' : '📖 Detaljer (Låst for redigering)';
       
+      document.getElementById('endreLabelTittel').innerText = item.kategori === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
+      document.getElementById('endreTittelEkstra').classList.toggle('hidden', item.kategori === 'plante');
       document.getElementById('endreModal').classList.remove('hidden');
     }
 
@@ -1960,6 +1943,8 @@ async function simulerBildeAnalyse() {
       document.getElementById('filmFelter').classList.toggle('hidden', kat !== 'film');
       document.getElementById('tegneserieFelter').classList.toggle('hidden', kat !== 'tegneserie');
       document.getElementById('planteFelter').classList.toggle('hidden', kat !== 'plante');
+      document.getElementById('labelTittel').innerText = kat === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
+      document.getElementById('feltTittelEkstra').classList.toggle('hidden', kat === 'plante');
       
       // Oppdater tittel
       let titler = { 'film': 'Registrer ny film', 'tegneserie': 'Registrer tegneserie', 'plante': 'Registrer plante', 'brettspill': 'Registrer brettspill' };
@@ -2219,6 +2204,11 @@ function lagreNyttElement(e) {
           ny.hardforhet = document.getElementById('feltPlanteHardforhet').value.trim();
           ny.giftig = document.getElementById('feltPlanteGiftig').value.trim();
           ny.dele_selge = document.getElementById('feltPlanteDeleSelge').value.trim();
+          ny.divisjon = document.getElementById('feltPlanteDivisjon').value.trim(); // Bytt 'ny' til 'item' i lagreEndring
+          ny.klasse = document.getElementById('feltPlanteKlasse').value.trim();
+          ny.orden = document.getElementById('feltPlanteOrden').value.trim();
+          ny.underfamilie = document.getElementById('feltPlanteUnderfamilie').value.trim();
+          ny.plassering = document.getElementById('feltPlantePlassering').value.trim();
       }
 
       database.unshift(ny); 
@@ -2267,6 +2257,8 @@ let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante
         let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
         
         if (item.kategori === 'plante') {
+            lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-indigo-900/50"><span class="block text-[10px] text-indigo-400 uppercase tracking-wider">Taksonomi</span><span class="font-bold text-slate-300 text-xs">' + (item.divisjon ? item.divisjon + ' ➔ ' : '') + (item.klasse ? item.klasse + ' ➔ ' : '') + (item.orden ? item.orden + ' ➔ ' : '') + (item.sjanger || 'Ukjent familie') + (item.underfamilie ? ' ➔ ' + item.underfamilie : '') + '</span></div>';
+            lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Plassering</span><span class="font-bold text-emerald-400">' + (item.plassering || 'Ikke angitt') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Vanning</span><span class="font-bold text-sky-400">' + (item.vanning || '-') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sollys</span><span class="font-bold text-amber-400">' + (item.sollys || '-') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Blomstring</span><span class="font-bold text-rose-400">' + (item.blomstring || '-') + '</span></div>';
