@@ -197,6 +197,10 @@
       
       <form id="skjemaEndre" onsubmit="lagreEndring(event)" class="space-y-4 text-xs">
         <input type="hidden" id="endreId" />
+        <!-- NY BILDEVISNING I REDIGER-MODALEN -->
+        <div id="endreBildeVisning" class="hidden flex justify-center mb-2">
+            <img id="endreBildeTag" src="" class="w-32 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl" />
+        </div>
         
         <!-- SEKSJON 1: TMDb / Generelt -->
         <div class="bg-slate-950 p-4 rounded-lg border border-indigo-900/50 space-y-3 relative overflow-hidden">
@@ -979,6 +983,13 @@ function apneEndreModal(id) {
       const erMin = item.eier === innloggetBruker;
 
       document.getElementById('endreId').value = item.id;
+      let editBilde = item.bruker_bilde || item.cover;
+      if (editBilde) {
+          document.getElementById('endreBildeVisning').classList.remove('hidden');
+          document.getElementById('endreBildeTag').src = editBilde;
+      } else {
+          document.getElementById('endreBildeVisning').classList.add('hidden');
+      }
       document.getElementById('endreTittel').value = item.tittel || '';
       document.getElementById('endreTittelEng').value = item.tittel_eng || '';
       document.getElementById('endreTittelOrig').value = item.tittel_orig || '';
