@@ -1540,7 +1540,6 @@ async function simulerBildeAnalyse() {
               
               let brukteFallback = false;
               
-              // Hvis ingen treff, prøv kun slekten (første ord)
               if ((!data.data || data.data.length === 0) && sokeTekst.includes(" ")) {
                   document.querySelector('#loadingInnhold h2').innerText = "Henter generelle stell-råd for slekten...";
                   sokeTekst = sokeTekst.split(" ")[0]; 
@@ -1552,7 +1551,6 @@ async function simulerBildeAnalyse() {
               document.getElementById('loadingOverlay').classList.add('hidden');
               if (response.status !== 200) { alert("Perenual databasen sier: " + (data.message || data.error || "Ukjent feil")); return; }
 
-              // Det vitenskapelige navnet fra Pl@ntNet (sokeord) SKAL bevares uansett!
               let vitenskapelig = sokeord; 
               let engelskNavn = "";
               let familie = "";
@@ -1560,18 +1558,17 @@ async function simulerBildeAnalyse() {
               let vann = "";
               let sol = "";
 
-              // Henter data fra Perenual
               if (data.data && data.data.length > 0) {
                   const plante = data.data[0];
                   
-                  // Hvis vi traff eksakt art, kan vi trygt hente engelsk navn og bilde fra Perenual
                   if (!brukteFallback) {
                       engelskNavn = plante.common_name || "";
                       if (plante.default_image && plante.default_image.regular_url) {
                           bildeSvar = plante.default_image.regular_url;
                       }
-                  } 
-                  // Hvis vi brukte fallback, rører vi verken engelsk navn eller bilde (de tilhører feil plante)
+                  } else {
+                      engelskNavn = plante.common_name ? plante.common_name + " (Generell slekt)" : "";
+                  }
                   
                   familie = plante.family || "";
                   vann = plante.watering || ""; 
@@ -1581,7 +1578,6 @@ async function simulerBildeAnalyse() {
                   sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
               }
 
-              // WIKIPEDIA-TRIKSET: Bruker ALLTID eksakt vitenskapelig navn (aldri fallback-navnet)
               let norskNavn = sokeord; 
               let wikiSokeTittel = vitenskapelig;
               try {
@@ -1593,7 +1589,6 @@ async function simulerBildeAnalyse() {
                       norskNavn = wikiSokeTittel.charAt(0).toUpperCase() + wikiSokeTittel.slice(1); 
                   }
                   
-                  // Wikipedia Bilde-fallback (hvis Perenual ikke ga oss noe, eller hvis vi brukte fallback)
                   if (!bildeSvar) {
                       const imgRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiSokeTittel)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
                       const imgData = await imgRes.json();
@@ -1603,7 +1598,6 @@ async function simulerBildeAnalyse() {
                       if (pages[pageId] && pages[pageId].thumbnail) {
                           bildeSvar = pages[pageId].thumbnail.source;
                       } else {
-                          // Engelsk Wikipedia som aller siste utvei
                           const enImgRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(vitenskapelig)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
                           const enImgData = await enImgRes.json();
                           const enPages = enImgData.query.pages;
@@ -1613,20 +1607,25 @@ async function simulerBildeAnalyse() {
                   }
               } catch(e) {}
 
-              // Fyller inn skjemaet
+              // Fyller inn informasjonen i begge felt-settene slik at de ikke overskriver hverandre
               document.getElementById('feltTittel').value = norskNavn;
-              document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
-              document.getElementById('feltPlanteEngelsk').value = engelskNavn;
-              document.getElementById('feltPlanteFamilie').value = familie;
-              document.getElementById('feltPlanteVanning').value = vann || "Ukjent";
-              document.getElementById('feltPlanteSollys').value = sol || "Ukjent";
               
-              document.getElementById('feltPlanteOpprinnelse').value = "Ukjent / Skriv inn";
-              document.getElementById('feltPlanteFormering').value = "Stiklinger / Frø";
-              document.getElementById('feltPlanteBlomstring').value = "Ukjent";
-              document.getElementById('feltPlanteHardforhet').value = "Innendørs";
-              document.getElementById('feltPlanteGiftig').value = "Sjekk manuelt ⚠️";
-              document.getElementById('feltPlanteDeleSelge').value = ""; 
+              document.getElementById('feltTittelOrig').value = vitenskapelig;
+              if (document.getElementById('feltPlanteVitenskapelig')) document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
+              
+              document.getElementById('feltTittelEng').value = engelskNavn;
+              if (document.getElementById('feltPlanteEngelsk')) document.getElementById('feltPlanteEngelsk').value = engelskNavn;
+              
+              if (document.getElementById('feltPlanteFamilie')) document.getElementById('feltPlanteFamilie').value = familie;
+              if (document.getElementById('feltPlanteVanning')) document.getElementById('feltPlanteVanning').value = vann || "Ukjent";
+              if (document.getElementById('feltPlanteSollys')) document.getElementById('feltPlanteSollys').value = sol || "Ukjent";
+              
+              if (document.getElementById('feltPlanteOpprinnelse')) document.getElementById('feltPlanteOpprinnelse').value = "Ukjent / Skriv inn";
+              if (document.getElementById('feltPlanteFormering')) document.getElementById('feltPlanteFormering').value = "Stiklinger / Frø";
+              if (document.getElementById('feltPlanteBlomstring')) document.getElementById('feltPlanteBlomstring').value = "Ukjent";
+              if (document.getElementById('feltPlanteHardforhet')) document.getElementById('feltPlanteHardforhet').value = "Innendørs";
+              if (document.getElementById('feltPlanteGiftig')) document.getElementById('feltPlanteGiftig').value = "Sjekk manuelt ⚠️";
+              if (document.getElementById('feltPlanteDeleSelge')) document.getElementById('feltPlanteDeleSelge').value = ""; 
 
               if (bildeSvar) document.getElementById('feltCover').value = bildeSvar;
               
