@@ -1446,7 +1446,7 @@ async function simulerBildeAnalyse() {
                 img.src = event.target.result;
                 
                 img.onload = async function() {
-                    // Fellestrinn: Forminsker bildet for både film og plante
+                    // 1. Vanlig komprimering for AI-analyse
                     const canvas = document.createElement('canvas');
                     const maxBredde = 800; 
                     const skala = maxBredde / img.width;
@@ -1456,9 +1456,9 @@ async function simulerBildeAnalyse() {
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
                     const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
-                    // Ekstra komprimering (ca 0.1 - 0.2 MB) for lagring i Supabase
+
+                    // 2. Ekstra hard komprimering (ca 0.1 - 0.2 MB) kun for lagring i Supabase
                     const canvasLiten = document.createElement('canvas');
                     const maxLagringBredde = 450; 
                     const skalaLiten = maxLagringBredde / img.width;
@@ -1470,25 +1470,12 @@ async function simulerBildeAnalyse() {
                     document.getElementById('feltBrukerBilde').value = canvasLiten.toDataURL('image/jpeg', 0.6);
 
                     // ==========================================
-                    // LØSNING FOR PLANTER (Via din Vercel Server)
+                    // LØSNING FOR PLANTER
                     // ==========================================
                     if (aktivKategori === 'plante') {
                         if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer bladet/blomsten...";
                         
-                        const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
-                        // Ekstra komprimering (ca 0.1 - 0.2 MB) for lagring i Supabase
-                    const canvasLiten = document.createElement('canvas');
-                    const maxLagringBredde = 450; 
-                    const skalaLiten = maxLagringBredde / img.width;
-                    canvasLiten.width = img.width > maxLagringBredde ? maxLagringBredde : img.width;
-                    canvasLiten.height = img.width > maxLagringBredde ? img.height * skalaLiten : img.height;
-                    const ctxLiten = canvasLiten.getContext('2d');
-                    ctxLiten.drawImage(img, 0, 0, canvasLiten.width, canvasLiten.height);
-                    
-                    document.getElementById('feltBrukerBilde').value = canvasLiten.toDataURL('image/jpeg', 0.6);
-                        
                         try {
-                            // HER ER ENDRINGEN: Peker på plante2.js
                             const response = await fetch('/api/plante', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -1503,14 +1490,12 @@ async function simulerBildeAnalyse() {
                             
                             if (data.results && data.results.length > 0) {
                                 let valgHtml = '';
-                                // Henter de 3 mest sannsynlige plantene
                                 const toppTre = data.results.slice(0, 3);
                                 
                                 toppTre.forEach((treff) => {
                                     const vitenskapeligNavn = treff.species.scientificNameWithoutAuthor;
                                     const score = Math.round(treff.score * 100);
                                     
-                                    // Sjekker om API-et har et referansebilde vi kan vise
                                     let bildeUrl = '';
                                     if (treff.images && treff.images.length > 0) {
                                         bildeUrl = treff.images[0].url.s || treff.images[0].url.m || '';
@@ -1520,10 +1505,7 @@ async function simulerBildeAnalyse() {
                                         ? '<img src="' + bildeUrl + '" class="w-16 h-16 object-cover rounded shadow-md border border-slate-700 shrink-0">' 
                                         : '<div class="w-16 h-16 bg-slate-800 rounded flex items-center justify-center text-2xl border border-slate-700 shrink-0">🌿</div>';
 
-                                    // Fargekoder prosenten grønn hvis over 50%, gul hvis under
                                     let prosentFarge = score > 50 ? 'text-emerald-400' : 'text-amber-400';
-                                    
-                                    // Lager en Google-lenke for å la deg sjekke planten manuelt
                                     let googleLink = 'https://www.google.com/search?q=' + encodeURIComponent(vitenskapeligNavn);
 
                                     valgHtml += '<div onclick="velgPlanteFraListe(\'' + vitenskapeligNavn + '\')" class="bg-slate-950 p-3 rounded-lg border border-slate-800 hover:border-amber-500 cursor-pointer transition flex gap-3 items-center">' +
@@ -1552,7 +1534,7 @@ async function simulerBildeAnalyse() {
                     }
 
                     // ==========================================
-                    // LØSNING FOR FILMER (Via din Vercel Server)
+                    // LØSNING FOR FILMER
                     // ==========================================
                     if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer coveret...";
 
