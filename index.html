@@ -1024,7 +1024,7 @@ function apneEndreModal(id) {
 
       document.getElementById('endrePlanteFelter').classList.toggle('hidden', !erPlante);
 
-      // Endrer teksten på feltene dynamisk i stedet for å skjule dem
+      // Endrer teksten på feltene dynamisk
       document.getElementById('endreLabelTittel').innerText = erPlante ? 'Norsk navn' : 'Tittel (Lokal)';
       document.getElementById('endreTittelEng').previousElementSibling.innerText = erPlante ? 'Engelsk navn' : 'Engelsk Tittel';
       document.getElementById('endreTittelOrig').previousElementSibling.innerText = erPlante ? 'Vitenskapelig navn' : 'Originaltittel';
@@ -1032,11 +1032,37 @@ function apneEndreModal(id) {
       const aarLabelEndre = document.getElementById('endreAar').previousElementSibling;
       if (aarLabelEndre) aarLabelEndre.innerText = erPlante ? 'Oppdagelsesår' : 'Utgivelsesår';
 
-      // Sørg for at feltene for vitenskapelig/engelsk ALLTID vises
+      // Tvinger ekstrafeltene (Engelsk/Vitenskapelig) til å alltid vise seg i modalen
       document.getElementById('endreTittelEkstra').style.display = 'grid';
       document.getElementById('endreTittelEkstra').classList.remove('hidden');
 
-      if (item.kategori === 'plante') {
+      if (erFilm) {
+        document.getElementById('endreSjanger').value = item.sjanger || '';
+        document.getElementById('endreRating').value = item.rating || '';
+        
+        const imdbFelt = document.getElementById('endreImdb');
+        const imdbKnapp = document.getElementById('endreImdbLinkBtn');
+        imdbFelt.value = item.imdb || '';
+        
+        const oppdaterLenke = () => {
+            if(imdbFelt.value.includes('http')) {
+                imdbKnapp.href = imdbFelt.value;
+                imdbKnapp.style.opacity = '1';
+                imdbKnapp.style.pointerEvents = 'auto';
+            } else {
+                imdbKnapp.href = '#';
+                imdbKnapp.style.opacity = '0.3';
+                imdbKnapp.style.pointerEvents = 'none';
+            }
+        };
+        imdbFelt.oninput = oppdaterLenke;
+        oppdaterLenke();
+      } else if (erTegne) {
+        document.getElementById('endreBladserie').value = item.bladserie || '';
+        document.getElementById('endreNummer').value = item.nr || '';
+      }
+
+      if (erPlante) {
           document.getElementById('endrePlanteVanning').value = item.vanning || '';
           document.getElementById('endrePlanteSollys').value = item.sollys || '';
           document.getElementById('endrePlanteOpprinnelse').value = item.opprinnelse || '';
@@ -1054,7 +1080,7 @@ function apneEndreModal(id) {
           document.getElementById('endrePlanteSpiredato').value = item.spiredato || '';
           document.getElementById('endrePlanteEidFra').value = item.eid_fra || '';
       }
-      // Lås feltene for redigering hvis det er en venns samling man ser på
+
       const skjema = document.getElementById('skjemaEndre');
       skjema.querySelectorAll('input, select, textarea').forEach(el => {
           el.disabled = !erMin;
@@ -1062,14 +1088,11 @@ function apneEndreModal(id) {
           else el.classList.remove('opacity-50', 'cursor-not-allowed');
       });
       
-      // Åpne-knappen skal alltid fungere, selv på venners filmer!
       if(erFilm) document.getElementById('endreImdbLinkBtn').style.pointerEvents = document.getElementById('endreImdb').value.includes('http') ? 'auto' : 'none';
       
       document.getElementById('btnLagreEndring').style.display = erMin ? 'block' : 'none';
       document.getElementById('endreModalTittelTekst').innerText = erMin ? '✏️ Rediger / Detaljer' : '📖 Detaljer (Låst for redigering)';
       
-      document.getElementById('endreLabelTittel').innerText = item.kategori === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
-      document.getElementById('endreTittelEkstra').style.display = item.kategori === 'plante' ? 'none' : 'grid';
       document.getElementById('endreModal').classList.remove('hidden');
     }
 
