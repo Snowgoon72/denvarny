@@ -1045,7 +1045,7 @@ function apneEndreModal(id) {
       document.getElementById('endreModalTittelTekst').innerText = erMin ? '✏️ Rediger / Detaljer' : '📖 Detaljer (Låst for redigering)';
       
       document.getElementById('endreLabelTittel').innerText = item.kategori === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
-      document.getElementById('endreTittelEkstra').classList.toggle('hidden', item.kategori === 'plante');
+      document.getElementById('endreTittelEkstra').style.display = item.kategori === 'plante' ? 'none' : 'grid';
       document.getElementById('endreModal').classList.remove('hidden');
     }
 
@@ -1945,7 +1945,8 @@ async function simulerBildeAnalyse() {
       document.getElementById('tegneserieFelter').classList.toggle('hidden', kat !== 'tegneserie');
       document.getElementById('planteFelter').classList.toggle('hidden', kat !== 'plante');
       document.getElementById('labelTittel').innerText = kat === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
-      document.getElementById('feltTittelEkstra').classList.toggle('hidden', kat === 'plante');
+      // Tvinger nettleseren til å fjerne feltene helt i stedet for å bruke Tailwind-klasser:
+      document.getElementById('feltTittelEkstra').style.display = kat === 'plante' ? 'none' : 'grid';
       
       // Oppdater tittel
       let titler = { 'film': 'Registrer ny film', 'tegneserie': 'Registrer tegneserie', 'plante': 'Registrer plante', 'brettspill': 'Registrer brettspill' };
