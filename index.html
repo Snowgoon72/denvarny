@@ -1099,7 +1099,12 @@ if (item.kategori === 'film') {
       }
 
       database[index] = item;
-      supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
+      supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(svar => {
+          if (svar.error) {
+              alert("🚨 KUNNE IKKE OPPDATERE DATABASEN!\n\nSupabase sier: " + svar.error.message);
+              console.error("Supabase oppdateringsfeil:", svar.error);
+          }
+      });
       
       
       lukkEndreModal();
@@ -2293,7 +2298,12 @@ async function simulerBildeAnalyse() {
       }
 
       database.unshift(ny); 
-      supabaseDb.from('samlerbase_data').insert([ny]).then(); 
+      supabaseDb.from('samlerbase_data').insert([ny]).then(svar => {
+          if (svar.error) {
+              alert("🚨 KUNNE IKKE LAGRE TIL DATABASEN!\n\nSupabase sier: " + svar.error.message + "\n\nDette betyr at du mangler en kolonne, eller har stavet den feil i Supabase (Table Editor).");
+              console.error("Supabase lagringsfeil:", svar.error);
+          }
+      });
       
       document.getElementById('hovedSkjema').reset(); 
       document.getElementById('feltCover').value = '';
