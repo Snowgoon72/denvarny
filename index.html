@@ -1594,137 +1594,136 @@ async function simulerBildeAnalyse() {
       
      if (aktivKategori === 'plante') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
-          document.querySelector('#loadingInnhold h2').innerText = "Slår opp i plantedatabasen...";
 
           try {
               let sokeTekst = sokeord;
-              let response = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: sokeTekst }) });
-              let data = await response.json();
+              let vitenskapelig = sokeord;
               
-              let brukteFallback = false;
-              
-              if ((!data.data || data.data.length === 0) && sokeTekst.includes(" ")) {
-                  document.querySelector('#loadingInnhold h2').innerText = "Henter generelle stell-råd for slekten...";
-                  sokeTekst = sokeTekst.split(" ")[0]; 
-                  brukteFallback = true;
-                  response = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: sokeTekst }) });
-                  data = await response.json();
-              }
-              
-              document.getElementById('loadingOverlay').classList.add('hidden');
-              if (response.status !== 200) { alert("Perenual databasen sier: " + (data.message || data.error || "Ukjent feil")); return; }
-
-              let vitenskapelig = sokeord; 
-              let engelskNavn = "";
-              let familie = "";
-              let bildeSvar = "";
-              let vann = "";
-              let sol = "";
-
-              if (data.data && data.data.length > 0) {
-                  const plante = data.data[0];if (data.data && data.data.length > 0) {
-                  const planteTreff = data.data[0];
+              // 1. GBIF for Taksonomi og Opprinnelse
+              document.querySelector('#loadingInnhold h2').innerText = "Henter taksonomi (GBIF)...";
+              let divisjon = "", klasse = "", orden = "", familie = "", opprinnelse = "Ukjent";
+              try {
+                  const gbifRes = await fetch(`https://api.gbif.org/v1/species/match?name=${encodeURIComponent(vitenskapelig)}`);
+                  const gbifData = await gbifRes.json();
+                  divisjon = gbifData.phylum || "";
+                  klasse = gbifData.class || "";
+                  orden = gbifData.order || "";
+                  familie = gbifData.family || "";
                   
-                  // NYTT: Vi henter DETALJENE basert på ID-en vi fant!
-                  document.querySelector('#loadingInnhold h2').innerText = "Henter avanserte detaljer...";
-                  const detaljResponse = await fetch("/api/plante2", { 
-                      method: 'POST', 
-                      headers: { 'Content-Type': 'application/json' }, 
-                      body: JSON.stringify({ id: planteTreff.id }) 
-                  });
-                  const detaljer = await detaljResponse.json();
-                  
-                  if (!brukteFallback) {
-                      engelskNavn = detaljer.common_name || "";
-                      if (detaljer.default_image && detaljer.default_image.regular_url) {
-                          bildeSvar = detaljer.default_image.regular_url;
+                  if (gbifData.usageKey) {
+                      const distRes = await fetch(`https://api.gbif.org/v1/species/${gbifData.usageKey}/distributions`);
+                      const distData = await distRes.json();
+                      if (distData.results && distData.results.length > 0) {
+                          let steder = [...new Set(distData.results.filter(d => d.locality || d.country).map(d => d.locality || d.country))];
+                          if (steder.length > 0) opprinnelse = steder.slice(0, 3).join(', ');
                       }
-                  } else {
-                      engelskNavn = detaljer.common_name ? detaljer.common_name + " (Generell slekt)" : "";
                   }
-                  
-                  // Henter og oversetter alle godsakene fra detalj-APIet!
-                  familie = detaljer.family || "";
-                  
-                  vann = detaljer.watering || ""; 
-                  vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
-                  
-                  sol = detaljer.sunlight ? (Array.isArray(detaljer.sunlight) ? detaljer.sunlight.join(', ') : detaljer.sunlight) : ""; 
-                  sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+              } catch(e) { console.log("GBIF feilet"); }
 
-                  let opprinnelseApi = detaljer.origin ? detaljer.origin.join(', ') : "Ukjent";
-                  let formApi = detaljer.propagation ? detaljer.propagation.join(', ') : "Ukjent";
-                  formApi = formApi.replace(/Seed/gi, "Frø").replace(/Cutting/gi, "Stiklinger").replace(/Division/gi, "Deling");
+              // 2. Perenual for Vanning og Sollys
+              document.querySelector('#loadingInnhold h2').innerText = "Henter stell-råd (Perenual)...";
+              let vann = "", sol = "";
+              try {
+                  let perenualSok = sokeTekst;
+                  let perenualRes = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: perenualSok }) });
+                  let perenualData = await perenualRes.json();
                   
-                  let blomstApi = detaljer.flowers ? "Ja, blomstrer" : "Nei (Grønn plante)";
-                  let hardApi = detaljer.hardiness ? `Sone ${detaljer.hardiness.min} til ${detaljer.hardiness.max}` : "Innendørs / Ukjent";
-                  
-                  // Sjekker giftighet
-                  let giftigApi = "Sjekk manuelt";
-                  if (detaljer.poisonous_to_pets === 1 || detaljer.poisonous_to_pets === true) giftigApi = "⚠️ Ja, giftig for dyr";
-                  if (detaljer.poisonous_to_pets === 0 || detaljer.poisonous_to_pets === false) giftigApi = "Trygg for kjæledyr 🐾";
+                  if ((!perenualData.data || perenualData.data.length === 0) && perenualSok.includes(" ")) {
+                      perenualSok = perenualSok.split(" ")[0]; 
+                      perenualRes = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: perenualSok }) });
+                      perenualData = await perenualRes.json();
+                  }
 
-                  // Fyller inn de nye datastyrte feltene
-                  if (document.getElementById('feltPlanteOpprinnelse')) document.getElementById('feltPlanteOpprinnelse').value = opprinnelseApi;
-                  if (document.getElementById('feltPlanteFormering')) document.getElementById('feltPlanteFormering').value = formApi;
-                  if (document.getElementById('feltPlanteBlomstring')) document.getElementById('feltPlanteBlomstring').value = blomstApi;
-                  if (document.getElementById('feltPlanteHardforhet')) document.getElementById('feltPlanteHardforhet').value = hardApi;
-                  if (document.getElementById('feltPlanteGiftig')) document.getElementById('feltPlanteGiftig').value = giftigApi;
-              }
-              
-              if (document.getElementById('feltPlanteDeleSelge')) document.getElementById('feltPlanteDeleSelge').value = ""; // Tom med vilje for manuelt utfylling
-              }
+                  if (perenualData.data && perenualData.data.length > 0) {
+                      const pTreff = perenualData.data[0];
+                      const dRes = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: pTreff.id }) });
+                      const dData = await dRes.json();
+                      
+                      vann = dData.watering || "";
+                      vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
+                      sol = dData.sunlight ? (Array.isArray(dData.sunlight) ? dData.sunlight.join(', ') : dData.sunlight) : "";
+                      sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+                  }
+              } catch(e) { console.log("Perenual feilet"); }
 
-              let norskNavn = sokeord; // Standard er opprinnelig navn
+              // 3. Wikipedia for Norsk navn og Bilde
+              document.querySelector('#loadingInnhold h2').innerText = "Henter bilde og navn (Wikipedia)...";
+              let norskNavn = sokeord; 
+              let bildeSvar = "";
               let wikiSokeTittel = vitenskapelig;
               try {
-                  const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
+                  const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(vitenskapelig)}&redirects=1&format=json&origin=*`);
                   const wikiData = await wikiRes.json();
+                  const pages = wikiData.query.pages;
+                  const pageId = Object.keys(pages)[0];
                   
-                  if (wikiData.query.search.length > 0) { 
-                      wikiSokeTittel = wikiData.query.search[0].title; 
-                      // Sjekk at Wikipedia ikke returnerte noe urelatert. Veldig korte eller rare treff ignoreres.
-                      if (wikiSokeTittel.length > 2 && !wikiSokeTittel.includes(':')) {
-                          norskNavn = wikiSokeTittel.charAt(0).toUpperCase() + wikiSokeTittel.slice(1);
-                      } 
+                  if (pageId !== "-1" && pages[pageId].title) { 
+                      wikiSokeTittel = pages[pageId].title; 
+                      norskNavn = wikiSokeTittel.charAt(0).toUpperCase() + wikiSokeTittel.slice(1);
                   }
                   
-                  if (!bildeSvar) {
-                      const imgRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiSokeTittel)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
-                      const imgData = await imgRes.json();
-                      const pages = imgData.query.pages;
-                      const pageId = Object.keys(pages)[0];
-                      
-                      if (pages[pageId] && pages[pageId].thumbnail) {
-                          bildeSvar = pages[pageId].thumbnail.source;
+                  const imgRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiSokeTittel)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
+                  const imgData = await imgRes.json();
+                  const imgPages = imgData.query.pages;
+                  const imgPageId = Object.keys(imgPages)[0];
+                  if (imgPages[imgPageId] && imgPages[imgPageId].thumbnail) {
+                      bildeSvar = imgPages[imgPageId].thumbnail.source;
+                  } else {
+                      const enImgRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(vitenskapelig)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
+                      const enImgData = await enImgRes.json();
+                      const enPages = enImgData.query.pages;
+                      const enPageId = Object.keys(enPages)[0];
+                      if (enPages[enPageId] && enPages[enPageId].thumbnail) bildeSvar = enPages[enPageId].thumbnail.source;
+                  }
+              } catch(e) { console.log("Wiki bilde feilet"); }
+
+              // 4. Wikidata for Giftighet og Spiselighet
+              document.querySelector('#loadingInnhold h2').innerText = "Sjekker giftighet (Wikidata)...";
+              let giftigStatus = "Sjekk manuelt";
+              let spiseligStatus = "Ikke mat";
+              try {
+                  const wdSearch = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(vitenskapelig)}&language=en&format=json&origin=*`);
+                  const wdSearchData = await wdSearch.json();
+                  if (wdSearchData.search && wdSearchData.search.length > 0) {
+                      const wdId = wdSearchData.search[0].id;
+                      const wdEnt = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wdId}&props=claims&format=json&origin=*`);
+                      const wdEntData = await wdEnt.json();
+                      const claims = wdEntData.entities[wdId].claims;
+
+                      // Sjekk giftig (P3075 eller instance of Q408223)
+                      if (claims.P3075 || (claims.P31 && claims.P31.some(c => c.mainsnak.datavalue && c.mainsnak.datavalue.value.id === 'Q408223'))) {
+                          giftigStatus = "⚠️ Ja, giftig";
                       } else {
-                          const enImgRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(vitenskapelig)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
-                          const enImgData = await enImgRes.json();
-                          const enPages = enImgData.query.pages;
-                          const enPageId = Object.keys(enPages)[0];
-                          if (enPages[enPageId] && enPages[enPageId].thumbnail) bildeSvar = enPages[enPageId].thumbnail.source;
+                          giftigStatus = "Ikke reg. som giftig";
+                      }
+                      
+                      // Sjekk spiselig (P2934 edible parts eller instance of Q1442436 edible plant)
+                      if (claims.P2934 || (claims.P31 && claims.P31.some(c => c.mainsnak.datavalue && c.mainsnak.datavalue.value.id === 'Q1442436'))) {
+                          spiseligStatus = "🥗 Spiselig";
                       }
                   }
-              } catch(e) {}
+              } catch(e) { console.log("Wikidata feilet"); }
 
-              // Fyller inn informasjonen i begge felt-settene slik at de ikke overskriver hverandre
+              document.getElementById('loadingOverlay').classList.add('hidden');
+
+              // Fyller inn informasjonen i skjemaet
               document.getElementById('feltTittel').value = norskNavn;
-              
               document.getElementById('feltTittelOrig').value = vitenskapelig;
               if (document.getElementById('feltPlanteVitenskapelig')) document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
               
-              document.getElementById('feltTittelEng').value = engelskNavn;
-              if (document.getElementById('feltPlanteEngelsk')) document.getElementById('feltPlanteEngelsk').value = engelskNavn;
-              
+              if (document.getElementById('feltPlanteDivisjon')) document.getElementById('feltPlanteDivisjon').value = divisjon;
+              if (document.getElementById('feltPlanteKlasse')) document.getElementById('feltPlanteKlasse').value = klasse;
+              if (document.getElementById('feltPlanteOrden')) document.getElementById('feltPlanteOrden').value = orden;
               if (document.getElementById('feltPlanteFamilie')) document.getElementById('feltPlanteFamilie').value = familie;
+              
+              if (document.getElementById('feltPlanteOpprinnelse')) document.getElementById('feltPlanteOpprinnelse').value = opprinnelse;
               if (document.getElementById('feltPlanteVanning')) document.getElementById('feltPlanteVanning').value = vann || "Ukjent";
               if (document.getElementById('feltPlanteSollys')) document.getElementById('feltPlanteSollys').value = sol || "Ukjent";
+              if (document.getElementById('feltPlanteGiftig')) document.getElementById('feltPlanteGiftig').value = `${giftigStatus} / ${spiseligStatus}`;
               
-              if (document.getElementById('feltPlanteOpprinnelse')) document.getElementById('feltPlanteOpprinnelse').value = "Ukjent / Skriv inn";
               if (document.getElementById('feltPlanteFormering')) document.getElementById('feltPlanteFormering').value = "Stiklinger / Frø";
               if (document.getElementById('feltPlanteBlomstring')) document.getElementById('feltPlanteBlomstring').value = "Ukjent";
               if (document.getElementById('feltPlanteHardforhet')) document.getElementById('feltPlanteHardforhet').value = "Innendørs";
-              if (document.getElementById('feltPlanteGiftig')) document.getElementById('feltPlanteGiftig').value = "Sjekk manuelt ⚠️";
               if (document.getElementById('feltPlanteDeleSelge')) document.getElementById('feltPlanteDeleSelge').value = ""; 
 
               if (bildeSvar) document.getElementById('feltCover').value = bildeSvar;
@@ -1736,10 +1735,10 @@ async function simulerBildeAnalyse() {
                   document.getElementById('regBildeForhandsvisning').src = visBilde;
               }
               
-              alert("Klar! Hentet inn " + norskNavn + ".\n\nSjekk giftighet manuelt, da dette krever Premium hos Perenual.");
+              alert("Klar! Hentet superdata fra GBIF, Perenual, Wikipedia og Wikidata. 🌿");
           } catch (error) { 
               document.getElementById('loadingOverlay').classList.add('hidden'); 
-              alert("Klarte ikke koble til plantedatabasen: " + error.message); 
+              alert("Klarte ikke koble til databasene: " + error.message); 
           }
           return;
       }
