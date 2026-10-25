@@ -265,6 +265,7 @@
                  <div><label class="block font-semibold text-rose-500 mb-1">Giftig for dyr?</label><input type="text" id="endrePlanteGiftig" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-rose-500" /></div>
                </div>
             </div>
+          </div>
 
           <div id="endreFilmSeksjon" class="space-y-3">
             <div class="grid grid-cols-2 gap-2">
@@ -1977,7 +1978,6 @@ async function simulerBildeAnalyse() {
           return; 
       }
 
-      // NYTT: Vi grupperer elementene basert på tittel og eier før vi tegner dem!
       let grupperteElementer = {};
       elementer.slice(0, 2000).forEach(item => {
         let gruppeNokkel = (item.tittel || 'Uten tittel').toLowerCase().trim() + '_' + item.eier;
@@ -1987,9 +1987,8 @@ async function simulerBildeAnalyse() {
         grupperteElementer[gruppeNokkel].push(item);
       });
 
-      // Gå gjennom hver unike gruppe
       Object.values(grupperteElementer).forEach(gruppe => {
-        const item = gruppe[0]; // Vi bruker den første i bunken for hovedbildet
+        const item = gruppe[0]; 
         const erMin = item.eier === innloggetBruker;
         const antallKopier = gruppe.length;
         
@@ -1997,7 +1996,6 @@ async function simulerBildeAnalyse() {
         let eierTekst = eierProfil.land ? item.eier + " (" + eierProfil.land + ")" : item.eier;
         const eierBadge = '<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700">👤 ' + eierTekst + '</span>';
 
-        // Hovedtittel, legger til antall hvis det er fler
         let tittelString = '<span class="font-bold text-base text-amber-400 block">' + (item.tittel || 'Uten tittel');
         if (antallKopier > 1) {
             tittelString += ' <span class="bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-xs ml-2 font-black shadow-md">' + antallKopier + ' stk</span>';
@@ -2016,15 +2014,11 @@ async function simulerBildeAnalyse() {
         let rad = document.createElement('div');
         rad.className = 'bg-slate-950 border border-slate-800 p-3 rounded-lg hover:border-slate-700 transition flex flex-col gap-2';
 
-      // Bestemmer hvilke knapper som skal vises på hovedkortet
-        let detaljerKnapp = '<button onclick="apneDetaljerModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition shrink-0 mt-2 sm:mt-0 font-bold">📖 Detaljer</button>';
-        
-let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
+        let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
 
-        // Bestemmer hvilke knapper som skal vises på hovedkortet
         let adminKnapper = '';
         if (antallKopier > 1) {
-            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Detaljer</button><button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
+            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneDetaljerModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Detaljer</button><button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
         } else if (erMin) {
             let oppdaterKnapp = (item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition" title="Hent info fra TMDb">🔄 TMDb</button>' : '';
             adminKnapper = '<div class="flex gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">✏️ Detaljer/Endre</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
@@ -2032,7 +2026,6 @@ let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encod
             adminKnapper = '<div class="shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Se detaljer</button></div>';
         }
 
-        // Bygger HTML for hovedvisningen (Nå er tittelen klikkbar mot IMDb igjen!)
         let hovedKort = '<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">' +
             '<div class="flex gap-3 w-full overflow-hidden flex-1">' +
               bildeHtml + 
@@ -2045,7 +2038,7 @@ let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encod
             '</div>' + adminKnapper +
           '</div>';
 
-      let kopierHtml = '';
+        let kopierHtml = '';
         if (antallKopier > 1) {
             kopierHtml = '<div id="gruppe_' + gruppe[0].id + '" class="hidden mt-3 pt-3 border-t border-slate-800 space-y-2">';
             
@@ -2082,159 +2075,6 @@ let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encod
         }
     }
 
-    function utforSok() {
-      if(!innloggetBruker) return;
-      
-      const q = document.getElementById('sokeFelt').value.toLowerCase();
-      const filt = document.getElementById('eieFilter').value;
-      const sortFilt = document.getElementById('sorteringFilt').value;
-      const filterTekstFelt = document.getElementById('filterTekst');
-
-      if (filt === 'min_alle') filterTekstFelt.innerText = "- Mitt: Vis alt";
-      else if (filt === 'min_har') filterTekstFelt.innerText = "- Mitt: Kun eide";
-      else if (filt === 'min_mangler') filterTekstFelt.innerText = "- Mitt: Ønskeliste";
-      else if (filt === 'venner') filterTekstFelt.innerText = "- Nettverk: Venners samlinger";
-      else if (filt === 'globalt') filterTekstFelt.innerText = "- Nettverk: Globalt søk";
-
-      let filtrert = database.filter(item => {
-        if (item.kategori !== aktivKategori) return false;
-        if (filt === 'min_alle' && item.eier !== innloggetBruker) return false;
-        if (filt === 'min_har' && (item.eier !== innloggetBruker || item.status !== 'Har')) return false;
-        if (filt === 'min_mangler' && (item.eier !== innloggetBruker || item.status !== 'Har ikke')) return false;
-        if (filt === 'venner' && item.eier === innloggetBruker) return false;
-
-        if (item.eier !== innloggetBruker) {
-            let eierProfil = profiler[item.eier] || { standardSynlighet: 'offentlig' };
-            let effektivSynlighet = item.synlighet && item.synlighet !== 'standard' ? item.synlighet : eierProfil.standardSynlighet;
-            if (effektivSynlighet === 'privat') return false; 
-        }
-
-        const fritekst = ((item.tittel||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
-        return fritekst.includes(q);
-      });
-
-      filtrert.sort((a, b) => {
-        if (sortFilt === 'nyeste') return b.id - a.id;
-        
-        let valA = '', valB = '';
-        if (sortFilt === 'tittel') { 
-            valA = (a.tittel||'').toLowerCase(); 
-            valB = (b.tittel||'').toLowerCase(); 
-        } else if (sortFilt === 'tittel_eng') { 
-            valA = (a.tittel_eng || a.tittel || '').toLowerCase(); 
-            valB = (b.tittel_eng || b.tittel || '').toLowerCase(); 
-        } else if (sortFilt === 'tittel_orig') { 
-            valA = (a.tittel_orig || a.tittel || '').toLowerCase(); 
-            valB = (b.tittel_orig || b.tittel || '').toLowerCase(); 
-        } else if (sortFilt === 'sjanger_serie') { 
-            valA = aktivKategori === 'film' ? (a.sjanger||'').toLowerCase() : (a.bladserie||'').toLowerCase(); 
-            valB = aktivKategori === 'film' ? (b.sjanger||'').toLowerCase() : (b.bladserie||'').toLowerCase(); 
-        } else if (sortFilt === 'lagret') { 
-            valA = (a.lagret||'').toLowerCase(); 
-            valB = (b.lagret||'').toLowerCase(); 
-        } else if (sortFilt === 'eier') { 
-            valA = (a.eier||'').toLowerCase(); 
-            valB = (b.eier||'').toLowerCase(); 
-        } else if (sortFilt === 'verdi_hoy') {
-            return (Number(b.verdi) || 0) - (Number(a.verdi) || 0);
-        } else if (sortFilt === 'verdi_lav') {
-            return (Number(a.verdi) || 0) - (Number(b.verdi) || 0);
-        } else if (sortFilt === 'rating') {
-            return (Number(b.rating) || 0) - (Number(a.rating) || 0);
-        }
-
-        if (valA < valB) return -1;
-        if (valA > valB) return 1;
-        return 0;
-      });
-
-      tegnListe(filtrert);
-    }
-
-function lagreNyttElement(e) {
-      e.preventDefault();
-      
-      // 1. DUPLIKATSJEKK
-      const nyTittel = document.getElementById('feltTittel').value.trim();
-      const sjekkEksisterende = database.find(i => i.eier === innloggetBruker && i.kategori === aktivKategori && i.tittel.toLowerCase() === nyTittel.toLowerCase());
-      
-      if (sjekkEksisterende) {
-          if (!confirm("⚠️ DUPLIKAT OPPDAGET!\n\nDu har allerede '" + nyTittel + "' registrert i samlingen din.\n\nEr du sikker på at du vil legge til et nytt eksemplar?")) {
-              return; // Avbryter lagringen hvis du trykker Avbryt
-          }
-      }
-
-      const valgteFormater = Array.from(document.querySelectorAll('#formatValg input[type="checkbox"]:checked')).map(cb => cb.value);
-
-      const ny = {
-        id: Date.now(), 
-        eier: innloggetBruker, 
-        kategori: aktivKategori,
-        strekkode: document.getElementById('feltStrekkode').value, 
-        tittel: document.getElementById('feltTittel').value,
-        tittel_eng: document.getElementById('feltTittelEng').value, 
-        tittel_orig: document.getElementById('feltTittelOrig').value,
-        aar: document.getElementById('feltAar').value, 
-        lagret: document.getElementById('feltLagret').value,
-        status: document.getElementById('feltStatus').value, 
-        synlighet: document.getElementById('feltSynlighet').value,
-        tilstand: document.getElementById('feltTilstand').value, 
-        kommentar: document.getElementById('feltKommentar').value,
-        imdb: document.getElementById('feltImdb').value, 
-        verdi: document.getElementById('feltVerdi').value,
-        cover: document.getElementById('feltCover').value
-      };
-
-      if (aktivKategori === 'film') { 
-          ny.sjanger = document.getElementById('feltSjanger').value; 
-          ny.rating = document.getElementById('feltRating').value; 
-          ny.format = valgteFormater; 
-      } else if (aktivKategori === 'tegneserie') { 
-          ny.bladserie = document.getElementById('feltBladserie').value; 
-          ny.nr = document.getElementById('feltNummer').value; 
-} else if (aktivKategori === 'plante') {
-          ny.tittel_eng = document.getElementById('feltPlanteEngelsk').value.trim();
-          ny.tittel_orig = document.getElementById('feltPlanteVitenskapelig').value.trim();
-          ny.sjanger = document.getElementById('feltPlanteFamilie').value.trim(); 
-          ny.vanning = document.getElementById('feltPlanteVanning').value.trim();
-          ny.sollys = document.getElementById('feltPlanteSollys').value.trim();
-          ny.opprinnelse = document.getElementById('feltPlanteOpprinnelse').value.trim();
-          ny.formering = document.getElementById('feltPlanteFormering').value.trim();
-          ny.blomstring = document.getElementById('feltPlanteBlomstring').value.trim();
-          ny.hardforhet = document.getElementById('feltPlanteHardforhet').value.trim();
-          ny.giftig = document.getElementById('feltPlanteGiftig').value.trim();
-          ny.dele_selge = document.getElementById('feltPlanteDeleSelge').value.trim();
-          ny.divisjon = document.getElementById('feltPlanteDivisjon').value.trim(); // Bytt 'ny' til 'item' i lagreEndring
-          ny.klasse = document.getElementById('feltPlanteKlasse').value.trim();
-          ny.orden = document.getElementById('feltPlanteOrden').value.trim();
-          ny.underfamilie = document.getElementById('feltPlanteUnderfamilie').value.trim();
-          ny.plassering = document.getElementById('feltPlantePlassering').value.trim();
-      }
-
-      database.unshift(ny); 
-      supabaseDb.from('samlerbase_data').insert([ny]).then(); 
-      
-      document.getElementById('hovedSkjema').reset(); 
-      document.getElementById('feltCover').value = '';
-      document.getElementById('feltSynlighet').value = 'standard';
-      document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.getElementById('eieFilter').value = 'min_alle'; 
-      utforSok();
-    }
-
-    function slettElement(id) { 
-        const item = database.find(i => i.id === id);
-        if (!confirm("🚨 ADVARSEL!\n\nVil du virkelig slette '" + (item.tittel || 'dette objektet') + "' permanent?")) {
-            return; // Avbryt hvis brukeren trykker nei
-        }
-        database = database.filter(i => i.id !== id); 
-        supabaseDb.from('samlerbase_data').delete().eq('id', id).then(); 
-        utforSok(); 
-    }
-    
-// ==========================================
-    // DETALJER-MODAL (LOKAL VS TMDB)
-    // ==========================================
     let aktivtDetaljObjekt = null;
 
     function apneDetaljerModal(id) {
@@ -2247,7 +2087,7 @@ function lagreNyttElement(e) {
         let subTekst = item.kategori === 'film' ? 'År: ' + (item.aar || 'Ukjent') : 'Serie: ' + (item.bladserie || '');
         document.getElementById('detSub').innerText = 'ID: ' + item.id + ' | ' + subTekst;
 
-let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
+        let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
         let bildeHtml = item.cover 
             ? '<img src="' + item.cover + '" class="w-20 h-28 object-cover rounded shadow-md border border-slate-700">' 
             : '<div class="w-20 h-28 bg-slate-800 rounded flex items-center justify-center text-4xl border border-slate-700">' + fallbackIkon + '</div>';
