@@ -450,6 +450,9 @@
               <option value="venner">Søk i venners samlinger</option>
               <option value="globalt">Søk Globalt (Alle)</option>
             </optgroup>
+            <optgroup label="Plante-Marked">
+              <option value="plante_marked">🌱 Til salgs / Bytte / Gis bort</option>
+            </optgroup>
           </select>
         </div>
       </div>
@@ -494,6 +497,7 @@
 
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs">
             <input type="hidden" id="feltCover" />
+            <input type="hidden" id="feltBrukerBilde" />
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Strekkode / EAN</label>
@@ -600,6 +604,10 @@
                    <label class="block font-semibold text-emerald-500 uppercase tracking-wider mb-1">Klimasone / Kulde</label>
                    <input type="text" id="feltPlanteHardforhet" placeholder="F.eks. Tåler ikke frost" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-emerald-500" />
                  </div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Spiredato</label><input type="date" id="feltPlanteSpiredato" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" /></div>
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Eid fra dato</label><input type="date" id="feltPlanteEidFra" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" /></div>
                </div>
                <div class="grid grid-cols-2 gap-2">
                  <div><label class="block font-semibold text-sky-400 uppercase tracking-wider mb-1">Vanning</label><input type="text" id="feltPlanteVanning" placeholder="Hver 7. dag" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sky-400" /></div>
@@ -1403,6 +1411,16 @@ async function simulerBildeAnalyse() {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                     const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
+                    // Ekstra komprimering (ca 0.1 - 0.2 MB) for lagring i Supabase
+                    const canvasLiten = document.createElement('canvas');
+                    const maxLagringBredde = 450; 
+                    const skalaLiten = maxLagringBredde / img.width;
+                    canvasLiten.width = img.width > maxLagringBredde ? maxLagringBredde : img.width;
+                    canvasLiten.height = img.width > maxLagringBredde ? img.height * skalaLiten : img.height;
+                    const ctxLiten = canvasLiten.getContext('2d');
+                    ctxLiten.drawImage(img, 0, 0, canvasLiten.width, canvasLiten.height);
+                    
+                    document.getElementById('feltBrukerBilde').value = canvasLiten.toDataURL('image/jpeg', 0.6);
 
                     // ==========================================
                     // LØSNING FOR PLANTER (Via din Vercel Server)
@@ -1411,6 +1429,16 @@ async function simulerBildeAnalyse() {
                         if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer bladet/blomsten...";
                         
                         const forminsketBilde = canvas.toDataURL('image/jpeg', 0.8);
+                        // Ekstra komprimering (ca 0.1 - 0.2 MB) for lagring i Supabase
+                    const canvasLiten = document.createElement('canvas');
+                    const maxLagringBredde = 450; 
+                    const skalaLiten = maxLagringBredde / img.width;
+                    canvasLiten.width = img.width > maxLagringBredde ? maxLagringBredde : img.width;
+                    canvasLiten.height = img.width > maxLagringBredde ? img.height * skalaLiten : img.height;
+                    const ctxLiten = canvasLiten.getContext('2d');
+                    ctxLiten.drawImage(img, 0, 0, canvasLiten.width, canvasLiten.height);
+                    
+                    document.getElementById('feltBrukerBilde').value = canvasLiten.toDataURL('image/jpeg', 0.6);
                         
                         try {
                             // HER ER ENDRINGEN: Peker på plante2.js
@@ -1979,6 +2007,19 @@ async function simulerBildeAnalyse() {
       document.getElementById('tegneserieFelter').classList.toggle('hidden', kat !== 'tegneserie');
       document.getElementById('planteFelter').classList.toggle('hidden', kat !== 'plante');
       document.getElementById('labelTittel').innerText = kat === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
+      
+      // Finner labelet over År-feltet og endrer det dynamisk
+      const aarLabel = document.getElementById('feltAar').previousElementSibling;
+      if (aarLabel) aarLabel.innerText = kat === 'plante' ? 'Oppdagelsesår (Valgfritt)' : 'Utgivelsesår';
+      
+      document.getElementById('feltTittelEkstra').style.display = kat === 'plante' ? 'none' : 'grid';
+
+      // Setter dagens dato automatisk
+      if (kat === 'plante') {
+          const iDag = new Date().toISOString().split('T')[0];
+          if (document.getElementById('feltPlanteSpiredato')) document.getElementById('feltPlanteSpiredato').value = iDag;
+          if (document.getElementById('feltPlanteEidFra')) document.getElementById('feltPlanteEidFra').value = iDag;
+      }
       // Tvinger nettleseren til å fjerne feltene helt i stedet for å bruke Tailwind-klasser:
       document.getElementById('feltTittelEkstra').style.display = kat === 'plante' ? 'none' : 'grid';
       
@@ -2042,7 +2083,7 @@ async function simulerBildeAnalyse() {
             : '<div class="text-[9px] text-slate-500 font-mono mb-1 mt-0.5">Flere unike eksemplarer (' + antallKopier + ')</div>';
         
         let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
-        let bildeHtml = item.cover 
+        let bildeHtml = (item.bruker_bilde || item.cover) 
             ? '<img src="' + item.cover + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
             : '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">' + fallbackIkon + '</div>';
         
@@ -2130,6 +2171,12 @@ async function simulerBildeAnalyse() {
         if (filt === 'min_har' && (item.eier !== innloggetBruker || item.status !== 'Har')) return false;
         if (filt === 'min_mangler' && (item.eier !== innloggetBruker || item.status !== 'Har ikke')) return false;
         if (filt === 'venner' && item.eier === innloggetBruker) return false;
+        // Nytt filter: Vis kun planter som har noe skrevet i Dele/Selge-feltet
+        if (filt === 'plante_marked') {
+            if (item.kategori !== 'plante' || !item.dele_selge || item.dele_selge.trim() === '' || item.dele_selge.toLowerCase() === 'nei') {
+                return false; 
+            }
+        }
 
         if (item.eier !== innloggetBruker) {
             let eierProfil = profiler[item.eier] || { standardSynlighet: 'offentlig' };
@@ -2237,6 +2284,9 @@ async function simulerBildeAnalyse() {
           ny.orden = document.getElementById('feltPlanteOrden').value.trim();
           ny.underfamilie = document.getElementById('feltPlanteUnderfamilie').value.trim();
           ny.plassering = document.getElementById('feltPlantePlassering').value.trim();
+          ny.spiredato = document.getElementById('feltPlanteSpiredato').value;
+          ny.eid_fra = document.getElementById('feltPlanteEidFra').value;
+          ny.bruker_bilde = document.getElementById('feltBrukerBilde').value;
       }
 
       database.unshift(ny); 
