@@ -223,8 +223,21 @@
               <label class="block font-semibold text-slate-400 mb-1">Utgivelsesår</label>
               <input type="number" id="endreAar" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
             </div>
-            <!-- Skjult for film, vises for tegneserie -->
-<div id="endrePlanteFelter" class="hidden col-span-2 w-full space-y-3 mt-3 border-t border-indigo-900/50 pt-3">
+            
+<!-- Skjult for film, vises for tegneserie -->
+            <div id="endreTegneserieFelter" class="hidden grid-cols-2 gap-2 col-span-2 sm:col-span-1 w-full">
+                <div>
+                  <label class="block font-semibold text-slate-400 mb-1">Bladserie</label>
+                  <input type="text" id="endreBladserie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-400 mb-1">Nummer</label>
+                  <input type="text" id="endreNummer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                </div>
+            </div>
+
+            <!-- Plante-felter for redigering -->
+            <div id="endrePlanteFelter" class="hidden col-span-2 w-full space-y-3 mt-3 border-t border-indigo-900/50 pt-3">
                <div class="grid grid-cols-2 gap-2">
                  <div>
                    <label class="block font-semibold text-sky-400 mb-1">Vanning</label>
@@ -269,14 +282,6 @@
                    <label class="block font-semibold text-slate-400 mb-1">Plantefamilie</label>
                    <input type="text" id="endrePlanteFamilie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
                </div>
-            </div>
-                  <label class="block font-semibold text-slate-400 mb-1">Bladserie</label>
-                  <input type="text" id="endreBladserie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-                </div>
-                <div>
-                  <label class="block font-semibold text-slate-400 mb-1">Nummer</label>
-                  <input type="text" id="endreNummer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-                </div>
             </div>
           </div>
 
