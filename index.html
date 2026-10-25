@@ -1543,23 +1543,57 @@ async function simulerBildeAnalyse() {
               let sol = "";
 
               if (data.data && data.data.length > 0) {
-                  const plante = data.data[0];
+                  const plante = data.data[0];if (data.data && data.data.length > 0) {
+                  const planteTreff = data.data[0];
+                  
+                  // NYTT: Vi henter DETALJENE basert på ID-en vi fant!
+                  document.querySelector('#loadingInnhold h2').innerText = "Henter avanserte detaljer...";
+                  const detaljResponse = await fetch("/api/plante2", { 
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' }, 
+                      body: JSON.stringify({ id: planteTreff.id }) 
+                  });
+                  const detaljer = await detaljResponse.json();
                   
                   if (!brukteFallback) {
-                      engelskNavn = plante.common_name || "";
-                      if (plante.default_image && plante.default_image.regular_url) {
-                          bildeSvar = plante.default_image.regular_url;
+                      engelskNavn = detaljer.common_name || "";
+                      if (detaljer.default_image && detaljer.default_image.regular_url) {
+                          bildeSvar = detaljer.default_image.regular_url;
                       }
                   } else {
-                      engelskNavn = plante.common_name ? plante.common_name + " (Generell slekt)" : "";
+                      engelskNavn = detaljer.common_name ? detaljer.common_name + " (Generell slekt)" : "";
                   }
                   
-                  familie = plante.family || "";
-                  vann = plante.watering || ""; 
+                  // Henter og oversetter alle godsakene fra detalj-APIet!
+                  familie = detaljer.family || "";
+                  
+                  vann = detaljer.watering || ""; 
                   vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
                   
-                  sol = plante.sunlight ? (Array.isArray(plante.sunlight) ? plante.sunlight.join(', ') : plante.sunlight) : ""; 
+                  sol = detaljer.sunlight ? (Array.isArray(detaljer.sunlight) ? detaljer.sunlight.join(', ') : detaljer.sunlight) : ""; 
                   sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+
+                  let opprinnelseApi = detaljer.origin ? detaljer.origin.join(', ') : "Ukjent";
+                  let formApi = detaljer.propagation ? detaljer.propagation.join(', ') : "Ukjent";
+                  formApi = formApi.replace(/Seed/gi, "Frø").replace(/Cutting/gi, "Stiklinger").replace(/Division/gi, "Deling");
+                  
+                  let blomstApi = detaljer.flowers ? "Ja, blomstrer" : "Nei (Grønn plante)";
+                  let hardApi = detaljer.hardiness ? `Sone ${detaljer.hardiness.min} til ${detaljer.hardiness.max}` : "Innendørs / Ukjent";
+                  
+                  // Sjekker giftighet
+                  let giftigApi = "Sjekk manuelt";
+                  if (detaljer.poisonous_to_pets === 1 || detaljer.poisonous_to_pets === true) giftigApi = "⚠️ Ja, giftig for dyr";
+                  if (detaljer.poisonous_to_pets === 0 || detaljer.poisonous_to_pets === false) giftigApi = "Trygg for kjæledyr 🐾";
+
+                  // Fyller inn de nye datastyrte feltene
+                  if (document.getElementById('feltPlanteOpprinnelse')) document.getElementById('feltPlanteOpprinnelse').value = opprinnelseApi;
+                  if (document.getElementById('feltPlanteFormering')) document.getElementById('feltPlanteFormering').value = formApi;
+                  if (document.getElementById('feltPlanteBlomstring')) document.getElementById('feltPlanteBlomstring').value = blomstApi;
+                  if (document.getElementById('feltPlanteHardforhet')) document.getElementById('feltPlanteHardforhet').value = hardApi;
+                  if (document.getElementById('feltPlanteGiftig')) document.getElementById('feltPlanteGiftig').value = giftigApi;
+              }
+              
+              if (document.getElementById('feltPlanteDeleSelge')) document.getElementById('feltPlanteDeleSelge').value = ""; // Tom med vilje for manuelt utfylling
               }
 
               let norskNavn = sokeord; 
