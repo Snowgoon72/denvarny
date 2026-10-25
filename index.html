@@ -1529,7 +1529,7 @@ async function simulerBildeAnalyse() {
     async function simulerApiOppslag(sokeord) {
       // === PLANTE-OPPSLAG (Perenual + Wikipedia) ===
       
-      if (aktivKategori === 'plante') {
+     if (aktivKategori === 'plante') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
           document.querySelector('#loadingInnhold h2').innerText = "Slår opp i plantedatabasen...";
 
@@ -1540,7 +1540,7 @@ async function simulerBildeAnalyse() {
               
               let brukteFallback = false;
               
-              // Hvis ingen treff på hele navnet, søk kun på slekten for å i det minste få vanning/sol
+              // Hvis ingen treff, prøv kun slekten (første ord)
               if ((!data.data || data.data.length === 0) && sokeTekst.includes(" ")) {
                   document.querySelector('#loadingInnhold h2').innerText = "Henter generelle stell-råd for slekten...";
                   sokeTekst = sokeTekst.split(" ")[0]; 
@@ -1552,61 +1552,75 @@ async function simulerBildeAnalyse() {
               document.getElementById('loadingOverlay').classList.add('hidden');
               if (response.status !== 200) { alert("Perenual databasen sier: " + (data.message || data.error || "Ukjent feil")); return; }
 
-              // Hovedregelen: Vi stoler ALLTID på Pl@ntNet sitt nøyaktige navn (sokeordet)!
-              let vitenskapelig = sokeord;
+              // Det vitenskapelige navnet fra Pl@ntNet (sokeord) SKAL bevares uansett!
+              let vitenskapelig = sokeord; 
               let engelskNavn = "";
               let familie = "";
-              let bildeFraPerenual = "";
+              let bildeSvar = "";
               let vann = "";
               let sol = "";
 
-              // Finner Norsk navn via Wikipedia
-              let norskNavn = sokeord; 
-              try {
-                  const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
-                  const wikiData = await wikiRes.json();
-                  if (wikiData.query.search.length > 0) { 
-                      let w = wikiData.query.search[0].title; 
-                      norskNavn = w.charAt(0).toUpperCase() + w.slice(1); 
-                  }
-              } catch(e) {}
-
-              // Henter ut stell-råd hvis Perenual fant noe
+              // Henter data fra Perenual
               if (data.data && data.data.length > 0) {
                   const plante = data.data[0];
                   
-                  // Hvis vi traff eksakt (ikke brukte fallback), kan vi hente engelsk navn
+                  // Hvis vi traff eksakt art, kan vi trygt hente engelsk navn og bilde fra Perenual
                   if (!brukteFallback) {
                       engelskNavn = plante.common_name || "";
-                  } else {
-                      // Hvis vi brukte fallback, noterer vi det så du vet
-                      engelskNavn = plante.common_name ? plante.common_name + " (Generell for slekt)" : "";
-                  }
+                      if (plante.default_image && plante.default_image.regular_url) {
+                          bildeSvar = plante.default_image.regular_url;
+                      }
+                  } 
+                  // Hvis vi brukte fallback, rører vi verken engelsk navn eller bilde (de tilhører feil plante)
                   
                   familie = plante.family || "";
-                  
-                  // Oversetter stell-råd
                   vann = plante.watering || ""; 
                   vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
                   
                   sol = plante.sunlight ? (Array.isArray(plante.sunlight) ? plante.sunlight.join(', ') : plante.sunlight) : ""; 
                   sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
-
-                  if (plante.default_image && plante.default_image.regular_url) {
-                      bildeFraPerenual = plante.default_image.regular_url;
-                  }
               }
+
+              // WIKIPEDIA-TRIKSET: Bruker ALLTID eksakt vitenskapelig navn (aldri fallback-navnet)
+              let norskNavn = sokeord; 
+              let wikiSokeTittel = vitenskapelig;
+              try {
+                  const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
+                  const wikiData = await wikiRes.json();
+                  
+                  if (wikiData.query.search.length > 0) { 
+                      wikiSokeTittel = wikiData.query.search[0].title; 
+                      norskNavn = wikiSokeTittel.charAt(0).toUpperCase() + wikiSokeTittel.slice(1); 
+                  }
+                  
+                  // Wikipedia Bilde-fallback (hvis Perenual ikke ga oss noe, eller hvis vi brukte fallback)
+                  if (!bildeSvar) {
+                      const imgRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiSokeTittel)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
+                      const imgData = await imgRes.json();
+                      const pages = imgData.query.pages;
+                      const pageId = Object.keys(pages)[0];
+                      
+                      if (pages[pageId] && pages[pageId].thumbnail) {
+                          bildeSvar = pages[pageId].thumbnail.source;
+                      } else {
+                          // Engelsk Wikipedia som aller siste utvei
+                          const enImgRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(vitenskapelig)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
+                          const enImgData = await enImgRes.json();
+                          const enPages = enImgData.query.pages;
+                          const enPageId = Object.keys(enPages)[0];
+                          if (enPages[enPageId] && enPages[enPageId].thumbnail) bildeSvar = enPages[enPageId].thumbnail.source;
+                      }
+                  }
+              } catch(e) {}
 
               // Fyller inn skjemaet
               document.getElementById('feltTittel').value = norskNavn;
               document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
               document.getElementById('feltPlanteEngelsk').value = engelskNavn;
               document.getElementById('feltPlanteFamilie').value = familie;
-              
               document.getElementById('feltPlanteVanning').value = vann || "Ukjent";
               document.getElementById('feltPlanteSollys').value = sol || "Ukjent";
               
-              // Perenual krever Premium/ekstra API-kall for disse, så vi setter fine standardverdier du kan overstyre
               document.getElementById('feltPlanteOpprinnelse').value = "Ukjent / Skriv inn";
               document.getElementById('feltPlanteFormering').value = "Stiklinger / Frø";
               document.getElementById('feltPlanteBlomstring').value = "Ukjent";
@@ -1614,11 +1628,9 @@ async function simulerBildeAnalyse() {
               document.getElementById('feltPlanteGiftig').value = "Sjekk manuelt ⚠️";
               document.getElementById('feltPlanteDeleSelge').value = ""; 
 
-              if (bildeFraPerenual) {
-                  document.getElementById('feltCover').value = bildeFraPerenual;
-              }
+              if (bildeSvar) document.getElementById('feltCover').value = bildeSvar;
               
-              alert("Klar! Hentet inn " + norskNavn + ".\n\nHusk å dobbeltsjekke giftighet og opprinnelse manuelt, da dette ikke ligger i den gratis databasen.");
+              alert("Klar! Hentet inn " + norskNavn + ".\n\nSjekk giftighet manuelt, da dette krever Premium hos Perenual.");
           } catch (error) { 
               document.getElementById('loadingOverlay').classList.add('hidden'); 
               alert("Klarte ikke koble til plantedatabasen: " + error.message); 
