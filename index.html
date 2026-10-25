@@ -1528,7 +1528,8 @@ async function simulerBildeAnalyse() {
 
     async function simulerApiOppslag(sokeord) {
       // === PLANTE-OPPSLAG (Perenual + Wikipedia) ===
-if (aktivKategori === 'plante') {
+      
+      if (aktivKategori === 'plante') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
           document.querySelector('#loadingInnhold h2').innerText = "Slår opp i plantedatabasen...";
 
@@ -1537,58 +1538,91 @@ if (aktivKategori === 'plante') {
               let response = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: sokeTekst }) });
               let data = await response.json();
               
+              let brukteFallback = false;
+              
+              // Hvis ingen treff på hele navnet, søk kun på slekten for å i det minste få vanning/sol
               if ((!data.data || data.data.length === 0) && sokeTekst.includes(" ")) {
-                  document.querySelector('#loadingInnhold h2').innerText = "Utvider søket...";
+                  document.querySelector('#loadingInnhold h2').innerText = "Henter generelle stell-råd for slekten...";
                   sokeTekst = sokeTekst.split(" ")[0]; 
+                  brukteFallback = true;
                   response = await fetch("/api/plante2", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sokeord: sokeTekst }) });
                   data = await response.json();
               }
+              
               document.getElementById('loadingOverlay').classList.add('hidden');
               if (response.status !== 200) { alert("Perenual databasen sier: " + (data.message || data.error || "Ukjent feil")); return; }
 
+              // Hovedregelen: Vi stoler ALLTID på Pl@ntNet sitt nøyaktige navn (sokeordet)!
+              let vitenskapelig = sokeord;
+              let engelskNavn = "";
+              let familie = "";
+              let bildeFraPerenual = "";
+              let vann = "";
+              let sol = "";
+
+              // Finner Norsk navn via Wikipedia
+              let norskNavn = sokeord; 
+              try {
+                  const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
+                  const wikiData = await wikiRes.json();
+                  if (wikiData.query.search.length > 0) { 
+                      let w = wikiData.query.search[0].title; 
+                      norskNavn = w.charAt(0).toUpperCase() + w.slice(1); 
+                  }
+              } catch(e) {}
+
+              // Henter ut stell-råd hvis Perenual fant noe
               if (data.data && data.data.length > 0) {
                   const plante = data.data[0];
-                  let vitenskapelig = plante.scientific_name ? plante.scientific_name[0] : sokeord;
-                  let engelskNavn = plante.common_name || "";
-                  let familie = plante.family || "";
-
-                  // Norsk navn
-                  let norskNavn = engelskNavn; 
-                  try {
-                      const wikiRes = await fetch(`https://no.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(vitenskapelig)}&utf8=&format=json&origin=*`);
-                      const wikiData = await wikiRes.json();
-                      if (wikiData.query.search.length > 0) { let w = wikiData.query.search[0].title; norskNavn = w.charAt(0).toUpperCase() + w.slice(1); }
-                  } catch(e) {}
-
-                  // Fyll inn
-                  document.getElementById('feltTittel').value = norskNavn;
-                  document.getElementById('feltPlanteEngelsk').value = engelskNavn;
-                  document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
-                  document.getElementById('feltPlanteFamilie').value = familie;
                   
-                  // Oversettelser
-                  let vann = plante.watering || ""; vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
-                  let sol = plante.sunlight ? (Array.isArray(plante.sunlight) ? plante.sunlight.join(', ') : plante.sunlight) : ""; sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
-                  let opprinnelse = plante.origin ? plante.origin.join(', ') : "Ukjent";
-                  let form = plante.propagation ? plante.propagation.join(', ') : ""; form = form.replace(/Seed/gi, "Frø").replace(/Cutting/gi, "Stiklinger").replace(/Division/gi, "Deling av rot");
-                  let blomst = plante.flowers ? (plante.flowering_season || "Ja, blomstrer") : "Nei, grønn plante"; blomst = blomst.replace(/Spring/gi, "Vår").replace(/Summer/gi, "Sommer").replace(/Autumn/gi,"Høst").replace(/Winter/gi,"Vinter");
-                  let hard = plante.hardiness ? `Sone ${plante.hardiness.min} til ${plante.hardiness.max}` : "Innendørs / Ukjent";
-                  let giftig = plante.poisonous_to_pets ? "⚠️ Ja, giftig for dyr" : "Trygg for kjæledyr 🐾";
-
-                  document.getElementById('feltPlanteVanning').value = vann;
-                  document.getElementById('feltPlanteSollys').value = sol;
-                  document.getElementById('feltPlanteOpprinnelse').value = opprinnelse;
-                  document.getElementById('feltPlanteFormering').value = form;
-                  document.getElementById('feltPlanteBlomstring').value = blomst;
-                  document.getElementById('feltPlanteHardforhet').value = hard;
-                  document.getElementById('feltPlanteGiftig').value = giftig;
-                  document.getElementById('feltPlanteDeleSelge').value = ""; // Tom med vilje
-
-                  if (plante.default_image && plante.default_image.regular_url) document.getElementById('feltCover').value = plante.default_image.regular_url;
+                  // Hvis vi traff eksakt (ikke brukte fallback), kan vi hente engelsk navn
+                  if (!brukteFallback) {
+                      engelskNavn = plante.common_name || "";
+                  } else {
+                      // Hvis vi brukte fallback, noterer vi det så du vet
+                      engelskNavn = plante.common_name ? plante.common_name + " (Generell for slekt)" : "";
+                  }
                   
-                  alert("Fant " + norskNavn + "!\nSkjemaet er fylt ut med info og bilde.");
-              } else { alert("Fant dessverre ingen planter i Perenual-databasen for '" + sokeord + "'."); }
-          } catch (error) { document.getElementById('loadingOverlay').classList.add('hidden'); alert("Klarte ikke koble til plantedatabasen: " + error.message); }
+                  familie = plante.family || "";
+                  
+                  // Oversetter stell-råd
+                  vann = plante.watering || ""; 
+                  vann = vann.replace(/Frequent/gi, "Ofte").replace(/Average/gi, "Middels").replace(/Minimum/gi, "Sjelden");
+                  
+                  sol = plante.sunlight ? (Array.isArray(plante.sunlight) ? plante.sunlight.join(', ') : plante.sunlight) : ""; 
+                  sol = sol.replace(/full sun/gi, "Full sol").replace(/part shade/gi, "Halvskygge").replace(/full shade/gi, "Full skygge");
+
+                  if (plante.default_image && plante.default_image.regular_url) {
+                      bildeFraPerenual = plante.default_image.regular_url;
+                  }
+              }
+
+              // Fyller inn skjemaet
+              document.getElementById('feltTittel').value = norskNavn;
+              document.getElementById('feltPlanteVitenskapelig').value = vitenskapelig;
+              document.getElementById('feltPlanteEngelsk').value = engelskNavn;
+              document.getElementById('feltPlanteFamilie').value = familie;
+              
+              document.getElementById('feltPlanteVanning').value = vann || "Ukjent";
+              document.getElementById('feltPlanteSollys').value = sol || "Ukjent";
+              
+              // Perenual krever Premium/ekstra API-kall for disse, så vi setter fine standardverdier du kan overstyre
+              document.getElementById('feltPlanteOpprinnelse').value = "Ukjent / Skriv inn";
+              document.getElementById('feltPlanteFormering').value = "Stiklinger / Frø";
+              document.getElementById('feltPlanteBlomstring').value = "Ukjent";
+              document.getElementById('feltPlanteHardforhet').value = "Innendørs";
+              document.getElementById('feltPlanteGiftig').value = "Sjekk manuelt ⚠️";
+              document.getElementById('feltPlanteDeleSelge').value = ""; 
+
+              if (bildeFraPerenual) {
+                  document.getElementById('feltCover').value = bildeFraPerenual;
+              }
+              
+              alert("Klar! Hentet inn " + norskNavn + ".\n\nHusk å dobbeltsjekke giftighet og opprinnelse manuelt, da dette ikke ligger i den gratis databasen.");
+          } catch (error) { 
+              document.getElementById('loadingOverlay').classList.add('hidden'); 
+              alert("Klarte ikke koble til plantedatabasen: " + error.message); 
+          }
           return;
       }
 
