@@ -71,11 +71,18 @@
           <input type="email" id="regEpost" required placeholder="din@epost.no" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg passord</label>
-          <input type="password" id="regPassord" required placeholder="Min. 6 tegn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
-        </div>
-        <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg passord</label>
+            <input type="password" id="regPassord" required placeholder="Min. 6 tegn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Bekreft passord</label>
+            <input type="password" id="regPassordBekreft" required placeholder="Gjenta passord" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+          </div>
+        </div>
+        <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-400 mt-1">
+            <input type="checkbox" onchange="document.getElementById('regPassord').type = this.checked ? 'text' : 'password'; document.getElementById('regPassordBekreft').type = this.checked ? 'text' : 'password';" class="rounded text-amber-500 w-3.5 h-3.5 bg-slate-900 border-slate-700"> <span>Vis passord</span>
             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Land</label>
             <input type="text" id="regLand" placeholder="Norge" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
           </div>
@@ -436,7 +443,7 @@
         </div>
         
         <div class="flex items-center gap-3">
-          <button onclick="tipsEnVenn()" class="text-sky-400 hover:text-sky-300 text-xs px-2 hidden sm:block font-bold">💌 Tips en venn</button>
+          <button onclick="tipsEnVenn()" class="text-sky-400 hover:text-sky-300 text-[10px] sm:text-xs px-2 font-bold">💌 Tips en venn</button>
           <button id="btnAdmin" onclick="aapneAdminPanel()" class="hidden bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs px-3 py-1.5 rounded border border-rose-700 transition shadow">👑 Admin</button>
           <div class="text-right ml-2 border-l border-slate-800 pl-3">
             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider leading-none">Innlogget</p>
@@ -863,7 +870,18 @@ async function registrerBruker(e) {
       e.preventDefault();
       const nyttNavn = document.getElementById('regBrukernavn').value.trim();
       const passord = document.getElementById('regPassord').value;
+      const passordBekreft = document.getElementById('regPassordBekreft').value;
       const epost = document.getElementById('regEpost').value.trim().toLowerCase();
+      
+      // Nye sikkerhetssjekker for passordet
+      if (passord.length < 6) { 
+          alert("Passordet må bestå av minst 6 tegn."); 
+          return; 
+      }
+      if (passord !== passordBekreft) { 
+          alert("Passordene er ikke like! Sjekk at du har skrevet dem riktig."); 
+          return; 
+      }
       
       let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
       if (eksisterer) { alert("Brukernavn er tatt. Velg et annet."); return; }
@@ -2515,9 +2533,18 @@ async function simulerBildeAnalyse() {
     // ADMIN, GODKJENNING & TIPS EN VENN
     // ==========================================
     function tipsEnVenn() {
-        const emne = encodeURIComponent("Sjekk ut Samlerbasen!");
-        const innhold = encodeURIComponent("Hei!\n\nJeg bruker en smart, ny app kalt Samlerbasen for å holde oversikt over samlingene mine (filmer, planter, tegneserier osv). \n\nTa en titt og opprett din egen profil for å digitalisere samlingen din du også!\n\nHilsen " + (innloggetBruker || "meg"));
-        window.location.href = "mailto:?subject=" + emne + "&body=" + innhold;
+        const emne = "Sjekk ut Samlerbasen!";
+        const innhold = "Hei!\n\nJeg bruker en smart, ny app kalt Samlerbasen for å holde oversikt over samlingene mine (filmer, planter, tegneserier osv). \n\nTa en titt og opprett din egen profil for å digitalisere samlingen din du også!\n\nHilsen " + (innloggetBruker || "meg");
+        
+        // 1. Prøver å åpne enhetens e-postprogram automatisk
+        window.location.href = "mailto:?subject=" + encodeURIComponent(emne) + "&body=" + encodeURIComponent(innhold);
+        
+        // 2. BACKUP: Kopierer teksten i tilfelle de ikke har en e-post-app konfigurert
+        navigator.clipboard.writeText(emne + "\n\n" + innhold).then(() => {
+            alert("💌 Hvis e-postprogrammet ditt ikke åpnet seg automatisk, er det ingen krise!\n\nMeldingen er nå kopiert til utklippstavlen din. Du kan lime den direkte inn i Messenger, SMS eller din vanlige nett-epost.");
+        }).catch(err => {
+            console.log("Kopiering feilet", err);
+        });
     }
 
     async function aapneAdminPanel() {
