@@ -1539,8 +1539,8 @@ async function simulerBildeAnalyse() {
                                     const score = Math.round(treff.score * 100);
                                     
                                     let bildeUrl = '';
-                                    if (treff.images && treff.images.length > 0) {
-                                        bildeUrl = treff.images[0].url.s || treff.images[0].url.m || '';
+                                    if (treff.images && treff.images.length > 0 && treff.images[0].url) {
+                                        bildeUrl = treff.images[0].url.m || treff.images[0].url.s || treff.images[0].url.o || (typeof treff.images[0].url === 'string' ? treff.images[0].url : '');
                                     }
                                     
                                     let bildeTag = bildeUrl 
@@ -2421,6 +2421,18 @@ async function simulerBildeAnalyse() {
         document.getElementById('detBilde').innerHTML = bildeHtml;
 
         let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
+        
+        // NYTT: Bildegalleri som viser både ditt eget bilde og API-bildet
+        if (item.kategori === 'plante' && (item.bruker_bilde || item.cover)) {
+            lokalHtml += '<div class="col-span-2 flex gap-3 overflow-x-auto pb-2">';
+            if (item.bruker_bilde) {
+                lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Mitt bilde</span><a href="' + item.bruker_bilde + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.bruker_bilde + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            }
+            if (item.cover) {
+                lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Referansebilde</span><a href="' + item.cover + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.cover + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            }
+            lokalHtml += '</div>';
+        }
         
         if (item.kategori === 'plante') {
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Vitenskapelig navn</span><span class="font-bold text-white italic">' + (item.tittel_orig || '-') + '</span></div>';
