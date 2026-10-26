@@ -409,6 +409,18 @@
     </div>
   </div>
 
+  <!-- ADMIN-MODAL (For å godkjenne brukere) -->
+  <div id="adminModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[160] flex flex-col items-center justify-center p-4">
+    <div class="bg-slate-900 p-6 rounded-2xl border border-rose-900/50 max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh]">
+      <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white font-black text-xl px-2">✕</button>
+      <h2 class="text-xl font-black text-rose-500 mb-2">👑 Admin-panel</h2>
+      <p class="text-sm text-slate-400 mb-4 border-b border-slate-800 pb-3">Nye brukere som venter på aktivering:</p>
+      <div id="adminBrukerListe" class="space-y-3 overflow-y-auto flex-1 hide-scrollbar">
+          <!-- Fylles med JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- HOVEDAPP HEADER -->
   <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-3">
@@ -424,14 +436,15 @@
         </div>
         
         <div class="flex items-center gap-3">
-          <div class="text-right">
-            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider leading-none">Innlogget som</p>
-            <p class="text-sm font-bold text-emerald-400 leading-none" id="innloggetBrukerNavn">Gjest</p>
+          <button onclick="tipsEnVenn()" class="text-sky-400 hover:text-sky-300 text-xs px-2 hidden sm:block font-bold">💌 Tips en venn</button>
+          <button id="btnAdmin" onclick="aapneAdminPanel()" class="hidden bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs px-3 py-1.5 rounded border border-rose-700 transition shadow">👑 Admin</button>
+          <div class="text-right ml-2 border-l border-slate-800 pl-3">
+            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider leading-none">Innlogget</p>
+            <p class="text-sm font-bold text-emerald-400 leading-none mt-0.5" id="innloggetBrukerNavn">Gjest</p>
           </div>
           <button onclick="aapneProfil()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold text-xs px-3 py-1.5 rounded border border-slate-700 transition">⚙️ Profil</button>
           <button onclick="loggUt()" class="bg-slate-800 hover:bg-rose-900 hover:text-rose-400 text-slate-300 text-xs px-3 py-1.5 rounded border border-slate-700 transition hidden sm:block">Logg ut</button>
         </div>
-      </div>
 
       <div class="flex flex-col sm:flex-row items-center gap-2 w-full">
         <input type="text" id="sokeFelt" oninput="utforSok()" placeholder="Søk (tittel, sjanger, kommentar)..." class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
@@ -803,6 +816,15 @@
       } else { 
           document.getElementById('loginModal').classList.add('hidden'); 
           document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker;
+          
+          // Sjekk om innlogget bruker er admin, og vis/skjul knappen
+          const minProfil = profiler[innloggetBruker];
+          if (minProfil && minProfil.epost === 'jorn.garder@gmail.com') {
+              document.getElementById('btnAdmin').classList.remove('hidden');
+          } else {
+              document.getElementById('btnAdmin').classList.add('hidden');
+          }
+          
           oppdaterKategoriMeny(); 
           utforSok(); 
       }
@@ -877,8 +899,10 @@ async function registrerBruker(e) {
           document.getElementById('skjemaRegistrer').reset(); 
           sjekkInnlogging();
       } else {
-          alert("Konto opprettet! Administratoren må godkjenne profilen din før du kan logge inn.");
+          alert("✅ PROFIL OPPRETTET!\n\nKontoen din (" + nyttNavn + ") er registrert trygt i databasen.\n\nSikkerhetstiltak: Før du kan logge inn, må administratoren godkjenne og aktivere profilen din manuelt. Du vil motta en e-post når kontoen er klar til bruk.");
           byttTilLoggInn();
+          document.getElementById('modalUndertekst').innerText = 'Konto registrert. Venter på aktivering fra admin.';
+          document.getElementById('modalUndertekst').classList.add('text-amber-400');
       }
     }
     
@@ -2487,6 +2511,65 @@ async function simulerBildeAnalyse() {
         simulerApiOppslag(vitenskapeligNavn);
     }
 
+// ==========================================
+    // ADMIN, GODKJENNING & TIPS EN VENN
+    // ==========================================
+    function tipsEnVenn() {
+        const emne = encodeURIComponent("Sjekk ut Samlerbasen!");
+        const innhold = encodeURIComponent("Hei!\n\nJeg bruker en smart, ny app kalt Samlerbasen for å holde oversikt over samlingene mine (filmer, planter, tegneserier osv). \n\nTa en titt og opprett din egen profil for å digitalisere samlingen din du også!\n\nHilsen " + (innloggetBruker || "meg"));
+        window.location.href = "mailto:?subject=" + emne + "&body=" + innhold;
+    }
+
+    async function aapneAdminPanel() {
+        document.getElementById('adminModal').classList.remove('hidden');
+        document.getElementById('adminBrukerListe').innerHTML = '<p class="text-slate-500 text-center py-4 animate-pulse">Sjekker skyen for nye brukere...</p>';
+        
+        // Henter profiler som ikke er godkjent fra Supabase
+        const { data, error } = await supabaseDb.from('samlerbase_profiler').select('*').eq('godkjent', false);
+        
+        if (error) {
+            document.getElementById('adminBrukerListe').innerHTML = '<p class="text-rose-500 p-3 bg-rose-950/50 rounded border border-rose-900">Feil: Kunne ikke hente brukere. ' + error.message + '</p>';
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            document.getElementById('adminBrukerListe').innerHTML = '<div class="text-center py-8"><span class="text-4xl block mb-2">🎉</span><p class="text-emerald-400 font-bold">Alt er oppdatert!</p><p class="text-slate-400 text-sm mt-1">Ingen nye brukere venter på aktivering.</p></div>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(bruker => {
+            html += '<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row justify-between sm:items-center gap-3">' +
+                '<div>' +
+                    '<p class="text-base font-bold text-amber-400">' + bruker.brukernavn + '</p>' +
+                    '<p class="text-xs text-slate-400 mt-0.5"><span class="text-slate-300">📧 ' + bruker.epost + '</span> | 🌍 ' + (bruker.land || 'Ukjent') + '</p>' +
+                '</div>' +
+                '<button onclick="godkjennBruker(\'' + bruker.brukernavn + '\', \'' + bruker.epost + '\')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-lg shadow-lg border border-emerald-500/50 transition shrink-0">✅ Aktiver konto</button>' +
+            '</div>';
+        });
+        document.getElementById('adminBrukerListe').innerHTML = html;
+    }
+
+    async function godkjennBruker(brukernavn, epost) {
+        // 1. Sett 'godkjent' til true i Supabase
+        const { error } = await supabaseDb.from('samlerbase_profiler').update({ godkjent: true }).eq('brukernavn', brukernavn);
+        
+        if (error) {
+            alert("Feil ved aktivering: " + error.message);
+            return;
+        }
+        
+        if (profiler[brukernavn]) profiler[brukernavn].godkjent = true;
+        
+        // 2. Åpne e-postprogrammet for å sende bekreftelsen
+        const emne = encodeURIComponent("Din konto på Samlerbasen er nå aktivert! 🎉");
+        const innhold = encodeURIComponent("Hei " + brukernavn + "!\n\nKontoen din er nå godkjent og aktivert av administrator.\n\nDu kan nå logge inn i Samlerbasen med brukernavnet og passordet du valgte.\n\nVelkommen inn!\n\nHilsen Admin");
+        window.location.href = "mailto:" + epost + "?subject=" + emne + "&body=" + innhold;
+        
+        // Laster listen på nytt for å se at brukeren forsvant fra admin-panelet
+        aapneAdminPanel(); 
+    }
+    
     // START APPEN NÅR SIDEN LASTER
     window.onload = startApp;
   </script>
