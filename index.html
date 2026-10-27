@@ -1859,28 +1859,34 @@ async function simulerBildeAnalyse() {
               // 2. Hvis Google ikke fant noe, "snok" på Outland.no (Perfekt for norske hefter)
               if (!funnetTreff) {
                   document.querySelector('#loadingInnhold h2').innerText = "Leter i hyllene til Outland...";
-                  const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.outland.no/search?q=" + sokeord);
-                  const outlandRes = await fetch(proxyUrl);
-                  const outlandData = await outlandRes.json();
-                  
-                  // Leser den usynlige nettsiden vi nettopp lastet ned
-                  const parser = new DOMParser();
-                  const doc = parser.parseFromString(outlandData.contents, "text/html");
-                  const tittelElement = doc.querySelector('.product-item-link, .product-item-name');
-                  const bildeElement = doc.querySelector('.product-image-photo');
-
-                  if (tittelElement && tittelElement.innerText.trim().length > 0) {
-                      funnetTreff = true;
-                      let outlandTittel = tittelElement.innerText.trim();
-                      document.getElementById('feltTittel').value = outlandTittel;
-                      document.getElementById('feltBladserie').value = outlandTittel.split(/[#\-]/)[0].trim();
+                  try { // Eget sikkerhetsnett for Outland-snokingen!
+                      const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.outland.no/search?q=" + sokeord);
+                      const outlandRes = await fetch(proxyUrl);
+                      const outlandData = await outlandRes.json();
                       
-                      if (bildeElement && bildeElement.src) {
-                          let coverUrl = bildeElement.src;
-                          document.getElementById('feltCover').value = coverUrl;
-                          document.getElementById('regBildeBoks').classList.remove('hidden');
-                          document.getElementById('regBildeForhandsvisning').src = coverUrl;
+                      if (outlandData && outlandData.contents) {
+                          // Leser den usynlige nettsiden vi nettopp lastet ned
+                          const parser = new DOMParser();
+                          const doc = parser.parseFromString(outlandData.contents, "text/html");
+                          const tittelElement = doc.querySelector('.product-item-link, .product-item-name');
+                          const bildeElement = doc.querySelector('.product-image-photo');
+
+                          if (tittelElement && tittelElement.innerText.trim().length > 0) {
+                              funnetTreff = true;
+                              let outlandTittel = tittelElement.innerText.trim();
+                              document.getElementById('feltTittel').value = outlandTittel;
+                              document.getElementById('feltBladserie').value = outlandTittel.split(/[#\-]/)[0].trim();
+                              
+                              if (bildeElement && bildeElement.src) {
+                                  let coverUrl = bildeElement.src;
+                                  document.getElementById('feltCover').value = coverUrl;
+                                  document.getElementById('regBildeBoks').classList.remove('hidden');
+                                  document.getElementById('regBildeForhandsvisning').src = coverUrl;
+                              }
+                          }
                       }
+                  } catch (outlandError) {
+                      console.log("Outland søk feilet, går videre til Plan B:", outlandError);
                   }
               }
 
@@ -1915,7 +1921,29 @@ async function simulerBildeAnalyse() {
               }
           } catch (error) {
               document.getElementById('loadingOverlay').classList.add('hidden');
-              alert("Klarte ikke koble til tegneseriedatabasene.");
+              console.error("Hovedkrasj i tegneseriesøk:", error);
+              
+              if (fraAI) {
+                  // PLAN C: Kjører Plan B selv om selve hovedsøket (Google) krasjer helt
+                  document.getElementById('feltTittel').value = sokeord;
+                  document.getElementById('feltTittelEng').value = sokeord;
+                  document.getElementById('feltTittelOrig').value = sokeord;
+                  document.getElementById('feltBladserie').value = sokeord.split(/[#\-]/)[0].trim();
+                  
+                  let mittBilde = document.getElementById('feltBrukerBilde').value;
+                  if (mittBilde) {
+                      document.getElementById('regBildeBoks').classList.remove('hidden');
+                      document.getElementById('regBildeForhandsvisning').src = mittBilde;
+                  }
+
+                  alert("Systemet slet med å koble til databasene, men jeg har lagt inn navnet og bildet ditt manuelt for deg.");
+                  
+                  if (confirm("Vil du skanne strekkoden på tegneserien nå for å forsøke å hente mer info?")) {
+                      startAutoRegistrering('strekkode', false);
+                  }
+              } else {
+                  alert("Klarte ikke koble til tegneseriedatabasene. Sjekk nettilkoblingen eller prøv igjen senere.");
+              }
           }
           return;
       }
