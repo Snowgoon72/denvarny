@@ -70,19 +70,26 @@
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">E-postadresse</label>
           <input type="email" id="regEpost" required placeholder="din@epost.no" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
         </div>
+        
+        <!-- Passord med bekreftelse og vis/skjul -->
         <div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg passord</label>
-            <input type="password" id="regPassord" required placeholder="Min. 6 tegn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Velg passord</label>
+              <input type="password" id="regPassord" required placeholder="Min. 6 tegn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Bekreft passord</label>
+              <input type="password" id="regPassordBekreft" required placeholder="Gjenta passord" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Bekreft passord</label>
-            <input type="password" id="regPassordBekreft" required placeholder="Gjenta passord" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
-          </div>
+          <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-400 mt-2">
+              <input type="checkbox" onchange="document.getElementById('regPassord').type = this.checked ? 'text' : 'password'; document.getElementById('regPassordBekreft').type = this.checked ? 'text' : 'password';" class="rounded text-amber-500 w-3.5 h-3.5 bg-slate-900 border-slate-700"> <span>Vis passord</span>
+          </label>
         </div>
-        <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-400 mt-1">
-            <input type="checkbox" onchange="document.getElementById('regPassord').type = this.checked ? 'text' : 'password'; document.getElementById('regPassordBekreft').type = this.checked ? 'text' : 'password';" class="rounded text-amber-500 w-3.5 h-3.5 bg-slate-900 border-slate-700"> <span>Vis passord</span>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Land</label>
             <input type="text" id="regLand" placeholder="Norge" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
           </div>
@@ -244,6 +251,18 @@
                 <div>
                   <label class="block font-semibold text-slate-400 mb-1">Nummer</label>
                   <input type="text" id="endreNummer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+                </div>
+                <div class="col-span-2">
+                  <label class="block font-semibold text-slate-400 mb-1">Format</label>
+                  <select id="endreTegneserieFormat" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+                    <option value="">Ikke spesifisert</option>
+                    <option value="Enkelthefte (Comic)">Enkelthefte (Standard Comic)</option>
+                    <option value="Trade Paperback (TPB)">Trade Paperback (TPB)</option>
+                    <option value="Hardcover (HC)">Hardcover (HC)</option>
+                    <option value="Manga">Manga</option>
+                    <option value="Album">Album (Euro-tegneserie)</option>
+                    <option value="Pocket">Pocket / Jumbobok</option>
+                  </select>
                 </div>
             </div>
 
@@ -512,7 +531,7 @@
             <button type="button" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> 1. Strekkode</button>
             
             <!-- NY AI-KNAPP: -->
-            <button type="button" onclick="document.getElementById('bildeInput').click()" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">👁️</span> 2. AI Cover</button>
+            <button type="button" onclick="document.getElementById('bildeInput').click()" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">👁️</span> 2. Bruk AI</button>
             
             <button type="button" onclick="startAutoRegistrering('tittel')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">🔍</span> 3. Nettsøk</button>
             <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> 4. Diktering</button>
@@ -594,12 +613,24 @@
                <div class="grid grid-cols-2 gap-2">
                  <div>
                    <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Bladserie</label>
-                   <input type="text" id="feltBladserie" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2" />
+                   <input type="text" id="feltBladserie" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
                  </div>
                  <div>
                    <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Nummer i serie</label>
-                   <input type="text" id="feltNummer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2" />
+                   <input type="text" id="feltNummer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
                  </div>
+               </div>
+               <div>
+                 <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Tegneserie-format</label>
+                 <select id="feltTegneserieFormat" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300">
+                   <option value="">Velg format...</option>
+                   <option value="Enkelthefte (Comic)">Enkelthefte (Standard Comic)</option>
+                   <option value="Trade Paperback (TPB)">Trade Paperback (TPB)</option>
+                   <option value="Hardcover (HC)">Hardcover (HC)</option>
+                   <option value="Manga">Manga</option>
+                   <option value="Album">Album (Euro-tegneserie)</option>
+                   <option value="Pocket">Pocket / Jumbobok</option>
+                 </select>
                </div>
             </div>
 
@@ -1102,6 +1133,7 @@ function apneEndreModal(id) {
       } else if (erTegne) {
         document.getElementById('endreBladserie').value = item.bladserie || '';
         document.getElementById('endreNummer').value = item.nr || '';
+        document.getElementById('endreTegneserieFormat').value = (item.format && item.format.length > 0) ? item.format[0] : '';
       }
 
       if (erPlante) {
@@ -1167,6 +1199,8 @@ if (item.kategori === 'film') {
       } else if (item.kategori === 'tegneserie') {
         item.bladserie = document.getElementById('endreBladserie').value.trim();
         item.nr = document.getElementById('endreNummer').value.trim();
+        let formatInn = document.getElementById('endreTegneserieFormat').value;
+        item.format = formatInn ? [formatInn] : [];
       } else if (item.kategori === 'plante') {
           item.vanning = document.getElementById('endrePlanteVanning').value.trim();
           item.sollys = document.getElementById('endrePlanteSollys').value.trim();
@@ -1229,10 +1263,12 @@ if (item.kategori === 'film') {
       document.body.removeChild(link);
     }
 
-    function startAutoRegistrering(metode) {
-      document.getElementById('hovedSkjema').reset();
-      document.getElementById('regBildeBoks').classList.add('hidden'); 
-      document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
+    function startAutoRegistrering(metode, slettSkjema = true) {
+      if (slettSkjema) {
+          document.getElementById('hovedSkjema').reset();
+          document.getElementById('regBildeBoks').classList.add('hidden'); 
+          document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
+      }
       
       if (metode === 'strekkode') {
         document.getElementById('skannerModal').classList.remove('hidden'); 
@@ -1576,35 +1612,53 @@ async function simulerBildeAnalyse() {
                     }
 
                     // ==========================================
-                    // LØSNING FOR FILMER
+                    // LØSNING FOR FILMER OG TEGNESERIER
                     // ==========================================
-                    if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer coveret...";
+                    if (aktivKategori === 'film' || aktivKategori === 'tegneserie') {
+                        if (undertekstFelt) undertekstFelt.innerText = "Kunstig intelligens analyserer coveret...";
 
-                    try {
-                        const response = await fetch('/api/bilde', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ bildeBase64: forminsketBilde })
-                        });
+                        try {
+                            const response = await fetch('/api/bilde', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ bildeBase64: forminsketBilde })
+                            });
 
-                        const data = await response.json();
+                            const data = await response.json();
 
-                        if (data.tittel) {
+                            if (data.tittel) {
+                                if (overlay) overlay.classList.add('hidden');
+                                let renTittel = data.tittel.replace(/"/g, ''); 
+                                
+                                // Gjetter format basert på AI-ens ord (f.eks "Batman vol 1 TPB")
+                                if (aktivKategori === 'tegneserie') {
+                                    let gjetting = renTittel.toLowerCase();
+                                    let fFormat = "";
+                                    if (gjetting.includes("manga")) fFormat = "Manga";
+                                    else if (gjetting.includes("hardcover") || gjetting.includes(" hc")) fFormat = "Hardcover (HC)";
+                                    else if (gjetting.includes("pocket") || gjetting.includes("jumbo")) fFormat = "Pocket";
+                                    else if (gjetting.includes("album")) fFormat = "Album";
+                                    else if (gjetting.includes("tpb") || gjetting.includes("trade") || gjetting.includes("vol")) fFormat = "Trade Paperback (TPB)";
+                                    
+                                    if (fFormat) document.getElementById('feltTegneserieFormat').value = fFormat;
+                                }
+
+                                const bekreft = prompt("🤖 AI-en tror dette er:\n\n" + renTittel + "\n\nTrykk OK for å søke opp denne:", renTittel);
+                                if (bekreft && bekreft.trim() !== "") {
+                                    simulerApiOppslag(bekreft.trim(), true);
+                                }
+                            } else {
+                                throw new Error(data.error || "Fikk ikke svar fra AI.");
+                            }
+                        } catch (err) {
                             if (overlay) overlay.classList.add('hidden');
-                            let renTittel = data.tittel.replace(/"/g, ''); 
-                            const bekreft = prompt("🤖 AI-en tror dette er:\n\n" + renTittel + "\n\nTrykk OK for å søke opp denne filmen:", renTittel);
-                            if (bekreft && bekreft.trim() !== "") simulerApiOppslag(bekreft.trim());
-                        } else {
-                            throw new Error(data.error || "Fikk ikke svar fra AI.");
+                            alert("Noe gikk galt med søket:\n\n" + err.message);
+                        } finally {
+                            input.value = '';
                         }
-                    } catch (err) {
-                        if (overlay) overlay.classList.add('hidden');
-                        alert("Noe gikk galt med film-søket:\n\n" + err.message);
-                    } finally {
-                        input.value = '';
                     }
-                };
-            };
+                }; // LUKKER bildeinnlastingen
+            }; // LUKKER filinnlastingen
         } catch (error) {
             console.error(error);
             if (overlay) overlay.classList.add('hidden');
@@ -1613,7 +1667,7 @@ async function simulerBildeAnalyse() {
         }
     }
 
-    async function simulerApiOppslag(sokeord) {
+    async function simulerApiOppslag(sokeord, fraAI = false) {
       // === PLANTE-OPPSLAG (Perenual + Wikipedia) ===
       
      if (aktivKategori === 'plante') {
@@ -1831,10 +1885,33 @@ async function simulerBildeAnalyse() {
               }
 
               document.getElementById('loadingOverlay').classList.add('hidden');
+              
               if (funnetTreff) {
                   alert("Klar! Hentet informasjon og coverbilde. Sjekk over og fyll inn eventuelt nummer i rekken.");
               } else {
-                  alert("Fant dessverre ingen tegneserier med det navnet hverken globalt eller i Norge. Du må fylle inn manuelt.");
+                  if (fraAI) {
+                      // PLAN B: Fyll inn alt vi vet hvis den ikke finnes
+                      document.getElementById('feltTittel').value = sokeord;
+                      document.getElementById('feltTittelEng').value = sokeord;
+                      document.getElementById('feltTittelOrig').value = sokeord;
+                      document.getElementById('feltBladserie').value = sokeord.split(/[#\-]/)[0].trim();
+                      
+                      // Henter bildet vi akkurat tok, og viser det
+                      let mittBilde = document.getElementById('feltBrukerBilde').value;
+                      if (mittBilde) {
+                          document.getElementById('regBildeBoks').classList.remove('hidden');
+                          document.getElementById('regBildeForhandsvisning').src = mittBilde;
+                      }
+
+                      alert("Fant dessverre ingen tegneserier med navnet '" + sokeord + "' på nett.\n\nJeg har lagt inn navnet og bildet ditt manuelt for deg uansett!");
+                      
+                      if (confirm("Vil du skanne strekkoden på tegneserien nå for å forsøke å hente mer info?")) {
+                          // Sender "false" for å beholde navnet og bildet vi nettopp satte inn
+                          startAutoRegistrering('strekkode', false);
+                      }
+                  } else {
+                      alert("Fant dessverre ingen tegneserier med det navnet. Du må fylle inn manuelt.");
+                  }
               }
           } catch (error) {
               document.getElementById('loadingOverlay').classList.add('hidden');
@@ -2426,7 +2503,9 @@ async function simulerBildeAnalyse() {
           ny.format = valgteFormater; 
       } else if (aktivKategori === 'tegneserie') { 
           ny.bladserie = document.getElementById('feltBladserie').value; 
-          ny.nr = document.getElementById('feltNummer').value; 
+          ny.nr = document.getElementById('feltNummer').value;
+          let formatNy = document.getElementById('feltTegneserieFormat').value;
+          ny.format = formatNy ? [formatNy] : []; 
       } else if (aktivKategori === 'plante') {
           ny.tittel_eng = document.getElementById('feltPlanteEngelsk').value.trim();
           ny.tittel_orig = document.getElementById('feltPlanteVitenskapelig').value.trim();
