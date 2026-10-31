@@ -2276,8 +2276,8 @@
         lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Lagringsplass</span><span class="font-bold text-indigo-400">' + (item.lagret || 'Ikke oppgitt') + '</span></div>';
         lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Antatt verdi</span><span class="font-bold text-emerald-400">' + (item.verdi ? item.verdi + ' kr' : '-') + '</span></div>';
         
-        let regDato = (item.id > 1000000000000) ? new Date(item.id).toLocaleDateString('no-NO') : 'Ukjent';
-        lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Registrert i systemet</span><span class="font-bold text-slate-400">📅 ' + regDato + '</span></div>';
+        let regDatoTekst = item.registrert_dato ? item.registrert_dato : ((item.id > 1000000000000) ? new Date(item.id).toLocaleDateString('no-NO') : 'Ukjent');
+        lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Registrert i systemet</span><span class="font-bold text-slate-400">📅 ' + regDatoTekst + '</span></div>';
         
         lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Kommentar / Notater</span><span class="text-slate-300 italic">' + (item.kommentar || 'Ingen notater.') + '</span></div>';
         lokalHtml += '</div>';
