@@ -17,13 +17,15 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 model: "gpt-4o-mini",
+                response_format: { type: "json_object" }, // 1. Tvinger AI-en til å svare med gyldig JSON
                 messages: [
                     {
                         role: "user",
                         content: [
                             { 
                                 type: "text", 
-                                text: "Du er en ekspert på filmer. Se på dette bildet av et filmcover eller en filmplakat. Hva er tittelen på filmen? Svar KUN med den offisielle filmtittelen, ingenting annet. Ikke ta med ord som Blu-ray, DVD, anmeldelser eller skuespillere. Hvis du ser et tydelig utgivelsesår, kan du legge det til i parentes bak tittelen, men prioriter navnet." 
+                                // 2. Her er den nye instruksen din lagt inn:
+                                text: "Du er en ekspert på filmer og tegneserier. Se på dette bildet og finn tittelen. Returner alltid JSON med en 'tittel'. Hvis du tydelig kan lese en cover-pris på bladet (f.eks NOK, Kr eller $), legg den ved som et rent tall i et felt kalt 'pris'." 
                             },
                             { 
                                 type: "image_url", 
@@ -37,9 +39,10 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
-        const tittel = data.choices[0].message.content.trim();
         
-        res.status(200).json({ tittel });
+        // 3. Gjør om JSON-teksten fra AI-en til et faktisk objekt, og sender det til appen
+        const aiSvar = JSON.parse(data.choices[0].message.content.trim());
+        res.status(200).json(aiSvar);
 
     } catch (error) {
         console.error("OpenAI feil:", error);
