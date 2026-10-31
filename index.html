@@ -1598,6 +1598,8 @@
             } else {
                 document.getElementById('wizBaksideResultat').innerText = "✅ Suksess! Fant data.";
                 if (data.alder) document.getElementById('wizAlder').value = data.alder;
+                if (data.aar) document.getElementById('wizAar').value = data.aar;
+                if (data.aar) document.getElementById('wizAarFilm').value = data.aar;
                 if (data.tekst) document.getElementById('wizTekstSpraak').value = data.tekst;
                 if (data.lyd) document.getElementById('wizLydSpraak').value = data.lyd;
                 if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
@@ -2030,7 +2032,9 @@
           document.getElementById('feltTittel').value = film.title || "";
           document.getElementById('feltTittelOrig').value = film.original_title || "";
           document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
-          document.getElementById('feltAar').value = film.release_date ? film.release_date.substring(0, 4) : "";
+          if (film.release_date) {
+              document.getElementById('feltAar').value = film.release_date.substring(0, 4);
+          }
           document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
           
           if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
