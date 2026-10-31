@@ -1140,6 +1140,14 @@
       alert("✅ Lagret i samlingen din!");
     }
 
+    function slettElement(id) {
+        if(confirm("Er du sikker på at du vil slette dette objektet? Dette kan ikke angres!")) {
+            database = database.filter(item => item.id !== id);
+            supabaseDb.from('samlerbase_data').delete().eq('id', id).then();
+            utforSok();
+        }
+    }
+    
     function apneEndreModal(id) {
       const item = database.find(i => i.id === id);
       if (!item) return;
