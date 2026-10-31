@@ -184,10 +184,17 @@
         <input type="hidden" id="endreNyttBildeBase64" />
         
         <!-- NY BILDEVISNING I REDIGER-MODALEN -->
-        <div id="endreBildeVisning" class="flex flex-col items-center justify-center mb-4">
-            <img id="endreBildeTag" src="" class="w-32 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl hidden" />
-            <button type="button" onclick="document.getElementById('endreBildeInput').click()" class="mt-3 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-4 rounded-lg border border-slate-700 transition shadow font-bold">📷 Bytt bilde / Ta nytt</button>
-            <input type="file" id="endreBildeInput" accept="image/*" capture="environment" class="hidden" onchange="lastInnEndreBilde(event)" />
+        <div id="endreBildeVisning" class="flex gap-4 items-start justify-center mb-4 overflow-x-auto">
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Forside</span>
+                <img id="endreBildeTag" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl hidden" />
+                <button type="button" onclick="document.getElementById('endreBildeInput').click()" class="mt-2 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded border border-slate-700 transition font-bold">📷 Bytt</button>
+                <input type="file" id="endreBildeInput" accept="image/*" capture="environment" class="hidden" onchange="lastInnEndreBilde(event)" />
+            </div>
+            <div class="flex flex-col items-center hidden" id="endreBaksideBoks">
+                <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Bakside</span>
+                <a id="endreBaksideLenke" href="#" target="_blank"><img id="endreBaksideTag" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl" /></a>
+            </div>
         </div>
         
         <!-- SEKSJON 1: Generelt -->
@@ -1148,6 +1155,16 @@
           document.getElementById('endreBildeTag').classList.add('hidden');
           document.getElementById('endreBildeTag').src = '';
       }
+      
+      // Viser baksidebildet hvis det finnes i databasen
+      if (item.bakside_bilde) {
+          document.getElementById('endreBaksideBoks').classList.remove('hidden');
+          document.getElementById('endreBaksideTag').src = item.bakside_bilde;
+          document.getElementById('endreBaksideLenke').href = item.bakside_bilde;
+      } else {
+          document.getElementById('endreBaksideBoks').classList.add('hidden');
+          document.getElementById('endreBaksideTag').src = '';
+      }
       document.getElementById('endreTittel').value = item.tittel || '';
       document.getElementById('endreTittelEng').value = item.tittel_eng || '';
       document.getElementById('endreTittelOrig').value = item.tittel_orig || '';
@@ -2047,8 +2064,23 @@
 
             database[itemIndex] = item;
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
+            
+            // OPPDATERER SKJERMEN UMIDDELBART HVIS REDIGER-VINDUET ER ÅPENT!
+            if (!document.getElementById('endreModal').classList.contains('hidden') && document.getElementById('endreId').value == item.id) {
+                document.getElementById('endreTittelEng').value = item.tittel_eng || '';
+                document.getElementById('endreTittelOrig').value = item.tittel_orig || '';
+                document.getElementById('endreAar').value = item.aar || '';
+                document.getElementById('endreRating').value = item.rating || '';
+                document.getElementById('endreSjanger').value = item.sjanger || '';
+                document.getElementById('endreImdb').value = item.imdb || '';
+                if (item.cover && !document.getElementById('endreNyttBildeBase64').value) {
+                    document.getElementById('endreBildeTag').src = item.cover;
+                    document.getElementById('endreBildeTag').classList.remove('hidden');
+                }
+            }
+
             utforSok();
-            alert("Suksess! Oppdaterte info for " + valgtFilm.title);
+            alert("Suksess! Oppdaterte info for " + valgtFilm.title + ". Årstall satt til: " + (item.aar || "Fant ikke år"));
          }
        } catch(e) {}
     }
