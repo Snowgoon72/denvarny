@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     let aiPrompt = "Du er en ekspert på filmer og tegneserier. Se på dette bildet av en forside. Returner ALLTID et JSON-objekt. Trekk ut 'tittel' (hovedtittel), 'tittel_orig' (originaltittel), 'format' (f.eks Blu-ray, 4K UHD, DVD, Manga, Pocket), og 'pris' (kun tall hvis du ser en cover-pris).";
     
     if (erBakside) {
-        aiPrompt = "Dette er et bilde av baksiden av et filmcover eller tegneserie. Returner ALLTID et JSON-objekt. Finn og returner 'alder' (f.eks 15, 18, A), 'tekst' (undertekst-språk som Norsk, Engelsk), 'lyd' (lydspor, f.eks Engelsk 5.1), 'format' (f.eks Blu-ray, DVD, Hardcover hvis det står på baksiden), og eventuelt 'tittel_orig' hvis den er nevnt i liten tekst.";
+        aiPrompt = "Dette er et bilde av baksiden av et filmcover eller tegneserie. Returner ALLTID et JSON-objekt. Finn og returner 'alder' (f.eks 15, 18, A), 'tekst' (undertekst-språk som Norsk, Engelsk), 'lyd' (lydspor, f.eks Engelsk 5.1), 'format' (f.eks Blu-ray, DVD, Hardcover hvis det står på baksiden), 'aar' (utgivelsesår eller copyright-år), og eventuelt 'tittel_orig' hvis den er nevnt i liten tekst.";
     }
 
     try {
