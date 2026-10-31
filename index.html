@@ -540,6 +540,7 @@
        <!-- Steg 5: Serie / År -->
        <div id="wizStep_4" class="wiz-step hidden space-y-3">
           <h3 class="font-bold text-white mb-2">5. Serie og Utgivelse</h3>
+          
           <div id="wizSeksjonTegneserie">
               <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Bladserie</label><input type="text" id="wizBladserie" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
               <div class="grid grid-cols-2 gap-2 mt-3">
@@ -547,8 +548,10 @@
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgivelsesår</label><input type="number" id="wizAar" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
               </div>
           </div>
+          
           <div id="wizSeksjonFilm" class="hidden">
-              <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgivelsesår (Film)</label><input type="number" id="wizAarFilm" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+              <div><label class="block text-xs font-bold text-amber-500 uppercase mb-1">Utgivelsesår</label><input type="number" id="wizAarFilm" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-400 font-bold focus:border-indigo-500 outline-none"></div>
+              
               <div class="grid grid-cols-2 gap-2 mt-3">
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Tekstspråk</label><input type="text" id="wizTekstSpraak" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Lydspor</label><input type="text" id="wizLydSpraak" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
@@ -1677,6 +1680,10 @@
                     let rT = t.replace(/blu-ray|dvd|4k|uhd|nordic|import|edition|nordisk|norsk|uk/gi, '').replace(/\([0-9]{4}\)/g, '').replace(/-|\(|\)|\[|\]/g, ' ').replace(/\s+/g, ' ').trim();
                     if(!document.getElementById('wizTittel').value) document.getElementById('wizTittel').value = rT;
                     if(!document.getElementById('wizTittelEng').value) document.getElementById('wizTittelEng').value = rT;
+                    
+                    // Forsøker å fange utgivelsesåret direkte hvis det er angitt
+                    let pS = t.match(/\b(19\d{2}|20\d{2})\b/); 
+                    if(pS && !document.getElementById('wizAarFilm').value) document.getElementById('wizAarFilm').value = pS[0];
                 }
             } else {
                 const gbRes = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + strekkode);
@@ -1726,7 +1733,9 @@
         document.getElementById('feltKommentar').value = document.getElementById('wizKommentar').value;
         
         if (aktivKategori === 'film') {
+            // DETTE VAR MANGLENDE LINJE FOR FILM-ÅRSTALL:
             document.getElementById('feltAar').value = document.getElementById('wizAarFilm').value;
+            
             document.getElementById('feltTekstSpraak').value = document.getElementById('wizTekstSpraak').value;
             document.getElementById('feltLydSpraak').value = document.getElementById('wizLydSpraak').value;
             document.getElementById('feltAlder').value = document.getElementById('wizAlder').value;
@@ -1749,7 +1758,7 @@
 
         lukkWizard();
         
-        // Simulerer et automatisk søk for å hente inn IMDb rating hvis du er film, ellers lagrer den direkte.
+        // Simulerer et automatisk søk for å hente inn IMDb rating, originaltittel og år hvis det fremdeles mangler!
         if (aktivKategori === 'film' && document.getElementById('feltTittel').value) {
             simulerApiOppslag(document.getElementById('feltTittel').value);
         } else {
