@@ -657,7 +657,7 @@
   </header>
 
   <!-- Skanner Modal -->
-  <div id="skannerModal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4">
+  <div id="skannerModal" class="hidden fixed inset-0 bg-black/90 z-[200] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700 max-w-sm w-full">
       <div class="flex justify-between items-center mb-3">
         <h3 class="font-bold text-amber-400 text-sm">Skann Strekkode</h3>
@@ -1591,6 +1591,15 @@
         if(text.includes("4k") || text.includes("uhd")) return ops.find(o => o.includes("4K")) || "";
         if(text.includes("dvd")) return ops.find(o => o.includes("DVD")) || "";
         return "";
+    }
+
+    let skannerInstans = null;
+
+    function stoppSkanner() {
+        if (typeof skannerInstans !== 'undefined' && skannerInstans) {
+            skannerInstans.stop().then(() => { skannerInstans.clear(); }).catch(()=>{}); 
+        }
+        document.getElementById('skannerModal').classList.add('hidden'); 
     }
 
     function startWizardScanner() {
