@@ -1591,6 +1591,17 @@
                     if (data.tittel_orig) document.getElementById('wizTittelOrig').value = data.tittel_orig;
                     document.getElementById('wizBladserie').value = renTittel.split(/[#\-]/)[0].trim();
                     
+                    // NYTT: Hent årstallet fra TMDb med én gang forslag på tittel foreligger!
+                    if (aktivKategori === 'film') {
+                        try {
+                            const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO", { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
+                            const tmdbData = await tmdbRes.json();
+                            if (tmdbData.results && tmdbData.results.length > 0 && tmdbData.results[0].release_date) {
+                                document.getElementById('wizAarFilm').value = tmdbData.results[0].release_date.substring(0, 4);
+                            }
+                        } catch(e) {}
+                    }
+
                     setTimeout(() => wizGaa(1), 1500); 
                 } else {
                     document.getElementById('wizAiResultat').innerText = "Klarte ikke tyde tittelen.";
@@ -1598,10 +1609,10 @@
             } else {
                 document.getElementById('wizBaksideResultat').innerText = "✅ Suksess! Fant data.";
                 if (data.alder) document.getElementById('wizAlder').value = data.alder;
-                if (data.aar) document.getElementById('wizAar').value = data.aar;
-                if (data.aar) document.getElementById('wizAarFilm').value = data.aar;
                 if (data.tekst) document.getElementById('wizTekstSpraak').value = data.tekst;
                 if (data.lyd) document.getElementById('wizLydSpraak').value = data.lyd;
+                // Legger til årstall fra back-cover (hvis funnet):
+                if (data.aar) { document.getElementById('wizAarFilm').value = data.aar; document.getElementById('wizAar').value = data.aar; }
                 if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
                 if (data.tittel_orig && !document.getElementById('wizTittelOrig').value) document.getElementById('wizTittelOrig').value = data.tittel_orig;
                 
@@ -1683,9 +1694,16 @@
                     if(!document.getElementById('wizTittel').value) document.getElementById('wizTittel').value = rT;
                     if(!document.getElementById('wizTittelEng').value) document.getElementById('wizTittelEng').value = rT;
                     
-                    // Forsøker å fange utgivelsesåret direkte hvis det er angitt
-                    let pS = t.match(/\b(19\d{2}|20\d{2})\b/); 
-                    if(pS && !document.getElementById('wizAarFilm').value) document.getElementById('wizAarFilm').value = pS[0];
+                    // NYTT: Hent årstallet fra TMDb med én gang strekkoden gir oss en tittel!
+                    try {
+                        const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(rT) + "&language=no-NO", { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
+                        const tmdbData = await tmdbRes.json();
+                        if (tmdbData.results && tmdbData.results.length > 0 && tmdbData.results[0].release_date) {
+                            if (!document.getElementById('wizAarFilm').value) {
+                                document.getElementById('wizAarFilm').value = tmdbData.results[0].release_date.substring(0, 4);
+                            }
+                        }
+                    } catch(e) {}
                 }
             } else {
                 const gbRes = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + strekkode);
@@ -1697,7 +1715,10 @@
                         document.getElementById('wizTittelEng').value = bok.title || "";
                         document.getElementById('wizBladserie').value = (bok.title || "").split(/[#\-]/)[0].trim();
                     }
-                    if (bok.publishedDate) document.getElementById('wizAar').value = bok.publishedDate.substring(0, 4);
+                    if (bok.publishedDate) {
+                        document.getElementById('wizAar').value = bok.publishedDate.substring(0, 4);
+                        document.getElementById('wizAarFilm').value = bok.publishedDate.substring(0, 4);
+                    }
                     if (bok.pageCount) document.getElementById('wizSider').value = bok.pageCount;
                 }
             }
@@ -1735,7 +1756,7 @@
         document.getElementById('feltKommentar').value = document.getElementById('wizKommentar').value;
         
         if (aktivKategori === 'film') {
-            // DETTE VAR MANGLENDE LINJE FOR FILM-ÅRSTALL:
+            // DENNE LINJEN ER KRITISK FOR AT ÅRET SKAL BLI MED OVER:
             document.getElementById('feltAar').value = document.getElementById('wizAarFilm').value;
             
             document.getElementById('feltTekstSpraak').value = document.getElementById('wizTekstSpraak').value;
@@ -2032,8 +2053,9 @@
           document.getElementById('feltTittel').value = film.title || "";
           document.getElementById('feltTittelOrig').value = film.original_title || "";
           document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
-          if (film.release_date) {
-              document.getElementById('feltAar').value = film.release_date.substring(0, 4);
+          let funnetAar = film.release_date || detaljer.release_date || "";
+          if (funnetAar) {
+              document.getElementById('feltAar').value = funnetAar.substring(0, 4);
           }
           document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
           
@@ -2448,6 +2470,17 @@
         rad.innerHTML = hovedKort + kopierHtml;
         container.appendChild(rad);
       });
+    }
+    
+    function toggleKopier(id) {
+        const div = document.getElementById(id);
+        if(div) {
+            if(div.classList.contains('hidden')) {
+                div.classList.remove('hidden');
+            } else {
+                div.classList.add('hidden');
+            }
+        }
     }
 
     function utforSok() {
