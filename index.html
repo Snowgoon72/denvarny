@@ -498,12 +498,17 @@
        </div>
 
        <!-- Steg 2: Bakside -->
+       <!-- Steg 2: Bakside -->
        <div id="wizStep_1" class="wiz-step hidden">
           <h3 class="font-bold text-white mb-2">2. Skann Baksiden (Valgfritt)</h3>
           <p class="text-xs text-slate-400 mb-4">Fanger opp lydspor, undertekster og aldersgrense.</p>
           <button onclick="document.getElementById('wizBaksideInput').click()" class="w-full bg-blue-600/20 border border-blue-500/50 text-blue-400 hover:bg-blue-600/40 transition py-4 rounded-xl font-bold">📷 Ta bilde av baksiden</button>
           <input type="file" id="wizBaksideInput" accept="image/*" capture="environment" class="hidden" onchange="wizardBildeAnalyse(event, true)" />
-          <p id="wizBaksideResultat" class="text-cyan-400 text-sm font-bold mt-4 text-center"></p>
+          
+          <div id="wizBaksidePreviewBoks" class="hidden mt-4 text-center">
+              <img id="wizBaksidePreview" src="" class="w-32 h-32 object-cover mx-auto rounded-lg border-2 border-slate-700 shadow-lg">
+              <p id="wizBaksideResultat" class="text-cyan-400 text-sm font-bold mt-2"></p>
+          </div>
        </div>
 
        <!-- Steg 3: Strekkode -->
@@ -690,6 +695,7 @@
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs border-t border-slate-800 pt-4 mt-2">
             <input type="hidden" id="feltCover" />
             <input type="hidden" id="feltBrukerBilde" />
+            <input type="hidden" id="feltBaksideBilde" />
             
             <div class="flex justify-between items-center mb-2">
                 <h3 class="font-bold text-slate-300 uppercase tracking-wider">Manuelt Skjema</h3>
@@ -1061,7 +1067,8 @@
         tittel_eng: document.getElementById('feltTittelEng').value.trim(),
         tittel_orig: document.getElementById('feltTittelOrig').value.trim(),
         aar: document.getElementById('feltAar').value,
-        cover: document.getElementById('feltBrukerBilde').value || document.getElementById('feltCover').value
+        cover: document.getElementById('feltBrukerBilde').value || document.getElementById('feltCover').value,
+        bakside_bilde: document.getElementById('feltBaksideBilde').value
       };
 
       if (aktivKategori === 'film') {
@@ -1524,19 +1531,23 @@
         } else {
             document.getElementById('wizBaksideResultat').innerText = "Analyserer bakside...";
         }
-
+        
         const forminsketBilde = kuttetCanvas.toDataURL('image/jpeg', 0.8);
         
+        const canvasLiten = document.createElement('canvas');
+        const maxLagringBredde = 450; 
+        const skalaLiten = maxLagringBredde / kuttetCanvas.width;
+        canvasLiten.width = kuttetCanvas.width > maxLagringBredde ? maxLagringBredde : kuttetCanvas.width;
+        canvasLiten.height = kuttetCanvas.width > maxLagringBredde ? kuttetCanvas.height * skalaLiten : kuttetCanvas.height;
+        const ctxLiten = canvasLiten.getContext('2d');
+        ctxLiten.drawImage(kuttetCanvas, 0, 0, canvasLiten.width, canvasLiten.height);
+        const ferdigBilde = canvasLiten.toDataURL('image/jpeg', 0.6);
+        
         if (!erBakside) {
-            const canvasLiten = document.createElement('canvas');
-            const maxLagringBredde = 450; 
-            const skalaLiten = maxLagringBredde / kuttetCanvas.width;
-            canvasLiten.width = kuttetCanvas.width > maxLagringBredde ? maxLagringBredde : kuttetCanvas.width;
-            canvasLiten.height = kuttetCanvas.width > maxLagringBredde ? kuttetCanvas.height * skalaLiten : kuttetCanvas.height;
-            const ctxLiten = canvasLiten.getContext('2d');
-            ctxLiten.drawImage(kuttetCanvas, 0, 0, canvasLiten.width, canvasLiten.height);
-            
-            document.getElementById('wizBildePreview').src = canvasLiten.toDataURL('image/jpeg', 0.6);
+            document.getElementById('wizBildePreview').src = ferdigBilde;
+        } else {
+            document.getElementById('wizBaksidePreviewBoks').classList.remove('hidden');
+            document.getElementById('wizBaksidePreview').src = ferdigBilde;
         }
 
         try {
@@ -1680,6 +1691,10 @@
             document.getElementById('feltBrukerBilde').value = wizPre;
             document.getElementById('regBildeBoks').classList.remove('hidden');
             document.getElementById('regBildeForhandsvisning').src = wizPre;
+        }
+        const wizBak = document.getElementById('wizBaksidePreview').src;
+        if (wizBak && wizBak.length > 50) { 
+            document.getElementById('feltBaksideBilde').value = wizBak;
         }
 
         document.getElementById('feltStrekkode').value = document.getElementById('wizStrekkode').value;
@@ -2024,7 +2039,7 @@
 
             item.tittel_orig = valgtFilm.original_title || item.tittel_orig;
             item.tittel_eng = detaljer.title || valgtFilm.title || item.tittel_eng;
-            if(!item.aar) item.aar = valgtFilm.release_date ? valgtFilm.release_date.substring(0, 4) : item.aar;
+            if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
@@ -2072,7 +2087,7 @@
 
             item.tittel_orig = valgtFilm.original_title || item.tittel_orig;
             item.tittel_eng = detaljer.title || valgtFilm.title || item.tittel_eng;
-            if(!item.aar) item.aar = valgtFilm.release_date ? valgtFilm.release_date.substring(0, 4) : item.aar;
+            if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
@@ -2236,10 +2251,11 @@
 
         let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
         
-        if (item.kategori !== 'plante' && (item.bruker_bilde || item.cover)) {
+        if (item.kategori !== 'plante' && (item.bruker_bilde || item.cover || item.bakside_bilde)) {
             lokalHtml += '<div class="col-span-2 flex gap-3 overflow-x-auto pb-2">';
-            if (item.bruker_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Mitt bilde</span><a href="' + item.bruker_bilde + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.bruker_bilde + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
-            if (item.cover && item.cover !== item.bruker_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Referansebilde</span><a href="' + item.cover + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.cover + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            if (item.bruker_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Forside</span><a href="' + item.bruker_bilde + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.bruker_bilde + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            if (item.bakside_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Bakside</span><a href="' + item.bakside_bilde + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.bakside_bilde + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            if (item.cover && item.cover !== item.bruker_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Referanse (TMDb)</span><a href="' + item.cover + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.cover + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
             lokalHtml += '</div>';
         }
         
