@@ -202,18 +202,18 @@
           <div class="absolute top-0 right-0 bg-indigo-900/30 text-indigo-400 px-3 py-1 rounded-bl-lg font-bold text-[10px] uppercase tracking-wider">Generell Info (Kan auto-hentes)</div>
           
           <div class="pt-2">
-            <label id="endreLabelTittel" class="block font-semibold text-slate-400 mb-1">Tittel (Lokal)</label>
+            <label id="endreLabelTittel" class="block font-semibold text-slate-400 mb-1">Hovedtittel (Lokal)</label>
             <input type="text" id="endreTittel" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold" />
           </div>
 
           <div id="endreTittelEkstra" class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block font-semibold text-slate-400 mb-1">Engelsk Tittel</label>
-              <input type="text" id="endreTittelEng" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
-            </div>
-            <div>
               <label class="block font-semibold text-slate-400 mb-1">Originaltittel</label>
               <input type="text" id="endreTittelOrig" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-400 mb-1">Engelsk Tittel</label>
+              <input type="text" id="endreTittelEng" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
             </div>
           </div>
 
@@ -532,9 +532,12 @@
        <!-- Steg 4: Titler -->
        <div id="wizStep_3" class="wiz-step hidden space-y-3">
           <h3 class="font-bold text-white mb-2">4. Navn og Tittel</h3>
-          <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Tittel (Norsk/Lokal)</label><input type="text" id="wizTittel" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold focus:border-indigo-500 outline-none"></div>
-          <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Engelsk Tittel</label><input type="text" id="wizTittelEng" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+          <!-- Steg 4: Titler -->
+       <div id="wizStep_3" class="wiz-step hidden space-y-3">
+          <h3 class="font-bold text-white mb-2">4. Navn og Tittel</h3>
+          <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Hovedtittel (Norsk/Lokal)</label><input type="text" id="wizTittel" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold focus:border-indigo-500 outline-none"></div>
           <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Originaltittel</label><input type="text" id="wizTittelOrig" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+          <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Engelsk Tittel</label><input type="text" id="wizTittelEng" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
        </div>
 
        <!-- Steg 5: Serie / År -->
@@ -731,17 +734,17 @@
 
             <div class="space-y-2 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
               <div>
-                <label id="labelTittel" class="block font-semibold text-amber-500 uppercase tracking-wider mb-1">Tittel (Lokal)</label>
+                <label id="labelTittel" class="block font-semibold text-amber-500 uppercase tracking-wider mb-1">Hovedtittel (Lokal)</label>
                 <input type="text" id="feltTittel" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:border-amber-500" />
               </div>
               <div id="feltTittelEkstra" class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Engelsk Tittel</label>
-                  <input type="text" id="feltTittelEng" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" />
-                </div>
-                <div>
                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Originaltittel</label>
                   <input type="text" id="feltTittelOrig" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Engelsk Tittel</label>
+                  <input type="text" id="feltTittelEng" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" />
                 </div>
               </div>
             </div>
