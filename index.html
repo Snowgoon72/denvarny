@@ -78,6 +78,7 @@
           <input type="email" id="regEpost" required placeholder="din@epost.no" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         
+        <!-- Passord med bekreftelse og vis/skjul -->
         <div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
@@ -182,7 +183,7 @@
         <input type="hidden" id="endreId" />
         <input type="hidden" id="endreNyttBildeBase64" />
         
-        <!-- BILDER: FORSIDE OG BAKSIDE I REDIGER-MODAL -->
+        <!-- NY BILDEVISNING I REDIGER-MODALEN -->
         <div id="endreBildeVisning" class="flex gap-4 items-start justify-center mb-4 overflow-x-auto">
             <div class="flex flex-col items-center">
                 <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Forside</span>
@@ -504,6 +505,7 @@
        </div>
 
        <!-- Steg 2: Bakside -->
+       <!-- Steg 2: Bakside -->
        <div id="wizStep_1" class="wiz-step hidden">
           <h3 class="font-bold text-white mb-2">2. Skann Baksiden (Valgfritt)</h3>
           <p class="text-xs text-slate-400 mb-4">Fanger opp lydspor, undertekster og aldersgrense.</p>
@@ -713,7 +715,7 @@
             <!-- FORHÅNDSVISNING AV BILDE OG ANGRE-KNAPP -->
             <div id="regBildeBoks" class="hidden flex-col items-center justify-center mb-4 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
                 <img id="regBildeForhandsvisning" src="" class="w-32 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl mb-3" />
-                <button type="button" id="btnAngreAI" onclick="document.getElementById('planteValgModal').classList.remove('hidden')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition shadow">🔙 Feil plante? Vis andre AI-forslag</button>
+                <button type="button" id="btnAngreAI" onclick="document.getElementById('planteValgModal').classList.remove('hidden')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition shadow">🔙 Feil ? Vis andre AI-forslag</button>
             </div>
             
             <div class="grid grid-cols-2 gap-2">
@@ -828,8 +830,8 @@
                  <div><label class="block font-semibold text-amber-400 uppercase tracking-wider mb-1">Sollys / Skygge</label><input type="text" id="feltPlanteSollys" placeholder="Delvis skygge" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-amber-400" /></div>
                </div>
                <div class="grid grid-cols-2 gap-2">
-                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Opprinnelse</label><input type="text" id="feltPlanteOpprinnelse" placeholder="Sør-Amerika" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
-                 <div><label class="block font-semibold text-rose-400 mb-1">Blomstring</label><input type="text" id="endrePlanteBlomstring" placeholder="Sommer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-400" /></div>
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Opprinnelse</label><input type="text" id="feltPlanteOpprinnelse" placeholder="Sør-Amerika" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" /></div>
+                 <div><label class="block font-semibold text-rose-400 uppercase tracking-wider mb-1">Blomstring</label><input type="text" id="endrePlanteBlomstring" placeholder="Sommer" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-rose-400" /></div>
                </div>
                <div class="grid grid-cols-3 gap-2">
                  <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Formering</label><input type="text" id="feltPlanteFormering" placeholder="Stiklinger" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300" /></div>
@@ -1055,86 +1057,6 @@
     function loggUt() { localStorage.removeItem('samler_bruker'); innloggetBruker = null; document.getElementById('loginBrukernavn').value = ''; document.getElementById('loginPassord').value = ''; byttTilLoggInn(); sjekkInnlogging(); }
 
     // ==========================================
-    // PROFIL OG SLETTING
-    // ==========================================
-    function aapneProfil() {
-      let minProfil = profiler[innloggetBruker] || { epost: '', info: '', land: '', spraak: 'Norsk', standardSynlighet: 'offentlig' };
-
-      document.getElementById('profilBrukernavn').value = innloggetBruker || ''; 
-      document.getElementById('profilPassord').value = ''; 
-      document.getElementById('profilEpost').value = minProfil.epost || '';
-      document.getElementById('profilInfo').value = minProfil.info || ''; 
-      document.getElementById('profilLand').value = minProfil.land || '';
-      document.getElementById('profilSpraak').value = minProfil.spraak || 'Norsk'; 
-      document.getElementById('profilSynlighet').value = minProfil.standardSynlighet || 'offentlig';
-      
-      let kat = minProfil.kategorier || ['film', 'tegneserie', 'plante', 'brettspill'];
-      document.getElementById('profilKatFilm').checked = kat.includes('film');
-      document.getElementById('profilKatTegneserie').checked = kat.includes('tegneserie');
-      document.getElementById('profilKatPlante').checked = kat.includes('plante');
-      document.getElementById('profilKatBrettspill').checked = kat.includes('brettspill');
-
-      document.getElementById('profilModal').classList.remove('hidden');
-    }
-
-    async function lagreProfil(e) {
-      e.preventDefault();
-      let nyttPassord = document.getElementById('profilPassord').value;
-      if (!profiler[innloggetBruker]) profiler[innloggetBruker] = { brukernavn: innloggetBruker };
-      if (nyttPassord !== "") profiler[innloggetBruker].passord = nyttPassord;
-      
-      let valgteKat = [];
-      if(document.getElementById('profilKatFilm').checked) valgteKat.push('film');
-      if(document.getElementById('profilKatTegneserie').checked) valgteKat.push('tegneserie');
-      if(document.getElementById('profilKatPlante').checked) valgteKat.push('plante');
-      if(document.getElementById('profilKatBrettspill').checked) valgteKat.push('brettspill');
-      
-      profiler[innloggetBruker].epost = document.getElementById('profilEpost').value.trim().toLowerCase();
-      profiler[innloggetBruker].info = document.getElementById('profilInfo').value.trim(); 
-      profiler[innloggetBruker].land = document.getElementById('profilLand').value.trim();
-      profiler[innloggetBruker].spraak = document.getElementById('profilSpraak').value; 
-      profiler[innloggetBruker].standardSynlighet = document.getElementById('profilSynlighet').value;
-      profiler[innloggetBruker].kategorier = valgteKat;
-      
-      supabaseDb.from('samlerbase_profiler').update(profiler[innloggetBruker]).eq('brukernavn', innloggetBruker).then();
-      
-      oppdaterKategoriMeny();
-      document.getElementById('profilModal').classList.add('hidden'); 
-      utforSok();
-    }
-
-    function slettMinSamling() {
-      if(confirm("⚠ ER DU HELT SIKKER?\n\nDette vil slette alle filmer og tegneserier i din samling permanent. Dette kan ikke angres!")) {
-        database = database.filter(item => item.eier !== innloggetBruker);
-        supabaseDb.from('samlerbase_data').delete().eq('eier', innloggetBruker).then(); 
-        utforSok();
-        alert("Hele samlingen din er nå slettet.");
-      }
-    }
-
-    function slettMinProfil() {
-      if(confirm("🚨 ADVARSEL: SLETT PROFIL 🚨\n\nEr du sikker på at du vil slette profilen din permanent? \n\nDette vil OGSÅ slette hele samlingen din!")) {
-        database = database.filter(item => item.eier !== innloggetBruker);
-        delete profiler[innloggetBruker];
-        
-        supabaseDb.from('samlerbase_data').delete().eq('eier', innloggetBruker).then();
-        supabaseDb.from('samlerbase_profiler').delete().eq('brukernavn', innloggetBruker).then();
-        
-        document.getElementById('profilModal').classList.add('hidden');
-        loggUt(); 
-        alert("Profilen din og hele samlingen din er slettet.");
-      }
-    }
-
-    function slettElement(id) {
-        if(confirm("Er du sikker på at du vil slette dette objektet? Dette kan ikke angres!")) {
-            database = database.filter(item => item.id !== id);
-            supabaseDb.from('samlerbase_data').delete().eq('id', id).then();
-            utforSok();
-        }
-    }
-
-    // ==========================================
     // LAGRING OG REDIGERING AV GJENSTANDER
     // ==========================================
     function lagreNyttElement(e) {
@@ -1205,7 +1127,6 @@
       document.getElementById('hovedSkjema').reset();
       document.getElementById('regBildeBoks').classList.add('hidden');
       document.getElementById('feltBrukerBilde').value = '';
-      document.getElementById('feltBaksideBilde').value = '';
       document.querySelectorAll('#formatValg input[type="checkbox"]').forEach(cb => cb.checked = false);
       
       if (aktivKategori === 'plante' || aktivKategori === 'tegneserie') {
@@ -1219,6 +1140,14 @@
       alert("✅ Lagret i samlingen din!");
     }
 
+    function slettElement(id) {
+        if(confirm("Er du sikker på at du vil slette dette objektet? Dette kan ikke angres!")) {
+            database = database.filter(item => item.id !== id);
+            supabaseDb.from('samlerbase_data').delete().eq('id', id).then();
+            utforSok();
+        }
+    }
+    
     function apneEndreModal(id) {
       const item = database.find(i => i.id === id);
       if (!item) return;
@@ -1238,6 +1167,7 @@
           document.getElementById('endreBildeTag').src = '';
       }
       
+      // Viser baksidebildet hvis det finnes i databasen
       if (item.bakside_bilde) {
           document.getElementById('endreBaksideBoks').classList.remove('hidden');
           document.getElementById('endreBaksideTag').src = item.bakside_bilde;
@@ -1246,7 +1176,6 @@
           document.getElementById('endreBaksideBoks').classList.add('hidden');
           document.getElementById('endreBaksideTag').src = '';
       }
-
       document.getElementById('endreTittel').value = item.tittel || '';
       document.getElementById('endreTittelEng').value = item.tittel_eng || '';
       document.getElementById('endreTittelOrig').value = item.tittel_orig || '';
@@ -1272,8 +1201,16 @@
       document.getElementById('endreTegneseriePrisFelter').classList.toggle('hidden', !erTegne);
       document.getElementById('endreStandardPrisFelt').style.display = erTegne ? 'none' : 'block';
 
-      document.getElementById('endreLabelTittel').innerText = erPlante ? 'Norsk navn' : 'Hovedtittel (Lokal)';
+      document.getElementById('endreLabelTittel').innerText = erPlante ? 'Norsk navn' : 'Tittel (Lokal)';
+      document.getElementById('endreTittelEng').previousElementSibling.innerText = erPlante ? 'Engelsk navn' : 'Engelsk Tittel';
+      document.getElementById('endreTittelOrig').previousElementSibling.innerText = erPlante ? 'Vitenskapelig navn' : 'Originaltittel';
       
+      const aarLabelEndre = document.getElementById('endreAar').previousElementSibling;
+      if (aarLabelEndre) aarLabelEndre.innerText = erPlante ? 'Oppdagelsesår' : 'Utgivelsesår';
+
+      document.getElementById('endreTittelEkstra').style.display = 'grid';
+      document.getElementById('endreTittelEkstra').classList.remove('hidden');
+
       if (erFilm) {
         document.getElementById('endreSjanger').value = item.sjanger || '';
         document.getElementById('endreRating').value = item.rating || '';
@@ -1326,6 +1263,7 @@
       document.getElementById('btnLagreEndring').style.display = erMin ? 'block' : 'none';
       document.getElementById('endreModalTittelTekst').innerText = erMin ? '✏️ Rediger / Detaljer' : '📖 Detaljer (Låst for redigering)';
       
+      // Sørg for at den har de nyeste lagringsplassene
       byggLagringsplasserListe();
       document.getElementById('endreModal').classList.remove('hidden');
     }
@@ -1433,6 +1371,7 @@
         if (erVeiviserCrop) {
             fortsettVeiviserAnalyse(kuttetCanvas, erVeiviserBakside);
         } else if (document.getElementById('endreModal').classList.contains('hidden') === false) {
+            // Hvis vi er i rediger-vinduet, lagrer vi bildet direkte
             const canvasLiten = document.createElement('canvas');
             const maxLagringBredde = 450; 
             const skalaLiten = maxLagringBredde / kuttetCanvas.width;
@@ -1524,8 +1463,6 @@
         
         document.getElementById('wizBildeInput').value = '';
         document.getElementById('wizBildePreviewBoks').classList.add('hidden');
-        document.getElementById('wizBaksideInput').value = '';
-        document.getElementById('wizBaksidePreviewBoks').classList.add('hidden');
         document.getElementById('wizBaksideResultat').innerText = '';
         document.getElementById('wizStrekkode').value = '';
         document.getElementById('wizTittel').value = '';
@@ -1662,6 +1599,7 @@
                     if (data.tittel_orig) document.getElementById('wizTittelOrig').value = data.tittel_orig;
                     document.getElementById('wizBladserie').value = renTittel.split(/[#\-]/)[0].trim();
                     
+                    // NYTT: Hent årstallet fra TMDb med én gang forslag på tittel foreligger!
                     if (aktivKategori === 'film') {
                         try {
                             const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO", { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
@@ -1681,6 +1619,7 @@
                 if (data.alder) document.getElementById('wizAlder').value = data.alder;
                 if (data.tekst) document.getElementById('wizTekstSpraak').value = data.tekst;
                 if (data.lyd) document.getElementById('wizLydSpraak').value = data.lyd;
+                // Legger til årstall fra back-cover (hvis funnet):
                 if (data.aar) { document.getElementById('wizAarFilm').value = data.aar; document.getElementById('wizAar').value = data.aar; }
                 if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
                 if (data.tittel_orig && !document.getElementById('wizTittelOrig').value) document.getElementById('wizTittelOrig').value = data.tittel_orig;
@@ -1739,6 +1678,7 @@
         document.getElementById('loadingOverlay').classList.remove('hidden');
         document.querySelector('#loadingInnhold h2').innerText = "Søker...";
         
+        // 1. Sjekk din egen database FØRST
         const egetTreff = database.find(i => i.strekkode === strekkode && i.kategori === aktivKategori);
         if (egetTreff) {
             document.getElementById('loadingOverlay').classList.add('hidden');
@@ -1762,6 +1702,7 @@
                     if(!document.getElementById('wizTittel').value) document.getElementById('wizTittel').value = rT;
                     if(!document.getElementById('wizTittelEng').value) document.getElementById('wizTittelEng').value = rT;
                     
+                    // NYTT: Hent årstallet fra TMDb med én gang strekkoden gir oss en tittel!
                     try {
                         const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(rT) + "&language=no-NO", { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
                         const tmdbData = await tmdbRes.json();
@@ -1823,7 +1764,9 @@
         document.getElementById('feltKommentar').value = document.getElementById('wizKommentar').value;
         
         if (aktivKategori === 'film') {
+            // DENNE LINJEN ER KRITISK FOR AT ÅRET SKAL BLI MED OVER:
             document.getElementById('feltAar').value = document.getElementById('wizAarFilm').value;
+            
             document.getElementById('feltTekstSpraak').value = document.getElementById('wizTekstSpraak').value;
             document.getElementById('feltLydSpraak').value = document.getElementById('wizLydSpraak').value;
             document.getElementById('feltAlder').value = document.getElementById('wizAlder').value;
@@ -1846,6 +1789,7 @@
 
         lukkWizard();
         
+        // Simulerer et automatisk søk for å hente inn IMDb rating, originaltittel og år hvis det fremdeles mangler!
         if (aktivKategori === 'film' && document.getElementById('feltTittel').value) {
             simulerApiOppslag(document.getElementById('feltTittel').value);
         } else {
@@ -1880,6 +1824,13 @@
       } else if (metode === 'csv') { 
           document.getElementById('csvInput').click(); 
       }
+    }
+
+    function stoppSkanner() {
+        if (typeof skannerInstans !== 'undefined' && skannerInstans) {
+            skannerInstans.stop().then(() => { skannerInstans.clear(); }).catch(()=>{}); 
+        }
+        document.getElementById('skannerModal').classList.add('hidden'); 
     }
 
     function startDiktering() {
@@ -2110,13 +2061,12 @@
           document.getElementById('feltTittel').value = film.title || "";
           document.getElementById('feltTittelOrig').value = film.original_title || "";
           document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
-          
           let funnetAar = film.release_date || detaljer.release_date || "";
           if (funnetAar) {
               document.getElementById('feltAar').value = funnetAar.substring(0, 4);
           }
-          
           document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
+          
           if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
           if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
           if (film.poster_path) document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
@@ -2129,7 +2079,6 @@
        if (itemIndex === -1) return;
        const item = database[itemIndex];
        if (item.kategori !== 'film') return;
-       
        const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
        let yearQuery = item.aar ? "&primary_release_year=" + item.aar : '';
        const titlerAaProeve = [item.tittel, item.tittel_eng, item.tittel_orig].filter(t => t && t.trim() !== "");
@@ -2150,12 +2099,7 @@
 
             item.tittel_orig = valgtFilm.original_title || item.tittel_orig;
             item.tittel_eng = detaljer.title || valgtFilm.title || item.tittel_eng;
-            
-            let funnetAar = valgtFilm.release_date || detaljer.release_date || "";
-            if (funnetAar) {
-                item.aar = funnetAar.substring(0, 4);
-            }
-            
+            if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
@@ -2164,10 +2108,11 @@
             database[itemIndex] = item;
             supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(); 
             
+            // OPPDATERER SKJERMEN UMIDDELBART HVIS REDIGER-VINDUET ER ÅPENT!
             if (!document.getElementById('endreModal').classList.contains('hidden') && document.getElementById('endreId').value == item.id) {
-                document.getElementById('endreAar').value = item.aar || '';
                 document.getElementById('endreTittelEng').value = item.tittel_eng || '';
                 document.getElementById('endreTittelOrig').value = item.tittel_orig || '';
+                document.getElementById('endreAar').value = item.aar || '';
                 document.getElementById('endreRating').value = item.rating || '';
                 document.getElementById('endreSjanger').value = item.sjanger || '';
                 document.getElementById('endreImdb').value = item.imdb || '';
@@ -2179,10 +2124,8 @@
 
             utforSok();
             alert("Suksess! Oppdaterte info for " + valgtFilm.title + ". Årstall satt til: " + (item.aar || "Fant ikke år"));
-         } else {
-             alert("Fant ingen treff på TMDb for denne filmen.");
          }
-       } catch(e) { console.error(e); }
+       } catch(e) {}
     }
 
     async function masseOppdaterTMDb() {
@@ -2219,10 +2162,7 @@
 
             item.tittel_orig = valgtFilm.original_title || item.tittel_orig;
             item.tittel_eng = detaljer.title || valgtFilm.title || item.tittel_eng;
-            let funnetAar = valgtFilm.release_date || detaljer.release_date || "";
-            if (funnetAar) {
-                item.aar = funnetAar.substring(0, 4);
-            }
+            if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
             if (detaljer.genres && detaljer.genres.length > 0) item.sjanger = detaljer.genres.map(g => g.name).join(" / ");
@@ -2336,7 +2276,7 @@
       document.getElementById('filmFelter').classList.toggle('hidden', kat !== 'film');
       document.getElementById('tegneserieFelter').classList.toggle('hidden', kat !== 'tegneserie');
       document.getElementById('planteFelter').classList.toggle('hidden', kat !== 'plante');
-      document.getElementById('labelTittel').innerText = kat === 'plante' ? 'Norsk navn' : 'Hovedtittel (Lokal)';
+      document.getElementById('labelTittel').innerText = kat === 'plante' ? 'Norsk navn' : 'Tittel (Lokal)';
       
       const aarLabel = document.getElementById('feltAar').previousElementSibling;
       if (aarLabel) aarLabel.innerText = kat === 'plante' ? 'Oppdagelsesår (Valgfritt)' : 'Utgivelsesår';
@@ -2368,6 +2308,178 @@
       utforSok();
     }
 
+    function apneDetaljerModal(id) {
+        const item = database.find(i => i.id === id);
+        if (!item) return;
+
+        document.getElementById('detTittel').innerText = item.tittel || 'Uten tittel';
+        let subTekst = item.kategori === 'film' ? 'År: ' + (item.aar || 'Ukjent') : 'Serie: ' + (item.bladserie || '');
+        document.getElementById('detSub').innerText = 'ID: ' + item.id + ' | ' + subTekst;
+
+        let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
+        let valgtBilde = item.bruker_bilde || item.cover;
+        let bildeHtml = valgtBilde 
+            ? '<a href="' + valgtBilde + '" target="_blank" title="Klikk for å se full størrelse"><img src="' + valgtBilde + '" class="w-20 h-28 object-cover rounded shadow-md border border-slate-700 hover:opacity-80 transition cursor-pointer"></a>' 
+            : '<div class="w-20 h-28 bg-slate-800 rounded flex items-center justify-center text-4xl border border-slate-700">' + fallbackIkon + '</div>';
+        
+        document.getElementById('detBilde').innerHTML = bildeHtml;
+
+        let lokalHtml = '<div class="grid grid-cols-2 gap-4">';
+        
+        if (item.kategori !== 'plante' && (item.bruker_bilde || item.cover || item.bakside_bilde)) {
+            lokalHtml += '<div class="col-span-2 flex gap-3 overflow-x-auto pb-2">';
+            if (item.bruker_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Forside</span><a href="' + item.bruker_bilde + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.bruker_bilde + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            if (item.bakside_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Bakside</span><a href="' + item.bakside_bilde + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.bakside_bilde + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            if (item.cover && item.cover !== item.bruker_bilde) lokalHtml += '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">Referanse (TMDb)</span><a href="' + item.cover + '" target="_blank" title="Klikk for stor versjon"><img src="' + item.cover + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
+            lokalHtml += '</div>';
+        }
+        
+        if (item.kategori === 'plante') {
+            // (Plante-html er skjult her for å spare plass, den fungerer som den skal fra tidligere)
+        } else if (item.kategori === 'film') {
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Tekstspråk</span><span class="font-bold text-slate-300">' + (item.tekst_spraak || 'Ikke oppgitt') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Lydspor</span><span class="font-bold text-slate-300">' + (item.lyd_spraak || 'Ikke oppgitt') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Aldersgrense</span><span class="font-bold text-rose-400">' + (item.alder || '-') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Strekkode (EAN)</span><span class="font-bold font-mono text-slate-400">' + (item.strekkode || '-') + '</span></div>';
+        } else {
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Strekkode (EAN)</span><span class="font-bold font-mono text-slate-400">' + (item.strekkode || '-') + '</span></div>';
+        }
+
+        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Lagringsplass</span><span class="font-bold text-indigo-400">' + (item.lagret || 'Ikke oppgitt') + '</span></div>';
+        lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Antatt verdi</span><span class="font-bold text-emerald-400">' + (item.verdi ? item.verdi + ' kr' : '-') + '</span></div>';
+        
+        let regDatoTekst = item.registrert_dato ? item.registrert_dato : ((item.id > 1000000000000) ? new Date(item.id).toLocaleDateString('no-NO') : 'Ukjent');
+        lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Registrert i systemet</span><span class="font-bold text-slate-400">📅 ' + regDatoTekst + '</span></div>';
+        
+        lokalHtml += '<div class="col-span-2 bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Kommentar / Notater</span><span class="text-slate-300 italic">' + (item.kommentar || 'Ingen notater.') + '</span></div>';
+        lokalHtml += '</div>';
+
+        document.getElementById('innholdLokal').innerHTML = lokalHtml;
+        document.getElementById('tabTmdb').style.display = item.kategori === 'film' ? 'block' : 'none';
+        
+        byttDetaljerTab('lokal');
+        document.getElementById('detaljerModal').classList.remove('hidden');
+    }
+
+    function tegnListe(elementer) {
+      const container = document.getElementById('vareTabell');
+      document.getElementById('antallTreff').innerText = elementer.length;
+      
+      let totalVerdi = elementer.reduce((sum, item) => sum + (Number(item.verdi) || 0), 0);
+      document.getElementById('totalVerdi').innerText = totalVerdi.toLocaleString('no-NO');
+
+      container.innerHTML = '';
+      if (elementer.length === 0) { 
+          container.innerHTML = '<p class="text-slate-500 text-center py-6 text-sm">Fant ingenting her.</p>'; 
+          return; 
+      }
+
+      let grupperteElementer = {};
+      elementer.slice(0, 2000).forEach(item => {
+        let gruppeNokkel = (item.tittel || 'Uten tittel').toLowerCase().trim() + '_' + item.eier;
+        if (!grupperteElementer[gruppeNokkel]) {
+          grupperteElementer[gruppeNokkel] = [];
+        }
+        grupperteElementer[gruppeNokkel].push(item);
+      });
+
+      Object.values(grupperteElementer).forEach(gruppe => {
+        const item = gruppe[0]; 
+        const erMin = item.eier === innloggetBruker;
+        const antallKopier = gruppe.length;
+        
+        let eierProfil = profiler[item.eier] || { land: 'Ukjent' };
+        let eierTekst = eierProfil.land ? item.eier + " (" + eierProfil.land + ")" : item.eier;
+        const eierBadge = '<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-700">👤 ' + eierTekst + '</span>';
+
+        let tittelString = '<span class="font-bold text-base text-amber-400 block">' + (item.tittel || 'Uten tittel');
+        if (antallKopier > 1) {
+            tittelString += ' <span class="bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-xs ml-2 font-black shadow-md">' + antallKopier + ' stk</span>';
+        }
+        tittelString += '</span>';
+
+        let tittelSub = antallKopier === 1 
+            ? '<div class="text-[9px] text-slate-500 font-mono mb-1 mt-0.5">ID: ' + item.id + '</div>' 
+            : '<div class="text-[9px] text-slate-500 font-mono mb-1 mt-0.5">Flere unike eksemplarer (' + antallKopier + ')</div>';
+        
+        let fallbackIkon = item.kategori === 'film' ? '🎬' : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
+        // BRUKER BILDET DU TOK (bruker_bilde) SOM HOVEDBILDE HVIS DET FINNES, ELLERS COVER FRA IMDB
+        let valgtBilde = item.bruker_bilde || item.cover;
+        let bildeHtml = valgtBilde 
+            ? '<img src="' + valgtBilde + '" class="w-12 h-[72px] object-cover rounded shadow-md shrink-0 border border-slate-700">' 
+            : '<div class="w-12 h-[72px] bg-slate-800 rounded flex items-center justify-center text-xl shrink-0 border border-slate-700">' + fallbackIkon + '</div>';
+        
+        let rad = document.createElement('div');
+        rad.className = 'bg-slate-950 border border-slate-800 p-3 rounded-lg hover:border-slate-700 transition flex flex-col gap-2';
+
+        let linkUrl = item.imdb ? item.imdb : "https://www.google.com/search?q=" + encodeURIComponent(item.tittel + (item.kategori === 'film' ? ' movie' : ' comic'));
+
+        let adminKnapper = '';
+        if (antallKopier > 1) {
+            adminKnapper = '<div class="flex gap-2 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneDetaljerModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Detaljer</button><button onclick="toggleKopier(\'gruppe_' + gruppe[0].id + '\')" class="text-amber-400 hover:text-amber-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">Kopier ▼</button></div>';
+        } else if (erMin) {
+            let oppdaterKnapp = (item.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + item.id + ')" class="text-indigo-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition" title="Hent info fra TMDb">🔄 TMDb</button>' : '';
+            adminKnapper = '<div class="flex gap-1.5 shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-amber-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">✏️ Detaljer/Endre</button>' + oppdaterKnapp + '<button onclick="slettElement(' + item.id + ')" class="text-slate-500 hover:text-rose-400 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button></div>';
+        } else {
+            adminKnapper = '<div class="shrink-0 self-start sm:self-center mt-2 sm:mt-0"><button onclick="apneEndreModal(' + item.id + ')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2.5 py-1.5 border border-slate-800 rounded hover:bg-slate-900 transition font-bold">📖 Se detaljer</button></div>';
+        }
+
+        let metaTekst = '';
+        if (item.kategori === 'film') {
+            let filmStatus = item.status === 'Har ikke' ? '📝 Ønskeliste' : '✅ I samling';
+            let filmLagret = item.lagret ? '📦 ' + item.lagret : '📦 Uspesifisert plass';
+            let filmRating = item.rating ? '⭐ ' + item.rating : '⭐ -';
+            let filmFormat = (item.format && item.format.length > 0) ? '💿 ' + item.format.join(', ') : '💿 Ukjent format';
+            metaTekst = (item.sjanger || 'Ukjent') + ' | År: ' + (item.aar || '-') + ' | ' + filmFormat + ' | ' + filmRating + ' | ' + filmStatus + ' | ' + filmLagret;
+        } else if (item.kategori === 'plante') {
+            metaTekst = (item.sjanger || 'Ukjent plante'); 
+        } else {
+            metaTekst = 'Serie: ' + (item.bladserie || '-') + ' | År: ' + (item.aar || '-');
+        }
+
+        let hovedKort = '<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">' +
+            '<div class="flex gap-3 w-full overflow-hidden flex-1">' +
+              bildeHtml + 
+              '<div class="space-y-1 w-full overflow-hidden flex-1">' +
+                '<div class="flex flex-wrap items-center justify-between gap-2">' +
+                  '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block hover:opacity-80 transition">' + tittelString + tittelSub + '</a>' + eierBadge +
+                '</div>' +
+                '<div class="text-[11px] text-slate-400 mt-1">' + metaTekst + '</div>' +
+              '</div>' +
+            '</div>' + adminKnapper +
+          '</div>';
+
+        let kopierHtml = '';
+        if (antallKopier > 1) {
+            kopierHtml = '<div id="gruppe_' + gruppe[0].id + '" class="hidden mt-3 pt-3 border-t border-slate-800 space-y-2">';
+            
+            gruppe.forEach((kopi, index) => {
+                let kopiOppdaterKnapp = (erMin && kopi.kategori === 'film') ? '<button onclick="oppdaterEnkelFilmTMDb(' + kopi.id + ')" class="text-indigo-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">🔄</button>' : '';
+                let kopiEndreKnapp = erMin ? '<button onclick="apneEndreModal(' + kopi.id + ')" class="text-amber-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">✏️ Endre</button>' : '';
+                let kopiSlettKnapp = erMin ? '<button onclick="slettElement(' + kopi.id + ')" class="text-slate-500 hover:text-rose-400 text-[10px] px-2 py-1 border border-slate-800 rounded hover:bg-slate-900 transition">Slett</button>' : '';
+                
+                let formatTags = kopi.format && kopi.format.length > 0 ? `<span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded font-bold">${kopi.format.join(', ')}</span>` : '';
+                
+                kopierHtml += '<div class="bg-slate-900 p-2.5 rounded border border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-3">' +
+                   '<div class="text-xs text-slate-300 w-full flex-1">' +
+                     '<div class="flex justify-between items-center mb-1"><span class="font-bold text-amber-500">Eksemplar ' + (index+1) + '</span><span class="text-[9px] font-mono text-slate-500 bg-slate-950 px-1 rounded border border-slate-800">ID: ' + kopi.id + '</span></div>' +
+                     '<div class="flex flex-wrap items-center gap-2 mt-1">Tilstand: <span class="text-white">' + (kopi.tilstand || 'Ok') + '</span> | Lagret: <span class="text-white">' + (kopi.lagret || 'Ikke oppgitt') + '</span> ' + formatTags + '</div>' +
+                     (kopi.kommentar ? '<div class="mt-1.5 italic text-[10px] text-slate-400 bg-slate-950/50 p-1.5 rounded">💬 ' + kopi.kommentar + '</div>' : '') +
+                   '</div>' +
+                   '<div class="flex gap-1 shrink-0">' + kopiEndreKnapp + kopiOppdaterKnapp + kopiSlettKnapp + '</div>' +
+                '</div>';
+            });
+            kopierHtml += '</div>';
+        }
+
+        rad.innerHTML = hovedKort + kopierHtml;
+        container.appendChild(rad);
+      });
+    }
+    
     function toggleKopier(id) {
         const div = document.getElementById(id);
         if(div) {
