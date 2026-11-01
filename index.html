@@ -445,6 +445,16 @@
     </div>
   </div>
 
+  <!-- FILMVALG-MODAL -->
+  <div id="filmValgModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[150] flex flex-col items-center justify-center p-4">
+    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl relative">
+      <button onclick="document.getElementById('filmValgModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white font-black text-xl px-2">✕</button>
+      <h2 class="text-xl font-black text-amber-400 mb-2">🎬 Velg riktig film</h2>
+      <p class="text-sm text-slate-400 mb-4">TMDb fant flere filmer som passet. Hvilken mente du?</p>
+      <div id="filmValgListe" class="space-y-3 overflow-y-auto max-h-[60vh]"></div>
+    </div>
+  </div>
+
   <!-- ADMIN-MODAL -->
   <div id="adminModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[160] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-rose-900/50 max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh]">
@@ -1602,10 +1612,14 @@
                     // NYTT: Hent årstallet fra TMDb med én gang forslag på tittel foreligger!
                     if (aktivKategori === 'film') {
                         try {
-                            const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO", { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
+                            let knownYear = document.getElementById('wizAarFilm').value;
+                            let yearQuery = knownYear ? "&primary_release_year=" + knownYear : "";
+                            const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO" + yearQuery, { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
                             const tmdbData = await tmdbRes.json();
                             if (tmdbData.results && tmdbData.results.length > 0 && tmdbData.results[0].release_date) {
-                                document.getElementById('wizAarFilm').value = tmdbData.results[0].release_date.substring(0, 4);
+                                if (!document.getElementById('wizAarFilm').value) {
+                                    document.getElementById('wizAarFilm').value = tmdbData.results[0].release_date.substring(0, 4);
+                                }
                             }
                         } catch(e) {}
                     }
@@ -1704,7 +1718,9 @@
                     
                     // NYTT: Hent årstallet fra TMDb med én gang strekkoden gir oss en tittel!
                     try {
-                        const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(rT) + "&language=no-NO", { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
+                        let knownYear = document.getElementById('wizAarFilm').value;
+                        let yearQuery = knownYear ? "&primary_release_year=" + knownYear : "";
+                        const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(rT) + "&language=no-NO" + yearQuery, { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
                         const tmdbData = await tmdbRes.json();
                         if (tmdbData.results && tmdbData.results.length > 0 && tmdbData.results[0].release_date) {
                             if (!document.getElementById('wizAarFilm').value) {
@@ -1791,7 +1807,8 @@
         
         // Simulerer et automatisk søk for å hente inn IMDb rating, originaltittel og år hvis det fremdeles mangler!
         if (aktivKategori === 'film' && document.getElementById('feltTittel').value) {
-            simulerApiOppslag(document.getElementById('feltTittel').value);
+            let existingYear = document.getElementById('feltAar').value;
+            simulerApiOppslag(document.getElementById('feltTittel').value, false, existingYear);
         } else {
             alert("Perfekt! Skjemaet er fylt ut. Sjekk over og trykk 'Lagre på min profil' i bunnen.");
         }
@@ -1957,7 +1974,7 @@
         }
     }
 
-    async function simulerApiOppslag(sokeord, fraAI = false) {
+    async function simulerApiOppslag(sokeord, fraAI = false, knownYear = "") {
       if (aktivKategori === 'plante') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
           try {
@@ -2046,13 +2063,28 @@
       if (aktivKategori !== 'film') return; 
       
       const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
-      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO";
+      let yearParam = knownYear ? "&primary_release_year=" + knownYear : "";
+      const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(sokeord) + "&language=no-NO" + yearParam;
 
       try {
         const response = await fetch(sokUrl, options); 
         const data = await response.json();
         
         if (data.results && data.results.length > 0) {
+          // --- NYTT: Fyller popup-boksen med de 5 beste film-alternativene ---
+          let valgHtml = '';
+          const toppFem = data.results.slice(0, 5);
+          toppFem.forEach((f) => {
+              let bildeUrl = f.poster_path ? "https://image.tmdb.org/t/p/w92" + f.poster_path : "";
+              let bildeTag = bildeUrl ? '<img src="' + bildeUrl + '" class="w-12 h-16 object-cover rounded shadow-md border border-slate-700 shrink-0">' : '<div class="w-12 h-16 bg-slate-800 rounded flex items-center justify-center text-xl border border-slate-700 shrink-0">🎬</div>';
+              let aar = f.release_date ? f.release_date.substring(0, 4) : "Ukjent år";
+              let escapedTitle = (f.title || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+              
+              valgHtml += '<div onclick="velgFilmFraListe(' + f.id + ')" class="bg-slate-950 p-3 rounded-lg border border-slate-800 hover:border-amber-500 cursor-pointer transition flex gap-3 items-center">' + bildeTag + '<div class="flex-1"><h3 class="font-bold text-white text-sm leading-tight">' + escapedTitle + '</h3><p class="text-xs text-slate-400 mt-1">' + aar + ' • ⭐ ' + (f.vote_average ? f.vote_average.toFixed(1) : '-') + '</p></div></div>';
+          });
+          document.getElementById('filmValgListe').innerHTML = valgHtml;
+          // -------------------------------------------------------------------
+
           const film = data.results[0];
           const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
           const detaljResponse = await fetch(detaljerUrl, options); 
@@ -2062,7 +2094,7 @@
           document.getElementById('feltTittelOrig').value = film.original_title || "";
           document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
           let funnetAar = film.release_date || detaljer.release_date || "";
-          if (funnetAar) {
+          if (!knownYear && funnetAar) {
               document.getElementById('feltAar').value = funnetAar.substring(0, 4);
           }
           document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
@@ -2070,10 +2102,41 @@
           if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
           if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
           if (film.poster_path) document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
-        } 
+        }
       } catch (error) { console.error(error); }
     }
 
+    async function velgFilmFraListe(tmdbId) {
+        document.getElementById('filmValgModal').classList.add('hidden');
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.querySelector('#loadingInnhold h2').innerText = "Henter film...";
+        
+        const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+        try {
+            const detaljerUrl = "https://api.themoviedb.org/3/movie/" + tmdbId + "?language=no-NO";
+            const detaljResponse = await fetch(detaljerUrl, options); 
+            const detaljer = await detaljResponse.json();
+
+            document.getElementById('feltTittel').value = detaljer.title || "";
+            document.getElementById('feltTittelOrig').value = detaljer.original_title || "";
+            document.getElementById('feltTittelEng').value = detaljer.title || ""; 
+            
+            if (detaljer.release_date) {
+                document.getElementById('feltAar').value = detaljer.release_date.substring(0, 4);
+            }
+            
+            document.getElementById('feltRating').value = detaljer.vote_average ? detaljer.vote_average.toFixed(1) : "";
+            if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
+            if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
+            if (detaljer.poster_path) document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + detaljer.poster_path;
+            
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        } catch(e) {
+            console.error(e);
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+    }
+    
     async function oppdaterEnkelFilmTMDb(id) {
        const itemIndex = database.findIndex(i => i.id === id);
        if (itemIndex === -1) return;
@@ -2294,6 +2357,21 @@
           if (document.getElementById('feltKjoptDato')) document.getElementById('feltKjoptDato').value = iDag;
       }
       
+      const btnAngre = document.getElementById('btnAngreAI');
+      if (btnAngre) {
+          if (kat === 'plante') {
+              btnAngre.innerText = "🔙 Feil plante? Vis andre forslag";
+              btnAngre.onclick = () => document.getElementById('planteValgModal').classList.remove('hidden');
+              btnAngre.style.display = 'block';
+          } else if (kat === 'film') {
+              btnAngre.innerText = "🔙 Feil film? Velg en annen";
+              btnAngre.onclick = () => document.getElementById('filmValgModal').classList.remove('hidden');
+              btnAngre.style.display = 'block';
+          } else {
+              btnAngre.style.display = 'none';
+          }
+      }
+
       let titler = { 'film': 'Registrer ny film', 'tegneserie': 'Registrer tegneserie', 'plante': 'Registrer plante', 'brettspill': 'Registrer brettspill' };
       document.getElementById('skjemaTittel').innerText = titler[kat];
 
