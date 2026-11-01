@@ -2540,6 +2540,79 @@
       tegnListe(filtrert);
     }
     
+    // ==========================================
+    // MASSE-FLYTTING AV GJENSTANDER
+    // ==========================================
+    function apneFlyttModal() {
+        if (!innloggetBruker) return;
+        
+        let mineTing = database.filter(i => i.eier === innloggetBruker && i.kategori === aktivKategori);
+        let plasser = [...new Set(mineTing.map(i => i.lagret ? i.lagret.trim() : 'Ikke oppgitt'))].sort();
+        
+        let selectHtml = '<option value="">Velg eksisterende plass...</option>';
+        plasser.forEach(p => {
+            if(p) selectHtml += `<option value="${p}">${p}</option>`;
+        });
+        
+        document.getElementById('flyttFra').innerHTML = selectHtml;
+        document.getElementById('flyttTil').value = '';
+        document.getElementById('flyttModal').classList.remove('hidden');
+    }
+
+    async function utforMasseFlytt() {
+        let fraPlass = document.getElementById('flyttFra').value;
+        let tilPlass = document.getElementById('flyttTil').value.trim();
+        
+        if (!fraPlass) { alert("Du må velge hvilken plass du vil flytte fra."); return; }
+        if (tilPlass === '') { alert("Du må skrive inn den nye lagringsplassen."); return; }
+        if (fraPlass === tilPlass) { alert("Du har valgt samme plass som før."); return; }
+
+        let treff = database.filter(i => {
+            if (i.eier !== innloggetBruker || i.kategori !== aktivKategori) return false;
+            let p = i.lagret ? i.lagret.trim() : 'Ikke oppgitt';
+            return p === fraPlass;
+        });
+        
+        if (treff.length === 0) { alert("Fant ingen gjenstander på denne plassen."); return; }
+
+        if (confirm(`Bekreft endring:\n\nDu er i ferd med å flytte ${treff.length} gjenstand(er) fra:\n"${fraPlass}"\n\nTil den nye plassen:\n"${tilPlass}"\n\nVil du utføre flyttingen nå?`)) {
+            
+            document.getElementById('flyttModal').classList.add('hidden');
+            
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.querySelector('h2').innerText = "Flytter gjenstander...";
+                overlay.querySelector('p').innerText = "Oppdaterer skyen...";
+                overlay.classList.remove('hidden');
+            }
+
+            let oppdaterteIds = [];
+            treff.forEach(item => {
+                item.lagret = tilPlass;
+                oppdaterteIds.push(item.id);
+            });
+
+            try {
+                const batchSize = 200;
+                for (let i = 0; i < oppdaterteIds.length; i += batchSize) {
+                    const batchIds = oppdaterteIds.slice(i, i + batchSize);
+                    const { error } = await supabaseDb
+                        .from('samlerbase_data')
+                        .update({ lagret: tilPlass })
+                        .in('id', batchIds);
+                    if (error) throw error;
+                }
+                alert(`✅ Suksess! ${treff.length} gjenstander ble trygt flyttet til "${tilPlass}".`);
+            } catch (err) {
+                console.error(err);
+                alert("Det skjedde en feil under oppdatering i skyen: " + err.message);
+            } finally {
+                if (overlay) overlay.classList.add('hidden');
+                utforSok(); 
+            }
+        }
+    }
+    
     // START APPEN NÅR SIDEN LASTER
     window.onload = startApp;
   </script>
