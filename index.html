@@ -1614,12 +1614,27 @@
                         try {
                             let knownYear = document.getElementById('wizAarFilm').value;
                             let yearQuery = knownYear ? "&primary_release_year=" + knownYear : "";
-                            const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO" + yearQuery, { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
+                            const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+                            const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(renTittel) + "&language=no-NO" + yearQuery, options);
                             const tmdbData = await tmdbRes.json();
-                            if (tmdbData.results && tmdbData.results.length > 0 && tmdbData.results[0].release_date) {
-                                if (!document.getElementById('wizAarFilm').value) {
-                                    document.getElementById('wizAarFilm').value = tmdbData.results[0].release_date.substring(0, 4);
+                            
+                            if (tmdbData.results && tmdbData.results.length > 0) {
+                                const film = tmdbData.results[0];
+                                if (!document.getElementById('wizAarFilm').value && film.release_date) {
+                                    document.getElementById('wizAarFilm').value = film.release_date.substring(0, 4);
                                 }
+                                
+                                // Henter inn de korrekte titlene for NO, EN og Orig
+                                const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
+                                const detaljerUrlEN = "https://api.themoviedb.org/3/movie/" + film.id + "?language=en-US";
+                                
+                                const [detaljResponse, detaljResponseEN] = await Promise.all([fetch(detaljerUrl, options), fetch(detaljerUrlEN, options)]);
+                                const detaljer = await detaljResponse.json();
+                                const detaljerEN = await detaljResponseEN.json();
+                                
+                                document.getElementById('wizTittel').value = detaljer.title || film.title || renTittel;
+                                document.getElementById('wizTittelEng').value = detaljerEN.title || renTittel;
+                                document.getElementById('wizTittelOrig').value = detaljer.original_title || film.original_title || data.tittel_orig || "";
                             }
                         } catch(e) {}
                     }
@@ -1720,12 +1735,27 @@
                     try {
                         let knownYear = document.getElementById('wizAarFilm').value;
                         let yearQuery = knownYear ? "&primary_release_year=" + knownYear : "";
-                        const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(rT) + "&language=no-NO" + yearQuery, { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } });
+                        const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+                        const tmdbRes = await fetch("https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(rT) + "&language=no-NO" + yearQuery, options);
                         const tmdbData = await tmdbRes.json();
-                        if (tmdbData.results && tmdbData.results.length > 0 && tmdbData.results[0].release_date) {
-                            if (!document.getElementById('wizAarFilm').value) {
-                                document.getElementById('wizAarFilm').value = tmdbData.results[0].release_date.substring(0, 4);
+                        
+                        if (tmdbData.results && tmdbData.results.length > 0) {
+                            const film = tmdbData.results[0];
+                            if (!document.getElementById('wizAarFilm').value && film.release_date) {
+                                document.getElementById('wizAarFilm').value = film.release_date.substring(0, 4);
                             }
+                            
+                            // Henter inn de korrekte titlene for NO, EN og Orig
+                            const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
+                            const detaljerUrlEN = "https://api.themoviedb.org/3/movie/" + film.id + "?language=en-US";
+                            
+                            const [detaljResponse, detaljResponseEN] = await Promise.all([fetch(detaljerUrl, options), fetch(detaljerUrlEN, options)]);
+                            const detaljer = await detaljResponse.json();
+                            const detaljerEN = await detaljResponseEN.json();
+
+                            document.getElementById('wizTittel').value = detaljer.title || film.title || rT;
+                            document.getElementById('wizTittelEng').value = detaljerEN.title || rT;
+                            document.getElementById('wizTittelOrig').value = detaljer.original_title || film.original_title || "";
                         }
                     } catch(e) {}
                 }
