@@ -1605,7 +1605,7 @@
                     if (data.pris && !isNaN(parseFloat(data.pris))) document.getElementById('wizCoverPris').value = parseFloat(data.pris);
                     
                     document.getElementById('wizTittel').value = renTittel;
-                    document.getElementById('wizTittelEng').value = renTittel;
+                    document.getElementById('wizTittelEng').value = "";
                     if (data.tittel_orig) document.getElementById('wizTittelOrig').value = data.tittel_orig;
                     document.getElementById('wizBladserie').value = renTittel.split(/[#\-]/)[0].trim();
                     
@@ -1729,7 +1729,7 @@
                     let t = data.items[0].title;
                     let rT = t.replace(/blu-ray|dvd|4k|uhd|nordic|import|edition|nordisk|norsk|uk/gi, '').replace(/\([0-9]{4}\)/g, '').replace(/-|\(|\)|\[|\]/g, ' ').replace(/\s+/g, ' ').trim();
                     if(!document.getElementById('wizTittel').value) document.getElementById('wizTittel').value = rT;
-                    if(!document.getElementById('wizTittelEng').value) document.getElementById('wizTittelEng').value = rT;
+                    if(!document.getElementById('wizTittelEng').value) document.getElementById('wizTittelEng').value = "";
                     
                     // NYTT: Hent årstallet fra TMDb med én gang strekkoden gir oss en tittel!
                     try {
@@ -2124,7 +2124,7 @@
           const detaljerEN = await detaljResponseEN.json();
 
           document.getElementById('feltTittel').value = detaljer.title || film.title || ""; // Norsk/lokal tittel
-          document.getElementById('feltTittelEng').value = detaljerEN.title || detaljer.title || "";          // Engelsk tittel (fallback to localized if EN is missing)
+          document.getElementById('feltTittelEng').value = detaljerEN.title || "";          // Engelsk tittel (fallback to localized if EN is missing)
           document.getElementById('feltTittelOrig').value = detaljer.original_title || film.original_title || ""; // Originaltittel (uansett språk)
           
           let funnetAar = film.release_date || detaljer.release_date || "";
