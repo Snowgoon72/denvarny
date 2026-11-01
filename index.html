@@ -1633,7 +1633,7 @@
                                 const detaljerEN = await detaljResponseEN.json();
                                 
                                 document.getElementById('wizTittel').value = detaljer.title || film.title || renTittel;
-                                document.getElementById('wizTittelEng').value = detaljerEN.title || renTittel;
+                                document.getElementById('wizTittelEng').value = detaljerEN.title || "";
                                 document.getElementById('wizTittelOrig').value = detaljer.original_title || film.original_title || data.tittel_orig || "";
                             }
                         } catch(e) {}
@@ -1754,7 +1754,7 @@
                             const detaljerEN = await detaljResponseEN.json();
 
                             document.getElementById('wizTittel').value = detaljer.title || film.title || rT;
-                            document.getElementById('wizTittelEng').value = detaljerEN.title || rT;
+                            document.getElementById('wizTittelEng').value = detaljerEN.title || "";
                             document.getElementById('wizTittelOrig').value = detaljer.original_title || film.original_title || "";
                         }
                     } catch(e) {}
