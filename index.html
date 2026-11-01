@@ -2124,17 +2124,29 @@
           const detaljerEN = await detaljResponseEN.json();
 
           document.getElementById('feltTittel').value = detaljer.title || film.title || ""; // Norsk/lokal tittel
-          document.getElementById('feltTittelEng').value = detaljerEN.title || "";          // Engelsk tittel
+          document.getElementById('feltTittelEng').value = detaljerEN.title || detaljer.title || "";          // Engelsk tittel (fallback to localized if EN is missing)
           document.getElementById('feltTittelOrig').value = detaljer.original_title || film.original_title || ""; // Originaltittel (uansett språk)
+          
           let funnetAar = film.release_date || detaljer.release_date || "";
           if (!knownYear && funnetAar) {
               document.getElementById('feltAar').value = funnetAar.substring(0, 4);
+          } else if (knownYear) {
+              document.getElementById('feltAar').value = knownYear;
           }
-          document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : "";
           
-          if (detaljer.imdb_id) document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
-          if (detaljer.genres && detaljer.genres.length > 0) document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
-          if (film.poster_path) document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
+          document.getElementById('feltRating').value = film.vote_average ? film.vote_average.toFixed(1) : (detaljer.vote_average ? detaljer.vote_average.toFixed(1) : "");
+          
+          if (detaljer.imdb_id) {
+              document.getElementById('feltImdb').value = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
+          }
+          if (detaljer.genres && detaljer.genres.length > 0) {
+              document.getElementById('feltSjanger').value = detaljer.genres.map(g => g.name).join(" / ");
+          } else if (detaljerEN.genres && detaljerEN.genres.length > 0) {
+              document.getElementById('feltSjanger').value = detaljerEN.genres.map(g => g.name).join(" / ");
+          }
+          if (film.poster_path) {
+              document.getElementById('feltCover').value = "https://image.tmdb.org/t/p/w200" + film.poster_path;
+          }
         }
       } catch (error) { console.error(error); }
     }
