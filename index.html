@@ -2106,6 +2106,51 @@
       } catch (error) { console.error(error); }
     }
 
+    async function sokEtterFilmAlternativer() {
+        const tittel = document.getElementById('feltTittel').value.trim();
+        const aar = document.getElementById('feltAar').value.trim();
+        
+        if (!tittel) {
+            alert("Du må ha skrevet inn en tittel i skjemaet for å søke etter alternativer.");
+            return;
+        }
+
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.querySelector('#loadingInnhold h2').innerText = "Leter i databasen...";
+
+        const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
+        let yearParam = aar ? "&primary_release_year=" + aar : "";
+        const sokUrl = "https://api.themoviedb.org/3/search/movie?query=" + encodeURIComponent(tittel) + "&language=no-NO" + yearParam;
+
+        try {
+            const response = await fetch(sokUrl, options);
+            const data = await response.json();
+            
+            let valgHtml = '';
+            if (data.results && data.results.length > 0) {
+                const toppFem = data.results.slice(0, 5);
+                toppFem.forEach((f) => {
+                    let bildeUrl = f.poster_path ? "https://image.tmdb.org/t/p/w92" + f.poster_path : "";
+                    let bildeTag = bildeUrl ? '<img src="' + bildeUrl + '" class="w-12 h-16 object-cover rounded shadow-md border border-slate-700 shrink-0">' : '<div class="w-12 h-16 bg-slate-800 rounded flex items-center justify-center text-xl border border-slate-700 shrink-0">🎬</div>';
+                    let utgAar = f.release_date ? f.release_date.substring(0, 4) : "Ukjent år";
+                    let escapedTitle = (f.title || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    
+                    valgHtml += '<div onclick="velgFilmFraListe(' + f.id + ')" class="bg-slate-950 p-3 rounded-lg border border-slate-800 hover:border-amber-500 cursor-pointer transition flex gap-3 items-center">' + bildeTag + '<div class="flex-1"><h3 class="font-bold text-white text-sm leading-tight">' + escapedTitle + '</h3><p class="text-xs text-slate-400 mt-1">' + utgAar + ' • ⭐ ' + (f.vote_average ? f.vote_average.toFixed(1) : '-') + '</p></div></div>';
+                });
+            } else {
+                valgHtml = '<p class="text-sm text-slate-400 mt-4 text-center">Fant ingen andre filmer med denne tittelen og dette årstallet.</p>';
+            }
+            
+            document.getElementById('filmValgListe').innerHTML = valgHtml;
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('filmValgModal').classList.remove('hidden');
+        } catch(e) {
+            console.error(e);
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            alert("Kunne ikke koble til filmdatabasen.");
+        }
+    }
+    
     async function velgFilmFraListe(tmdbId) {
         document.getElementById('filmValgModal').classList.add('hidden');
         document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -2365,7 +2410,7 @@
               btnAngre.style.display = 'block';
           } else if (kat === 'film') {
               btnAngre.innerText = "🔙 Feil film? Velg en annen";
-              btnAngre.onclick = () => document.getElementById('filmValgModal').classList.remove('hidden');
+              btnAngre.onclick = sokEtterFilmAlternativer;
               btnAngre.style.display = 'block';
           } else {
               btnAngre.style.display = 'none';
