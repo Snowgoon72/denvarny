@@ -2093,9 +2093,9 @@
           const detaljer = await detaljResponse.json();
           const detaljerEN = await detaljResponseEN.json();
 
-          document.getElementById('feltTittel').value = detaljer.title || film.title || "";
-          document.getElementById('feltTittelOrig').value = detaljer.original_title || film.original_title || "";
-          document.getElementById('feltTittelEng').value = detaljerEN.title || "";
+          document.getElementById('feltTittel').value = detaljer.title || film.title || ""; // Norsk/lokal tittel
+          document.getElementById('feltTittelEng').value = detaljerEN.title || "";          // Engelsk tittel
+          document.getElementById('feltTittelOrig').value = detaljer.original_title || film.original_title || ""; // Originaltittel (uansett språk)
           let funnetAar = film.release_date || detaljer.release_date || "";
           if (!knownYear && funnetAar) {
               document.getElementById('feltAar').value = funnetAar.substring(0, 4);
@@ -2169,8 +2169,8 @@
             const detaljerEN = await detaljResponseEN.json();
 
             document.getElementById('feltTittel').value = detaljer.title || "";
-            document.getElementById('feltTittelOrig').value = detaljer.original_title || "";
             document.getElementById('feltTittelEng').value = detaljerEN.title || "";
+            document.getElementById('feltTittelOrig').value = detaljer.original_title || "";
             
             if (detaljer.release_date) {
                 document.getElementById('feltAar').value = detaljer.release_date.substring(0, 4);
@@ -2214,8 +2214,9 @@
             const detaljer = await detaljResponse.json();
             const detaljerEN = await detaljResponseEN.json();
 
-            item.tittel_orig = detaljer.original_title || valgtFilm.original_title || item.tittel_orig;
+            item.tittel = detaljer.title || valgtFilm.title || item.tittel;
             item.tittel_eng = detaljerEN.title || item.tittel_eng;
+            item.tittel_orig = detaljer.original_title || valgtFilm.original_title || item.tittel_orig;
             if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
@@ -2280,8 +2281,9 @@
             const detaljer = await detaljResponse.json();
             const detaljerEN = await detaljResponseEN.json();
 
-            item.tittel_orig = detaljer.original_title || valgtFilm.original_title || item.tittel_orig;
+            item.tittel = detaljer.title || valgtFilm.title || item.tittel;
             item.tittel_eng = detaljerEN.title || item.tittel_eng;
+            item.tittel_orig = detaljer.original_title || valgtFilm.original_title || item.tittel_orig;
             if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
