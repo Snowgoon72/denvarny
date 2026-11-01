@@ -2087,12 +2087,15 @@
 
           const film = data.results[0];
           const detaljerUrl = "https://api.themoviedb.org/3/movie/" + film.id + "?language=no-NO";
-          const detaljResponse = await fetch(detaljerUrl, options); 
+          const detaljerUrlEN = "https://api.themoviedb.org/3/movie/" + film.id + "?language=en-US";
+          
+          const [detaljResponse, detaljResponseEN] = await Promise.all([fetch(detaljerUrl, options), fetch(detaljerUrlEN, options)]);
           const detaljer = await detaljResponse.json();
+          const detaljerEN = await detaljResponseEN.json();
 
-          document.getElementById('feltTittel').value = film.title || "";
-          document.getElementById('feltTittelOrig').value = film.original_title || "";
-          document.getElementById('feltTittelEng').value = detaljer.title || film.title || ""; 
+          document.getElementById('feltTittel').value = detaljer.title || film.title || "";
+          document.getElementById('feltTittelOrig').value = detaljer.original_title || film.original_title || "";
+          document.getElementById('feltTittelEng').value = detaljerEN.title || "";
           let funnetAar = film.release_date || detaljer.release_date || "";
           if (!knownYear && funnetAar) {
               document.getElementById('feltAar').value = funnetAar.substring(0, 4);
@@ -2159,12 +2162,15 @@
         const options = { method: 'GET', headers: { accept: 'application/json', Authorization: "Bearer " + tmdbToken } };
         try {
             const detaljerUrl = "https://api.themoviedb.org/3/movie/" + tmdbId + "?language=no-NO";
-            const detaljResponse = await fetch(detaljerUrl, options); 
+            const detaljerUrlEN = "https://api.themoviedb.org/3/movie/" + tmdbId + "?language=en-US";
+            
+            const [detaljResponse, detaljResponseEN] = await Promise.all([fetch(detaljerUrl, options), fetch(detaljerUrlEN, options)]);
             const detaljer = await detaljResponse.json();
+            const detaljerEN = await detaljResponseEN.json();
 
             document.getElementById('feltTittel').value = detaljer.title || "";
             document.getElementById('feltTittelOrig').value = detaljer.original_title || "";
-            document.getElementById('feltTittelEng').value = detaljer.title || ""; 
+            document.getElementById('feltTittelEng').value = detaljerEN.title || "";
             
             if (detaljer.release_date) {
                 document.getElementById('feltAar').value = detaljer.release_date.substring(0, 4);
@@ -2202,11 +2208,14 @@
          
          if (valgtFilm) {
             const detaljerUrl = "https://api.themoviedb.org/3/movie/" + valgtFilm.id + "?language=no-NO";
-            const detaljResponse = await fetch(detaljerUrl, options); 
+            const detaljerUrlEN = "https://api.themoviedb.org/3/movie/" + valgtFilm.id + "?language=en-US";
+            
+            const [detaljResponse, detaljResponseEN] = await Promise.all([fetch(detaljerUrl, options), fetch(detaljerUrlEN, options)]);
             const detaljer = await detaljResponse.json();
+            const detaljerEN = await detaljResponseEN.json();
 
-            item.tittel_orig = valgtFilm.original_title || item.tittel_orig;
-            item.tittel_eng = detaljer.title || valgtFilm.title || item.tittel_eng;
+            item.tittel_orig = detaljer.original_title || valgtFilm.original_title || item.tittel_orig;
+            item.tittel_eng = detaljerEN.title || item.tittel_eng;
             if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
@@ -2265,11 +2274,14 @@
 
           if (valgtFilm) {
             const detaljerUrl = "https://api.themoviedb.org/3/movie/" + valgtFilm.id + "?language=no-NO";
-            const detaljResponse = await fetch(detaljerUrl, options); 
+            const detaljerUrlEN = "https://api.themoviedb.org/3/movie/" + valgtFilm.id + "?language=en-US";
+            
+            const [detaljResponse, detaljResponseEN] = await Promise.all([fetch(detaljerUrl, options), fetch(detaljerUrlEN, options)]);
             const detaljer = await detaljResponse.json();
+            const detaljerEN = await detaljResponseEN.json();
 
-            item.tittel_orig = valgtFilm.original_title || item.tittel_orig;
-            item.tittel_eng = detaljer.title || valgtFilm.title || item.tittel_eng;
+            item.tittel_orig = detaljer.original_title || valgtFilm.original_title || item.tittel_orig;
+            item.tittel_eng = detaljerEN.title || item.tittel_eng;
             if (valgtFilm.release_date) item.aar = valgtFilm.release_date.substring(0, 4);
             item.rating = valgtFilm.vote_average ? valgtFilm.vote_average.toFixed(1) : "";
             if (detaljer.imdb_id) item.imdb = "https://www.imdb.com/title/" + detaljer.imdb_id + "/";
