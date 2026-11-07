@@ -24,7 +24,7 @@
     <option value="Ukjent"><option value="Standard"><option value="16:9"><option value="1.78:1"><option value="1.85:1"><option value="2.35:1"><option value="2.39:1"><option value="2.40:1"><option value="4:3"><option value="1.33:1"><option value="Widescreen"><option value="Fullscreen"><option value="Anamorphic Widescreen"><option value="Letterbox">
   </datalist>
   <datalist id="utgaveListe">
-    <option value="Ukjent"><option value="Standard"><option value="Director's Cut"><option value="Extended Edition"><option value="Theatrical Cut"><option value="Unrated"><option value="Special Edition"><option value="Collector's Edition"><option value="Limited Edition"><option value="Steelbook"><option value="Remastered"><option value="Anniversary Edition"><option value="Criterion Collection">
+    <option value="Standard"><option value="Director's Cut"><option value="Extended Edition"><option value="Theatrical Cut"><option value="Unrated"><option value="Special Edition"><option value="Collector's Edition"><option value="Limited Edition"><option value="Steelbook"><option value="Remastered"><option value="Anniversary Edition"><option value="Criterion Collection">
   </datalist>
 
   <!-- LASTE-SKJERM MENS VI KOBLER TIL SKYEN -->
@@ -307,7 +307,7 @@
                 </select>
               </div>
               <div><label class="block font-semibold text-slate-400 mb-1">Bildeformat</label><input type="text" id="endreBildeformat" list="bildeformatListe" placeholder="Ukjent" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
-              <div><label class="block font-semibold text-slate-400 mb-1">Utgave</label><input type="text" id="endreUtgave" list="utgaveListe" placeholder="Ukjent" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+              <div><label class="block font-semibold text-slate-400 mb-1">Utgave</label><input type="text" id="endreUtgave" list="utgaveListe" placeholder="Standard" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div><label class="block font-semibold text-slate-400 mb-1">Sjanger</label><input type="text" id="endreSjanger" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
@@ -483,7 +483,8 @@
         <div><span class="block text-[10px] text-amber-500 uppercase font-bold tracking-wider">Ditt skannede cover</span><span class="text-xs text-slate-400">Sammenlign med plakatene under</span></div>
       </div>
       <div id="filmValgListe" class="space-y-3 overflow-y-auto max-h-[55vh]"></div>
-      <div class="flex gap-2 mt-4 pt-3 border-t border-slate-800">
+      <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-800">
+        <button type="button" id="filmValgFlereBtn" onclick="filmValgVisFlere()" class="hidden flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs py-2 rounded-lg border border-amber-500/50 font-bold transition">📋 Nei, vis flere forslag</button>
         <button type="button" onclick="filmValgNyttNavn()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs py-2 rounded-lg border border-slate-700 font-bold transition">🔎 Søk med annet navn</button>
         <button type="button" onclick="lukkFilmValg(null)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded-lg border border-slate-700 font-bold transition">Hopp over TMDb</button>
       </div>
@@ -536,44 +537,47 @@
        <!-- Steg indikator -->
        <div class="flex gap-1 mb-6" id="wizIndicators"></div>
 
-       <!-- Steg 1: Bilde -->
+       <!-- Steg 1: Strekkode (først – kan gi treff uten bilder) -->
        <div id="wizStep_0" class="wiz-step">
-          <h3 class="font-bold text-white mb-2">1. Ta bilde av coveret</h3>
-          <p class="text-xs text-slate-400 mb-4">AI-en vil prøve å lese tittel og info automatisk.</p>
+          <h3 class="font-bold text-white mb-2">1. Skann strekkode</h3>
+          <p class="text-xs text-slate-400 mb-4">Starter med strekkoden – den gir ofte treff direkte. Har du ingen strekkode, trykk «Hopp over».</p>
+          <button onclick="startWizardScanner()" class="w-full bg-emerald-600/20 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-600/40 py-4 rounded-xl font-bold transition">📸 Skann strekkode</button>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mt-4 mb-1">Strekkode / EAN</label>
+            <div class="flex gap-2">
+              <input type="text" id="wizStrekkode" inputmode="numeric" placeholder="Eller skriv inn EAN manuelt..." onkeydown="if(event.key==='Enter'){event.preventDefault();wizSokManuellStrekkode();}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none">
+              <button type="button" onclick="wizSokManuellStrekkode()" class="shrink-0 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold transition">Søk</button>
+            </div>
+          </div>
+          <p id="wizStrekkodeResultat" class="text-emerald-400 text-sm font-bold mt-3"></p>
+       </div>
+
+       <!-- Steg 2: Forside -->
+       <div id="wizStep_1" class="wiz-step hidden">
+          <h3 class="font-bold text-white mb-2">2. Ta bilde av coveret</h3>
+          <p class="text-xs text-slate-400 mb-4">AI-en leser cover-tittel, format og utgave automatisk.</p>
           <button onclick="document.getElementById('wizBildeInput').click()" class="w-full bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/40 transition py-4 rounded-xl font-bold">📷 Ta forside-bilde</button>
           <input type="file" id="wizBildeInput" accept="image/*" capture="environment" class="hidden" onchange="wizardBildeAnalyse(event, false)" />
-          
+
           <div id="wizBildePreviewBoks" class="hidden mt-4 text-center">
               <img id="wizBildePreview" src="" class="w-32 h-32 object-cover mx-auto rounded-lg border-2 border-slate-700 shadow-lg">
               <p id="wizAiResultat" class="text-amber-400 text-sm font-bold mt-2"></p>
           </div>
        </div>
 
-       <!-- Steg 2: Bakside -->
-       <!-- Steg 2: Bakside -->
-       <div id="wizStep_1" class="wiz-step hidden">
-          <h3 class="font-bold text-white mb-2">2. Skann Baksiden (Valgfritt)</h3>
-          <p class="text-xs text-slate-400 mb-4">Fanger opp lydspor, undertekster og aldersgrense.</p>
+       <!-- Steg 3: Bakside -->
+       <div id="wizStep_2" class="wiz-step hidden">
+          <h3 class="font-bold text-white mb-2">3. Skann baksiden (valgfritt)</h3>
+          <p class="text-xs text-slate-400 mb-4">Fanger opp lydspor, undertekster, bildeformat og aldersgrense.</p>
           <button onclick="document.getElementById('wizBaksideInput').click()" class="w-full bg-blue-600/20 border border-blue-500/50 text-blue-400 hover:bg-blue-600/40 transition py-4 rounded-xl font-bold">📷 Ta bilde av baksiden</button>
           <input type="file" id="wizBaksideInput" accept="image/*" capture="environment" class="hidden" onchange="wizardBildeAnalyse(event, true)" />
-          
+
           <div id="wizBaksidePreviewBoks" class="hidden mt-4 text-center">
               <img id="wizBaksidePreview" src="" class="w-32 h-32 object-cover mx-auto rounded-lg border-2 border-slate-700 shadow-lg">
               <p id="wizBaksideResultat" class="text-cyan-400 text-sm font-bold mt-2"></p>
           </div>
        </div>
 
-       <!-- Steg 3: Strekkode -->
-       <div id="wizStep_2" class="wiz-step hidden">
-          <h3 class="font-bold text-white mb-2">3. Skann strekkode (Siste sjekk)</h3>
-          <p class="text-xs text-slate-400 mb-4">Leter i databaser for å hente utgivelsesår og sjanger.</p>
-          <button onclick="startWizardScanner()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-4 rounded-xl font-bold transition">📸 Åpne Skanner</button>
-          <div>
-            <label class="block text-xs font-bold text-slate-400 uppercase mt-4 mb-1">Strekkode / EAN</label>
-            <input type="text" id="wizStrekkode" placeholder="Eller skriv inn EAN manuelt..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none">
-          </div>
-       </div>
-       
        <!-- Steg 4: Titler -->
        <div id="wizStep_3" class="wiz-step hidden space-y-3">
           <h3 class="font-bold text-white mb-2">4. Navn og Tittel</h3>
@@ -613,7 +617,7 @@
               </div>
               <div class="grid grid-cols-2 gap-2 mt-3">
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Bildeformat</label><input type="text" id="wizBildeformat" list="bildeformatListe" value="Ukjent" placeholder="Ukjent" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
-                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgave</label><input type="text" id="wizUtgave" list="utgaveListe" value="Ukjent" placeholder="Ukjent" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgave</label><input type="text" id="wizUtgave" list="utgaveListe" value="Standard" placeholder="Standard" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
               </div>
           </div>
        </div>
@@ -771,6 +775,9 @@
                 <h3 class="font-bold text-slate-300 uppercase tracking-wider">Manuelt Skjema</h3>
                 <button type="button" onclick="document.getElementById('bildeInput').click()" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400 hover:text-white border border-slate-700">📷 Legg til bilde</button>
             </div>
+            <div class="mb-3 bg-amber-500/10 border border-amber-500/40 text-amber-300 rounded-lg px-3 py-2 text-xs font-bold text-center">
+                💾 Husk å lagre registreringen! Trykk «Lagre på min profil» nederst når du er ferdig.
+            </div>
             
             <!-- FORHÅNDSVISNING AV BILDE OG ANGRE-KNAPP -->
             <div id="regBildeBoks" class="hidden flex-col items-center justify-center mb-4 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
@@ -778,6 +785,7 @@
                     <div id="regCoverSlot" class="flex flex-col items-center">
                         <span id="regCoverEtikett" class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Cover</span>
                         <img id="regBildeForhandsvisning" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl" />
+                        <div id="regCoverTom" class="hidden w-24 h-32 rounded-lg border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-600 text-[10px] text-center px-1">📷<br>Ingen coverbilde</div>
                     </div>
                     <div id="regBaksideSlot" class="hidden flex flex-col items-center">
                         <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Bakside</span>
@@ -785,9 +793,11 @@
                     </div>
                     <div id="regImdbSlot" class="hidden flex flex-col items-center">
                         <span class="text-[10px] text-sky-400 uppercase font-bold mb-1 tracking-wider">IMDb</span>
-                        <img id="regImdbForhandsvisning" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-sky-800 shadow-xl" />
+                        <a id="regImdbLenke" href="#" target="_blank"><img id="regImdbForhandsvisning" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-sky-800 shadow-xl" /></a>
+                        <div id="regImdbTom" class="hidden w-24 h-32 rounded-lg border-2 border-dashed border-sky-900 flex flex-col items-center justify-center text-sky-700 text-[10px] text-center px-1">🎬<br>Ikke koblet<br>Trykk 🔎 IMDb</div>
                     </div>
                 </div>
+                <p id="regImdbStatus" class="hidden text-xs text-sky-300 font-bold mb-2 text-center"></p>
                 <button type="button" id="btnAngreAI" onclick="document.getElementById('planteValgModal').classList.remove('hidden')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition shadow">🔙 Feil ? Vis andre AI-forslag</button>
             </div>
             
@@ -805,7 +815,10 @@
             <div class="space-y-2 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
               <div>
                 <label id="labelTittel" class="block font-semibold text-amber-500 uppercase tracking-wider mb-1">Cover tittel</label>
-                <input type="text" id="feltTittel" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:border-amber-500" />
+                <div class="flex gap-2">
+                  <input type="text" id="feltTittel" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:border-amber-500" />
+                  <button type="button" id="btnSokImdbManuelt" onclick="sokImdbFraManueltSkjema()" title="Søk opp i TMDb/IMDb og hent bilde og info" class="shrink-0 bg-sky-600/20 border border-sky-500/50 text-sky-300 hover:bg-sky-600/40 px-3 py-2 rounded-lg font-bold transition whitespace-nowrap">🔎 IMDb</button>
+                </div>
               </div>
               <div id="feltTittelEkstra" class="grid grid-cols-2 gap-2">
                 <div>
@@ -829,7 +842,7 @@
                   </select>
                 </div>
                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Bildeformat</label><input type="text" id="feltBildeformat" list="bildeformatListe" value="Ukjent" placeholder="Ukjent" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
-                <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Utgave</label><input type="text" id="feltUtgave" list="utgaveListe" value="Ukjent" placeholder="Ukjent" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
+                <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Utgave</label><input type="text" id="feltUtgave" list="utgaveListe" value="Standard" placeholder="Standard" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Sjanger</label><input type="text" id="feltSjanger" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
@@ -1072,6 +1085,7 @@
             ['feltPlanteSpiredato', 'feltPlanteEidFra', 'feltKjoptDato'].forEach(id => { const el = document.getElementById(id); if (el) el.value = iDag; });
         }
         settForrigeLagringsplass(true);
+        oppdaterRegBilder();
     }
 
     // ==========================================
@@ -1122,7 +1136,7 @@
         else if (!deler.length && /letterbox/.test(t)) deler.push('Letterbox');
         return deler.join(' ');
     }
-    // (2) Tolker utgave strengt mot kjente utgaver. Ukjent blir '' (= Ukjent).
+    // (2) Tolker utgave strengt mot kjente utgaver. Ingen kjent utgave → '' (= Standard).
     const kjenteUtgaver = [
         [/director'?s?\s*cut|regissørens versjon/i, "Director's Cut"], [/final\s*cut/i, 'Final Cut'],
         [/extended|forlenget/i, 'Extended Edition'], [/theatrical|kinoversjon/i, 'Theatrical Cut'],
@@ -1138,23 +1152,73 @@
         return [...new Set(funnet)].join(' / ');
     }
     // Mangler verdi → "Ukjent". Et bevisst valgt "Standard" beholdes.
+    // Gjør AI-svar (tekst eller liste) om til en ryddig, kommaseparert liste uten duplikater
+    const spraakNorsk = { norwegian: 'Norsk', swedish: 'Svensk', danish: 'Dansk', finnish: 'Finsk', english: 'Engelsk', icelandic: 'Islandsk',
+        german: 'Tysk', french: 'Fransk', spanish: 'Spansk', italian: 'Italiensk', dutch: 'Nederlandsk', portuguese: 'Portugisisk', polish: 'Polsk',
+        russian: 'Russisk', japanese: 'Japansk', chinese: 'Kinesisk', korean: 'Koreansk', czech: 'Tsjekkisk', hungarian: 'Ungarsk', greek: 'Gresk',
+        turkish: 'Tyrkisk', arabic: 'Arabisk', hebrew: 'Hebraisk', hindi: 'Hindi', thai: 'Thai', croatian: 'Kroatisk', estonian: 'Estisk',
+        latvian: 'Latvisk', lithuanian: 'Litauisk', romanian: 'Rumensk', slovenian: 'Slovensk', ukrainian: 'Ukrainsk', bulgarian: 'Bulgarsk',
+        norsk: 'Norsk', svensk: 'Svensk', dansk: 'Dansk', finsk: 'Finsk', engelsk: 'Engelsk', tysk: 'Tysk', fransk: 'Fransk', spansk: 'Spansk' };
+    function formaterSpraakListe(v, erLyd = false) {
+        if (!v) return '';
+        let biter = Array.isArray(v) ? v.map(x => (x && typeof x === 'object') ? Object.values(x).join(' ') : String(x)) : [String(v)];
+        const skille = erLyd ? /[,;|\n]+|\s+(?:og|and)\s+/i : /[,;|\n\/]+|\s+(?:og|and)\s+/i;
+        biter = biter.flatMap(b => b.split(skille)).map(b => b.trim()).filter(b => b && !/^(ukjent|unknown|n\/a|ingen|none|-)$/i.test(b));
+        const ut = [], sett = new Set();
+        biter.forEach(b => {
+            // Oversett rene språknavn (f.eks. "Swedish" → "Svensk"), behold resten (f.eks. "Engelsk DTS-HD 5.1")
+            const ord = b.split(/\s+/);
+            const forste = spraakNorsk[ord[0].toLowerCase().replace(/[^a-zæøå]/g, '')];
+            if (forste) ord[0] = forste;
+            const ferdig = ord.join(' ');
+            if (!sett.has(ferdig.toLowerCase())) { sett.add(ferdig.toLowerCase()); ut.push(ferdig); }
+        });
+        return ut.join(', ');
+    }
     const ellerUkjent = v => (v && String(v).trim()) ? String(v).trim() : 'Ukjent';
     const erTomEllerUkjent = v => !v || String(v).trim() === '' || String(v).trim().toLowerCase() === 'ukjent';
+    // Utgave: står det ikke spesifikt (Director's Cut o.l.) på cover/bakside, er det "Standard"
+    const ellerStandard = v => (v && String(v).trim() && String(v).trim().toLowerCase() !== 'ukjent') ? String(v).trim() : 'Standard';
+    const erStandardUtgave = v => !v || ['', 'ukjent', 'standard'].includes(String(v).trim().toLowerCase());
 
-    // (3) Viser Cover + Bakside + IMDb side om side i skjemaet før lagring
+    // (3) Viser Cover + Bakside + IMDb side om side i skjemaet før lagring.
+    //     For film vises feltet alltid, med plassholder når cover- eller IMDb-bilde mangler.
     function oppdaterRegBilder() {
-        const cover = document.getElementById('feltBrukerBilde').value || (aktivKategori !== 'film' ? document.getElementById('feltCover').value : '');
+        const erFilm = aktivKategori === 'film';
+        const cover = document.getElementById('feltBrukerBilde').value || (!erFilm ? document.getElementById('feltCover').value : '');
         const bakside = document.getElementById('feltBaksideBilde').value;
-        const imdb = aktivKategori === 'film' ? document.getElementById('feltImdbBilde').value : '';
-        const sett = (slot, imgId, url) => {
-            document.getElementById(slot).classList.toggle('hidden', !url);
-            if (url) document.getElementById(imgId).src = url; else document.getElementById(imgId).removeAttribute('src');
-        };
-        sett('regCoverSlot', 'regBildeForhandsvisning', cover);
-        sett('regBaksideSlot', 'regBaksideForhandsvisning', bakside);
-        sett('regImdbSlot', 'regImdbForhandsvisning', imdb);
-        document.getElementById('regCoverEtikett').innerText = aktivKategori === 'film' ? 'Cover' : 'Bilde';
-        document.getElementById('regBildeBoks').classList.toggle('hidden', !(cover || bakside || imdb));
+        const imdb = erFilm ? document.getElementById('feltImdbBilde').value : '';
+        const settImg = (id, url) => { const el = document.getElementById(id); if (url) { el.src = url; el.classList.remove('hidden'); } else { el.removeAttribute('src'); el.classList.add('hidden'); } };
+
+        // Cover
+        if (erFilm || cover) settImg('regBildeForhandsvisning', cover);
+        document.getElementById('regCoverTom').classList.toggle('hidden', !!cover || !erFilm);
+        document.getElementById('regCoverSlot').classList.toggle('hidden', !cover && !erFilm);
+        document.getElementById('regCoverEtikett').innerText = erFilm ? 'Cover' : 'Bilde';
+        // Bakside
+        settImg('regBaksideForhandsvisning', bakside);
+        document.getElementById('regBaksideSlot').classList.toggle('hidden', !bakside);
+        // IMDb
+        document.getElementById('regImdbSlot').classList.toggle('hidden', !erFilm);
+        settImg('regImdbForhandsvisning', imdb);
+        document.getElementById('regImdbTom').classList.toggle('hidden', !!imdb);
+        document.getElementById('regImdbLenke').href = document.getElementById('feltImdb').value || imdb || '#';
+        // Status-linje
+        const imdbTittel = erFilm ? document.getElementById('feltImdbTittel').value : '';
+        const aar = document.getElementById('feltAar').value;
+        const status = document.getElementById('regImdbStatus');
+        status.classList.toggle('hidden', !imdbTittel);
+        status.innerText = imdbTittel ? '✓ Koblet til IMDb: ' + imdbTittel + (aar ? ' (' + aar + ')' : '') : '';
+        // "Feil?"-knappen: for film → vis opptil 10 film-forslag
+        const btn = document.getElementById('btnAngreAI');
+        if (erFilm) {
+            btn.innerText = imdb ? '🔄 Feil film? Vis opptil 10 forslag' : '🔎 Søk opp filmen i IMDb';
+            btn.onclick = () => imdb ? sokEtterFilmAlternativer() : sokImdbFraManueltSkjema();
+        } else {
+            btn.innerText = '🔙 Feil ? Vis andre AI-forslag';
+            btn.onclick = () => document.getElementById('planteValgModal').classList.remove('hidden');
+        }
+        document.getElementById('regBildeBoks').classList.toggle('hidden', !(erFilm || cover || bakside));
     }
 
     async function tmdbSok(tittel, aar, type, spraak = 'no-NO') {
@@ -1201,13 +1265,26 @@
     // --- Valg-modal som returnerer et Promise ---
     let filmValgResolver = null;
     let filmValgKandidater = [];
-    function visFilmValg(kandidater, overskrift, undertekst, sokeord) {
+    function visFilmValg(kandidater, overskrift, undertekst, sokeord, bekreft = false) {
         return new Promise(resolve => {
             filmValgResolver = resolve;
             filmValgKandidater = kandidater;
             const n = normaliserNavn(sokeord);
             let html = '';
-            kandidater.forEach((f, i) => {
+            document.getElementById('filmValgFlereBtn').classList.toggle('hidden', !bekreft);
+            if (bekreft && kandidater.length === 1) {
+                // Ett treff: stor plakat så du kan bekrefte at det er riktig film
+                const f = kandidater[0];
+                const aarTxt = f.dato ? f.dato.substring(0, 4) : 'Ukjent år';
+                html = '<div class="flex flex-col items-center text-center">' +
+                    (f.poster ? '<img src="https://image.tmdb.org/t/p/w342' + f.poster + '" class="w-40 rounded-xl shadow-2xl border-2 border-sky-700 mb-1">' : '<div class="w-40 h-56 bg-slate-800 rounded-xl flex items-center justify-center text-5xl border border-slate-700 mb-1">' + (f.type === 'Serie' ? '📺' : '🎬') + '</div>') +
+                    '<span class="text-[10px] text-sky-400 uppercase font-bold tracking-wider mb-2">IMDb / TMDb</span>' +
+                    '<h3 class="font-black text-white text-lg leading-tight">' + esc(f.tittel) + '</h3>' +
+                    (f.orig && f.orig !== f.tittel ? '<p class="text-xs text-slate-500 italic">' + esc(f.orig) + '</p>' : '') +
+                    '<p class="text-xs text-slate-400 mt-1">' + aarTxt + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • ' + (f.type === 'Serie' ? '📺 Serie' : '🎬 Film') + '</p>' +
+                    '<button type="button" onclick="lukkFilmValg(0)" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black transition">✓ Ja, dette er riktig</button></div>';
+            }
+            if (!html) kandidater.forEach((f, i) => {
                 const bilde = f.poster ? '<img src="https://image.tmdb.org/t/p/w92' + f.poster + '" class="w-12 h-16 object-cover rounded shadow-md border border-slate-700 shrink-0">' : '<div class="w-12 h-16 bg-slate-800 rounded flex items-center justify-center text-xl border border-slate-700 shrink-0">' + (f.type === 'Serie' ? '📺' : '🎬') + '</div>';
                 const aar = f.dato ? f.dato.substring(0, 4) : 'Ukjent år';
                 const likNavn = n && (normaliserNavn(f.tittel) === n || normaliserNavn(f.orig) === n);
@@ -1232,6 +1309,11 @@
         document.getElementById('filmValgModal').classList.add('hidden');
         const r = filmValgResolver; filmValgResolver = null;
         if (r) r(index === null || index === undefined ? null : filmValgKandidater[index]);
+    }
+    function filmValgVisFlere() {
+        document.getElementById('filmValgModal').classList.add('hidden');
+        const r = filmValgResolver; filmValgResolver = null;
+        if (r) r({ flere: true });
     }
     function filmValgNyttNavn() {
         document.getElementById('filmValgModal').classList.add('hidden');
@@ -1266,7 +1348,33 @@
         // 1. Søk med årstall (både norsk og engelsk tittel, siden coveret kan være på engelsk)
         const [medNo, medEn] = await Promise.all([tmdbSok(sokeord, aar, type, 'no-NO'), tmdbSok(sokeord, aar, type, 'en-US')]);
         const eksakt = medNo.find(likNavn) || medEn.find(likNavn);
-        if (eksakt) return medNo.find(k => k.id === eksakt.id) || eksakt;
+        if (eksakt) {
+            const treff = medNo.find(k => k.id === eksakt.id) || eksakt;
+            if (!interaktiv) return treff;
+            // Vis plakaten og be om bekreftelse
+            const svar = await visFilmValg([treff], '✅ Er dette riktig ' + typeTekst + '?',
+                'Fant «' + treff.tittel + '»' + (treff.dato ? ' (' + treff.dato.substring(0, 4) + ')' : '') + '. Sammenlign med coveret ditt og bekreft.', sokeord, true);
+            if (svar && svar.nyttNavn) {
+                const nytt = spoerOmNyttNavn(sokeord, false);
+                return nytt ? finnTmdbTreff(nytt, aar, type, true, dybde + 1) : null;
+            }
+            if (!svar || !svar.flere) return svar;
+            // "Nei, vis flere forslag" → opptil 10 forslag (med og uten årstall, begge språk)
+            visLaster("Henter flere forslag...", sokeord);
+            const [u1, u2] = await Promise.all([tmdbSok(sokeord, '', type, 'no-NO'), tmdbSok(sokeord, '', type, 'en-US')]);
+            let flere = samleUnike(medNo, u1, u2.map(e => u1.find(k => k.id === e.id) || e)).filter(k => !(k.id === treff.id && k.type === treff.type));
+            if (flere.length === 0) flere = await tmdbSok(sokeord, '', annenType, 'no-NO');
+            if (flere.length === 0) {
+                const nytt = spoerOmNyttNavn(sokeord, true);
+                return nytt ? finnTmdbTreff(nytt, aar, type, true, dybde + 1) : null;
+            }
+            const v2 = await visFilmValg(sorterLikForst(flere).slice(0, 10), '📋 Velg riktig ' + typeTekst, 'Opptil 10 forslag for «' + sokeord + '». Cover-tittelen beholdes.', sokeord);
+            if (v2 && v2.nyttNavn) {
+                const nytt = spoerOmNyttNavn(sokeord, false);
+                return nytt ? finnTmdbTreff(nytt, aar, type, true, dybde + 1) : null;
+            }
+            return v2;
+        }
 
         // 2. Søk uten årstall
         let utenNo = [], utenEn = [];
@@ -1453,8 +1561,14 @@
     // ==========================================
     // LAGRING OG REDIGERING AV GJENSTANDER
     // ==========================================
-    function lagreNyttElement(e) {
+    async function lagreNyttElement(e) {
       e.preventDefault();
+      if (aktivKategori === 'film' && !document.getElementById('feltImdbBilde').value && !document.getElementById('feltImdbTittel').value) {
+          if (confirm("Filmen er ikke koblet til IMDb ennå, så IMDb-bilde og info mangler.\n\nVil du søke den opp før du lagrer?")) {
+              await simulerApiOppslag(document.getElementById('feltTittel').value.trim(), false, document.getElementById('feltAar').value.trim());
+              if (!confirm("Lagre nå?" + (document.getElementById('feltImdbTittel').value ? "\n\nIMDb: " + document.getElementById('feltImdbTittel').value : ""))) return;
+          }
+      }
       
       let nyttElement = {
         id: Date.now(),
@@ -1485,7 +1599,7 @@
         nyttElement.alder = document.getElementById('feltAlder').value.trim();
         nyttElement.mediatype = document.getElementById('feltMediatype').value || 'Film';
         nyttElement.bildeformat = ellerUkjent(document.getElementById('feltBildeformat').value);
-        nyttElement.utgave = ellerUkjent(document.getElementById('feltUtgave').value);
+        nyttElement.utgave = ellerStandard(document.getElementById('feltUtgave').value);
         nyttElement.imdb_tittel = document.getElementById('feltImdbTittel').value.trim();
         nyttElement.imdb_bilde = document.getElementById('feltImdbBilde').value.trim();
         // Cover = kun ditt eget bilde. IMDb-plakaten ligger i imdb_bilde.
@@ -1623,7 +1737,7 @@
         document.getElementById('endreImdbTittel').value = item.imdb_tittel || '';
         document.getElementById('endreMediatype').value = item.mediatype === 'Serie' ? 'Serie' : 'Film';
         document.getElementById('endreBildeformat').value = ellerUkjent(item.bildeformat);
-        document.getElementById('endreUtgave').value = ellerUkjent(item.utgave);
+        document.getElementById('endreUtgave').value = ellerStandard(item.utgave);
         const imdbFelt = document.getElementById('endreImdb');
         const imdbKnapp = document.getElementById('endreImdbLinkBtn');
         imdbFelt.value = item.imdb || '';
@@ -1708,7 +1822,7 @@
         item.alder = document.getElementById('endreAlder').value.trim();
         item.mediatype = document.getElementById('endreMediatype').value || 'Film';
         item.bildeformat = ellerUkjent(document.getElementById('endreBildeformat').value);
-        item.utgave = ellerUkjent(document.getElementById('endreUtgave').value);
+        item.utgave = ellerStandard(document.getElementById('endreUtgave').value);
         // imdb_tittel er skrivebeskyttet – settes kun fra TMDb
       } else if (item.kategori === 'tegneserie') {
         item.bladserie = document.getElementById('endreBladserie').value.trim();
@@ -1882,9 +1996,9 @@
             if (bf && (erTomEllerUkjent(bfFelt.value) || (/:\d/.test(bf) && !/:\d/.test(bfFelt.value)))) bfFelt.value = bf;
         }
         const ut = normaliserUtgave(data.utgave || data.edition || data.versjon || '');
-        if (ut && erTomEllerUkjent(utFelt.value)) utFelt.value = ut;
+        if (ut && erStandardUtgave(utFelt.value)) utFelt.value = ut;
         if (!bfFelt.value) bfFelt.value = 'Ukjent';
-        if (!utFelt.value) utFelt.value = 'Ukjent';
+        if (!utFelt.value || utFelt.value.trim().toLowerCase() === 'ukjent') utFelt.value = 'Standard';
         const mt = vaskMediatype(data.mediatype || data.type || '');
         if (mt) document.getElementById('wizMediatype').value = mt;
     }
@@ -1916,8 +2030,9 @@
         document.getElementById('wizBaksideResultat').innerText = '';
         document.getElementById('wizMediatype').value = 'Film';
         document.getElementById('wizBildeformat').value = 'Ukjent';
-        document.getElementById('wizUtgave').value = 'Ukjent';
+        document.getElementById('wizUtgave').value = 'Standard';
         document.getElementById('wizStrekkode').value = '';
+        document.getElementById('wizStrekkodeResultat').innerText = '';
         document.getElementById('wizTittel').value = '';
         document.getElementById('wizTittelEng').value = '';
         document.getElementById('wizTittelOrig').value = '';
@@ -2059,7 +2174,7 @@
                         if (data.aar && !document.getElementById('wizAarFilm').value) document.getElementById('wizAarFilm').value = data.aar;
                         document.getElementById('wizAiResultat').innerText = "Fant: " + renTittel + " – søker i TMDb/IMDb...";
                         try {
-                            const d = await wizKobleTilTmdb(renTittel);
+                            const d = wizTmdbDetaljer || await wizKobleTilTmdb(renTittel);
                             document.getElementById('wizAiResultat').innerText = d
                                 ? "Fant: " + renTittel + "  →  IMDb: " + imdbTittelFra(d) + (d.aar ? " (" + d.aar + ")" : "")
                                 : "Fant: " + renTittel + " (ikke koblet til TMDb/IMDb)";
@@ -2073,8 +2188,11 @@
             } else {
                 document.getElementById('wizBaksideResultat').innerText = "✅ Suksess! Fant data.";
                 if (data.alder) document.getElementById('wizAlder').value = data.alder;
-                if (data.tekst) document.getElementById('wizTekstSpraak').value = data.tekst;
-                if (data.lyd) document.getElementById('wizLydSpraak').value = data.lyd;
+                // Alle tekst- og lydspråk fra baksiden (AI kan svare med tekst eller liste)
+                const tekstListe = formaterSpraakListe(data.tekst || data.undertekster || data.subtitles || data.tekst_spraak);
+                const lydListe = formaterSpraakListe(data.lyd || data.lydspor || data.audio || data.lyd_spraak, true);
+                if (tekstListe) document.getElementById('wizTekstSpraak').value = tekstListe;
+                if (lydListe) document.getElementById('wizLydSpraak').value = lydListe;
                 // Legger til årstall fra back-cover (hvis funnet):
                 if (data.aar) { document.getElementById('wizAarFilm').value = data.aar; document.getElementById('wizAar').value = data.aar; }
                 if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
@@ -2121,26 +2239,42 @@
             (decodedText) => { 
                 stoppSkanner(); 
                 document.getElementById('wizStrekkode').value = decodedText;
-                
-                if(confirm("Strekkode skannet: " + decodedText + "\n\nVil du at jeg skal forsøke å slå opp denne for å hente utgivelsesår og sjanger?")) {
-                    wizStrekkodeSok(decodedText);
-                } else {
-                    wizGaa(1);
-                }
+                wizStrekkodeSok(decodedText);
             }, 
             (err) => {}
         ).catch(err => { stoppSkanner(); });
     }
 
+        function wizSokManuellStrekkode() {
+        const kode = document.getElementById('wizStrekkode').value.replace(/\s/g, '');
+        if (!kode) { alert("Skriv inn strekkoden først, eller trykk «Hopp over»."); return; }
+        wizStrekkodeSok(kode);
+    }
+
+    // Etter strekkode-søket: ved treff spør om du vil ta bilder, ellers gå til forsidebildet
+    function wizEtterStrekkode(treffNavn) {
+        skjulLaster();
+        const res = document.getElementById('wizStrekkodeResultat');
+        if (treffNavn) {
+            res.innerText = "✅ Fant: " + treffNavn;
+            if (confirm("Strekkoden ga treff:\n" + treffNavn + "\n\nVil du ta bilde av cover og bakside også?\n(OK = ta bilder, Avbryt = hopp rett til detaljene)")) {
+                wizAktivtSteg = 1;   // forside
+            } else {
+                wizAktivtSteg = 3;   // titler/detaljer
+            }
+            oppdaterWizardUI();
+        } else {
+            res.innerText = "Fant ingen treff på strekkoden – ta bilde av coveret i stedet.";
+            setTimeout(() => { wizAktivtSteg = 1; oppdaterWizardUI(); }, 1200);
+        }
+    }
+
     async function wizStrekkodeSok(strekkode) {
-        document.getElementById('loadingOverlay').classList.remove('hidden');
-        document.querySelector('#loadingInnhold h2').innerText = "Søker...";
-        
+        visLaster("Søker på strekkode...", strekkode);
+
         // 1. Sjekk din egen database FØRST
         const egetTreff = database.find(i => i.strekkode === strekkode && i.kategori === aktivKategori);
         if (egetTreff) {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            alert("Fant denne strekkoden i databasen din allerede! Fyller inn informasjonen.");
             if (egetTreff.tittel) document.getElementById('wizTittel').value = egetTreff.tittel;
             if (egetTreff.tittel_eng) document.getElementById('wizTittelEng').value = egetTreff.tittel_eng;
             if (egetTreff.tittel_orig) document.getElementById('wizTittelOrig').value = egetTreff.tittel_orig;
@@ -2155,9 +2289,11 @@
                     wizTmdbDetaljer = { type: egetTreff.mediatype || 'Film', tittelNo: '', tittelEn: egetTreff.imdb_tittel || egetTreff.tittel_eng || '', orig: egetTreff.tittel_orig || '', aar: egetTreff.aar || '', rating: egetTreff.rating || '', imdbUrl: egetTreff.imdb || '', sjanger: egetTreff.sjanger || '', poster: k.imdb || '' };
                 }
             }
-            wizGaa(1);
+            wizEtterStrekkode((egetTreff.tittel || '') + (egetTreff.aar ? ' (' + egetTreff.aar + ')' : '') + "\n(finnes allerede i samlingen din)");
             return;
         }
+
+        let treffNavn = '';
 
         try {
             if (aktivKategori === 'film') {
@@ -2169,13 +2305,16 @@
                     // Cover tittel settes kun hvis den er tom (det skannede navnet fra forsiden vinner)
                     if(!document.getElementById('wizTittel').value) document.getElementById('wizTittel').value = rT;
                     const upcUtgave = normaliserUtgave(t);
-                    if (upcUtgave && erTomEllerUkjent(document.getElementById('wizUtgave').value)) document.getElementById('wizUtgave').value = upcUtgave;
+                    if (upcUtgave && erStandardUtgave(document.getElementById('wizUtgave').value)) document.getElementById('wizUtgave').value = upcUtgave;
                     if (vaskMediatype(t) === 'Serie') document.getElementById('wizMediatype').value = 'Serie';
 
-                    // Koble til TMDb kun hvis veiviseren ikke allerede har et godkjent treff
+                    treffNavn = rT;
+                    // Koble til TMDb (viser plakaten for bekreftelse)
                     if (!wizTmdbDetaljer) {
+                        visLaster("Søker i TMDb/IMDb...", rT);
                         try { await wizKobleTilTmdb(document.getElementById('wizTittel').value || rT); } catch(e) { console.error(e); }
                     }
+                    if (wizTmdbDetaljer) treffNavn = rT + "\nIMDb: " + imdbTittelFra(wizTmdbDetaljer) + (wizTmdbDetaljer.aar ? " (" + wizTmdbDetaljer.aar + ")" : "");
                 }
             } else {
                 const gbRes = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + strekkode);
@@ -2192,13 +2331,13 @@
                         document.getElementById('wizAarFilm').value = bok.publishedDate.substring(0, 4);
                     }
                     if (bok.pageCount) document.getElementById('wizSider').value = bok.pageCount;
+                    treffNavn = bok.title || '';
                 }
             }
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            wizGaa(1);
+            wizEtterStrekkode(treffNavn);
         } catch(e) {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            wizGaa(1);
+            console.error(e);
+            wizEtterStrekkode('');
         }
     }
 
@@ -2533,6 +2672,13 @@
       finally { skjulLaster(); }
     }
 
+    // Manuelt skjema: søk opp cover-tittelen og hent IMDb-bilde + info (cover-tittelen beholdes)
+    function sokImdbFraManueltSkjema() {
+        const tittel = document.getElementById('feltTittel').value.trim();
+        if (!tittel) { alert("Skriv inn cover-tittelen først."); return; }
+        simulerApiOppslag(tittel, false, document.getElementById('feltAar').value.trim());
+    }
+
     // "Feil film? Velg en annen" – viser opptil 10 alternativer (med og uten årstall)
     async function sokEtterFilmAlternativer() {
         const tittel = document.getElementById('feltTittel').value.trim();
@@ -2773,7 +2919,9 @@
       
       document.getElementById('btnMasseOppdater').style.display = kat === 'film' ? 'inline-block' : 'none';
 
+      document.getElementById('btnSokImdbManuelt').style.display = kat === 'film' ? 'block' : 'none';
       settForrigeLagringsplass(true);   // (1) forrige lagringsplass for denne kategorien
+      oppdaterRegBilder();
       byggLagringsplasserListe();
       utforSok();
     }
@@ -2815,7 +2963,7 @@
             lokalHtml += flis('Cover tittel', item.tittel || '-', 'text-amber-400');
             lokalHtml += flis('IMDb-tittel', item.imdb_tittel || 'Ikke koblet', 'text-sky-300');
             lokalHtml += flis('Type', item.mediatype === 'Serie' ? '📺 Serie' : '🎬 Film');
-            lokalHtml += flis('Utgave / Versjon', item.utgave || 'Ukjent');
+            lokalHtml += flis('Utgave / Versjon', (item.utgave && item.utgave !== 'Ukjent') ? item.utgave : 'Standard');
             lokalHtml += flis('Bildeformat', item.bildeformat || 'Ukjent', 'text-slate-300', true);
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
