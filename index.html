@@ -9,8 +9,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <!-- SUPABASE BIBLIOTEK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Bilder kan klikkes for å se dem stort */
+    img[src]:not(#lightboxBilde):not(#cropImage):not(.cropper-container img) { cursor: zoom-in; }
+    #lightbox img { cursor: default; }
+  </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
+
+  <!-- BILDEVISER: klikk på et bilde for å se det stort -->
+  <div id="lightbox" class="hidden fixed inset-0 bg-black/95 z-[300] flex flex-col items-center justify-center p-4 cursor-zoom-out" onclick="lukkLightbox()">
+    <button type="button" onclick="lukkLightbox()" class="absolute top-3 right-4 text-white/80 hover:text-white text-3xl font-black px-2" title="Lukk (Esc)">✕</button>
+    <img id="lightboxBilde" src="" alt="" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border border-slate-700" />
+    <p id="lightboxTekst" class="text-slate-300 text-sm mt-3 font-bold text-center"></p>
+    <a id="lightboxLenke" href="#" target="_blank" onclick="event.stopPropagation()" class="mt-1 text-[11px] text-sky-400 hover:text-sky-300 underline">Åpne i ny fane</a>
+  </div>
 
   <!-- CROPPER.JS FOR Å KUTTE BILDER -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
@@ -121,8 +134,8 @@
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Synlighet</label>
           <select id="regSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none">
-            <option value="offentlig">Offentlig profil</option>
-            <option value="privat">Privat profil</option>
+            <option value="offentlig">Del samlingen min med andre brukere</option>
+            <option value="privat">Ikke del samlingen min</option>
           </select>
         </div>
         <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Registrer meg</button>
@@ -165,7 +178,7 @@
           <div><label class="block text-slate-400 mb-1 font-semibold">Mitt Land</label><input type="text" id="profilLand" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
           <div><label class="block text-slate-400 mb-1 font-semibold">Foretrukket språk</label><select id="profilSpraak" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"><option value="Norsk">Norsk</option><option value="Svensk">Svensk</option><option value="Dansk">Dansk</option><option value="Engelsk">Engelsk</option></select></div>
         </div>
-        <div><label class="block text-slate-400 mb-1 font-semibold">Standard synlighet</label><select id="profilSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"><option value="offentlig">Offentlig (Alle kan se mine gjenstander)</option><option value="privat">Privat (Kun jeg kan se mine gjenstander)</option></select></div>
+        <div><label class="block text-slate-400 mb-1 font-semibold">Deling av samlingen min</label><select id="profilSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"><option value="offentlig">Del samlingen – andre brukere kan velge å se den</option><option value="privat">Ikke del – bare jeg ser samlingen min</option></select></div>
         <div class="flex gap-3 pt-2 pb-4">
           <button type="button" onclick="document.getElementById('profilModal').classList.add('hidden')" class="flex-1 bg-slate-800 text-slate-300 py-2.5 rounded-lg border border-slate-700 hover:bg-slate-700 transition">Avbryt</button>
           <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-lg transition">Lagre endringer</button>
@@ -195,7 +208,22 @@
             ✅ Registreringen er lagret i samlingen din.<br>
             <span class="font-normal text-emerald-200/80">Se over skjemaet. Endrer du noe, trykk «Oppdater». Vil du fjerne den igjen, trykk «Kanseller».</span>
         </div>
-        
+
+        <div id="endrePakkeSeksjon" class="hidden bg-indigo-500/10 border border-indigo-500/40 rounded-lg p-3">
+            <div class="flex justify-between items-center mb-2 gap-2">
+                <span class="text-xs font-black text-indigo-300 uppercase tracking-wider">📦 Samleboks <span id="endrePakkeAntall" class="text-indigo-200 normal-case font-bold"></span></span>
+                <button type="button" id="btnLeggTilPakke" onclick="leggTilFilmIPakke()" class="text-[10px] bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 px-2 py-1 rounded border border-indigo-500/50 font-bold transition">➕ Legg til film i boksen</button>
+            </div>
+            <div id="endrePakkeFelter" class="hidden grid grid-cols-3 gap-2 mb-2">
+                <div class="col-span-2"><label class="block text-[10px] text-slate-400 mb-0.5">Boksens navn</label><input type="text" id="endrePakkeNavnFelt" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" /></div>
+                <div><label class="block text-[10px] text-slate-400 mb-0.5">Pris for boksen</label><input type="number" id="endrePakkePris" placeholder="kr" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" /></div>
+                <div><label class="block text-[10px] text-slate-400 mb-0.5">Disk nr. (denne filmen)</label><input type="text" id="endreDiskNr" placeholder="F.eks. 3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" /></div>
+                <div id="endrePakkeSokBoks" class="col-span-2"><label class="block text-[10px] text-slate-400 mb-0.5">Søk i boksen</label><input type="text" id="endrePakkeSok" oninput="filtrerPakkeListe()" placeholder="Søk blant filmene..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" /></div>
+            </div>
+            <div id="endrePakkeListe" class="space-y-1 max-h-56 overflow-y-auto pr-1"></div>
+            <p id="endrePakkeInfo" class="text-[10px] text-slate-500 mt-2">Boksens navn og pris, lagringsplass, tilstand, status, synlighet og coverbilde gjelder hele boksen. Boksens pris telles én gang i samlingsverdien.</p>
+        </div>
+
         <!-- NY BILDEVISNING I REDIGER-MODALEN -->
         <div id="endreBildeVisning" class="flex gap-4 items-start justify-center mb-4 overflow-x-auto">
             <div class="flex flex-col items-center">
@@ -394,7 +422,7 @@
           </div>
           
           <div>
-            <label class="block font-semibold text-slate-400 mb-1">Synlighet for venner</label>
+            <label class="block font-semibold text-slate-400 mb-1">Synlighet for andre brukere</label>
             <select id="endreSynlighet" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300">
               <option value="standard">Følg profilstandard</option>
               <option value="offentlig">Offentlig (Vis for alle)</option>
@@ -479,6 +507,35 @@
   </div>
 
   <!-- FILMVALG-MODAL -->
+  <div id="samlingModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[245] flex flex-col items-center justify-center p-4">
+    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl">
+      <h2 id="samlingTittel" class="text-lg font-black text-indigo-300 mb-1">📦 Samling</h2>
+      <p class="text-xs text-slate-400 mb-3">Fjern krysset for filmer som ikke ligger i boksen din.</p>
+      <div class="flex gap-2 mb-2 text-[11px] items-center">
+        <button type="button" onclick="samlingVelgAlle(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 font-bold">Velg alle</button>
+        <button type="button" onclick="samlingVelgAlle(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 font-bold">Fjern alle</button>
+        <span id="samlingAntall" class="ml-auto text-indigo-300 font-bold"></span>
+      </div>
+      <div id="samlingListe" class="space-y-1.5 overflow-y-auto max-h-[55vh] pr-1"></div>
+      <div class="flex gap-2 mt-4 pt-3 border-t border-slate-800">
+        <button type="button" onclick="lukkSamlingValg(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm py-2.5 rounded-lg border border-slate-700 font-bold transition">Avbryt</button>
+        <button type="button" onclick="lukkSamlingValg(true)" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm py-2.5 rounded-lg font-black transition">✓ Legg til valgte</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="usikreModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[245] flex flex-col items-center justify-center p-4">
+    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl">
+      <h2 class="text-lg font-black text-amber-400 mb-1">🔍 Gå gjennom usikre treff <span id="usikreAntall" class="text-sm text-slate-400"></span></h2>
+      <p class="text-xs text-slate-400 mb-3">Disse fant jeg ikke med nøyaktig samme navn i TMDb. Velg riktig film for hver – eller «uten IMDb-kobling».</p>
+      <div id="usikreListe" class="space-y-2 overflow-y-auto max-h-[55vh] pr-1"></div>
+      <div class="flex gap-2 mt-4 pt-3 border-t border-slate-800">
+        <button type="button" onclick="lukkUsikre(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-lg border border-slate-700 font-bold transition">Hopp over alle (uten IMDb)</button>
+        <button type="button" onclick="lukkUsikre(true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm py-2.5 rounded-lg font-black transition">✓ Lagre med valgene</button>
+      </div>
+    </div>
+  </div>
+
   <div id="filmValgModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[240] flex flex-col items-center justify-center p-4">
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 max-w-md w-full shadow-2xl relative">
       <button onclick="lukkFilmValg(null)" class="absolute top-4 right-4 text-slate-400 hover:text-white font-black text-xl px-2">✕</button>
@@ -590,6 +647,19 @@
           <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Cover tittel (slik den står på coveret)</label><input type="text" id="wizTittel" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold focus:border-indigo-500 outline-none"></div>
           <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Originaltittel</label><input type="text" id="wizTittelOrig" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
           <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Engelsk Tittel</label><input type="text" id="wizTittelEng" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+          <div id="wizPakkeBoks" class="hidden pt-3 mt-1 border-t border-slate-800">
+            <label class="flex items-center gap-2 text-sm text-indigo-300 font-bold cursor-pointer"><input type="checkbox" id="wizErPakke" onchange="wizTogglePakke()" class="w-4 h-4 rounded"> 📦 Samleboks / flere filmer i samme boks</label>
+            <div id="wizPakkeFelter" class="hidden space-y-2 mt-2">
+              <div class="grid grid-cols-3 gap-2">
+                <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Boksens navn</label><input type="text" id="wizPakkeNavn" placeholder="F.eks. Ultimate Collection James Bond" class="w-full bg-slate-950 border border-indigo-500/40 rounded-lg px-3 py-2 text-white focus:border-indigo-400 outline-none"></div>
+                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Pris for boksen</label><input type="number" id="wizPakkePris" placeholder="kr" class="w-full bg-slate-950 border border-indigo-500/40 rounded-lg px-3 py-2 text-white focus:border-indigo-400 outline-none"></div>
+              </div>
+              <div class="flex justify-between items-end"><label class="block text-[10px] font-bold text-slate-400 uppercase">Filmer i boksen (én per linje)</label><span id="wizPakkeAntall" class="text-[10px] text-indigo-300 font-bold"></span></div>
+              <textarea id="wizPakkeListe" rows="7" oninput="wizOppdaterPakkeAntall()" placeholder="Dr. No&#10;From Russia with Love&#10;Disk 3: Goldfinger&#10;..." class="w-full bg-slate-950 border border-indigo-500/40 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-400 outline-none font-mono"></textarea>
+              <button type="button" onclick="hentTmdbSamling()" class="w-full bg-indigo-600/20 border border-indigo-500/50 text-indigo-200 hover:bg-indigo-600/40 py-2.5 rounded-lg font-bold text-sm transition">🎬 Hent hel samling fra TMDb (f.eks. James Bond)</button>
+              <p class="text-[10px] text-slate-500">Skriv «Disk 3: Goldfinger» for å lagre disknummer. Filmer med samme navn i TMDb kobles automatisk – usikre treff går du gjennom samlet når du lagrer. Maks 50 filmer.</p>
+            </div>
+          </div>
        </div>
 
        <!-- Steg 5: Serie / År -->
@@ -720,15 +790,15 @@
             <option value="eier">Eier</option>
           </select>
 
-          <select id="eieFilter" onchange="utforSok()" class="flex-1 sm:flex-none bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
-            <optgroup label="Min Samling">
-              <option value="min_alle">Mitt: Vis alt</option>
-              <option value="min_har">Mitt: Kun eide</option>
-              <option value="min_mangler">Mitt: Ønskeliste</option>
-            </optgroup>
-            <optgroup label="Nettverk">
-              <option value="venner">Søk i venners samlinger</option>
-              <option value="globalt">Søk Globalt (Alle)</option>
+          <select id="samlingVisning" onchange="byttSamlingVisning()" title="Hvem sin samling vil du se?" class="flex-1 sm:flex-none bg-slate-900 border border-sky-500/50 text-sky-300 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+            <option value="meg">👤 Min samling</option>
+          </select>
+
+          <select id="eieFilter" onchange="utforSok()" title="Filtrer på status" class="flex-1 sm:flex-none bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+            <optgroup label="Status">
+              <option value="min_alle">Vis alt</option>
+              <option value="min_har">Kun eide</option>
+              <option value="min_mangler">Ønskeliste</option>
             </optgroup>
             <optgroup label="Plante-Marked">
               <option value="plante_marked">🌱 Til salgs / Bytte / Gis bort</option>
@@ -1024,7 +1094,7 @@
             <button onclick="apneFlyttModal()" class="bg-purple-600/20 text-purple-400 hover:bg-purple-600/40 text-[11px] font-bold px-3 py-1.5 rounded border border-purple-500/50 transition">📦 Flytt gjenstander</button>
             <button id="btnMasseOppdater" onclick="masseOppdaterTMDb()" class="bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/40 text-[11px] font-bold px-3 py-1.5 rounded border border-indigo-500/50 transition">🤖 Auto-fyll info (TMDb)</button>
             <div>
-              <span class="text-sm font-medium text-slate-400"><span id="antallTreff">0</span> treff</span>
+              <span class="text-sm font-medium text-slate-400"><span id="antallTreff">0</span> treff<span id="antallBokser" class="text-indigo-300"></span></span>
               <span class="text-sm font-bold text-emerald-400 ml-3">Verdi: <span id="totalVerdi">0</span> kr</span>
             </div>
           </div>
@@ -1059,6 +1129,50 @@
         o.classList.remove('hidden');
     }
     function skjulLaster() { const o = document.getElementById('loadingOverlay'); if (o) o.classList.add('hidden'); }
+    // ==========================================
+    // BILDEVISER (klikk på et bilde for å se det stort)
+    // ==========================================
+    // Bruker største versjon av TMDb-plakater
+    function storBildeUrl(src) { return String(src || '').replace(/image\.tmdb\.org\/t\/p\/w\d+\//, 'image.tmdb.org/t/p/original/'); }
+    function visStortBilde(src, tekst = '') {
+        if (!src) return;
+        const stor = storBildeUrl(src);
+        const img = document.getElementById('lightboxBilde');
+        img.onerror = () => { if (img.src !== src) img.src = src; };   // fall tilbake til opprinnelig størrelse
+        img.src = stor;
+        document.getElementById('lightboxTekst').innerText = tekst;
+        document.getElementById('lightboxLenke').href = stor;
+        document.getElementById('lightboxLenke').classList.toggle('hidden', stor.startsWith('data:'));   // egne bilder kan ikke åpnes i ny fane
+        document.getElementById('lightbox').classList.remove('hidden');
+    }
+    function lukkLightbox() {
+        document.getElementById('lightbox').classList.add('hidden');
+        document.getElementById('lightboxBilde').removeAttribute('src');
+    }
+    // Finner etiketten ved bildet (Cover / Bakside / IMDb) og evt. tittelen i listen
+    function finnBildeEtikett(img) {
+        const boks = img.closest('a') ? img.closest('a').parentElement : img.parentElement;
+        const span = boks ? [...boks.querySelectorAll('span')].find(sp => sp.innerText && sp.innerText.trim().length < 25) : null;
+        const overskrift = boks ? boks.querySelector('h3, p.font-bold') : null;   // f.eks. filmtittel i forslagslistene
+        let tekst = overskrift ? overskrift.innerText.trim() : (span ? span.innerText.trim() : '');
+        const rad = img.closest('#vareTabell > div');
+        const tittel = rad ? rad.querySelector('a span.font-bold') : null;
+        if (tittel) tekst = tittel.childNodes[0].textContent.trim() + (tekst ? ' – ' + tekst : '');
+        return tekst;
+    }
+    // Fanger klikk på alle bilder i appen (før kortets egen klikk-handling og lenker)
+    document.addEventListener('click', e => {
+        const img = e.target.closest && e.target.closest('img');
+        if (!img) return;
+        if (img.id === 'lightboxBilde' || img.id === 'cropImage' || img.closest('#cropModal') || img.closest('#skannerModal')) return;
+        const src = img.getAttribute('src');
+        if (!src) return;
+        e.preventDefault();
+        e.stopPropagation();
+        visStortBilde(img.currentSrc || img.src, finnBildeEtikett(img));
+    }, true);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('lightbox').classList.contains('hidden')) lukkLightbox(); });
+
     function esc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
     // ==========================================
@@ -1287,7 +1401,7 @@
                     '<span class="text-[10px] text-sky-400 uppercase font-bold tracking-wider mb-2">IMDb / TMDb</span>' +
                     '<h3 class="font-black text-white text-lg leading-tight">' + esc(f.tittel) + '</h3>' +
                     (f.orig && f.orig !== f.tittel ? '<p class="text-xs text-slate-500 italic">' + esc(f.orig) + '</p>' : '') +
-                    '<p class="text-xs text-slate-400 mt-1">' + aarTxt + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • ' + (f.type === 'Serie' ? '📺 Serie' : '🎬 Film') + '</p>' +
+                    '<p class="text-xs text-slate-400 mt-1">' + aarTxt + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • ' + typeEtikett(f.type) + '</p>' +
                     '<p id="filmValgSkuesp_0" class="text-xs text-slate-300 mt-1">🎭 <span class="text-slate-500">henter skuespillere…</span></p>' +
                     '<button type="button" onclick="lukkFilmValg(0)" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black transition">✓ Ja, dette er riktig</button></div>';
             }
@@ -1298,7 +1412,7 @@
                 const origTekst = f.orig && f.orig !== f.tittel ? '<p class="text-[10px] text-slate-500 italic truncate">' + esc(f.orig) + '</p>' : '';
                 html += '<div onclick="lukkFilmValg(' + i + ')" class="bg-slate-950 p-3 rounded-lg border ' + (likNavn ? 'border-emerald-700/60' : 'border-slate-800') + ' hover:border-amber-500 cursor-pointer transition flex gap-3 items-center">' + bilde +
                     '<div class="flex-1 overflow-hidden"><h3 class="font-bold text-white text-sm leading-tight">' + esc(f.tittel) + '</h3>' + origTekst +
-                    '<p class="text-xs text-slate-400 mt-1">' + aar + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • <span class="' + (f.type === 'Serie' ? 'text-sky-400' : 'text-amber-400') + '">' + (f.type === 'Serie' ? '📺 Serie' : '🎬 Film') + '</span>' +
+                    '<p class="text-xs text-slate-400 mt-1">' + aar + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • <span class="' + (f.type === 'Serie' ? 'text-sky-400' : 'text-amber-400') + '">' + typeEtikett(f.type) + '</span>' +
                     (likNavn ? ' • <span class="text-emerald-400 font-bold">✓ Samme navn</span>' : '') + '</p>' +
                     '<p id="filmValgSkuesp_' + i + '" class="text-[11px] text-slate-300 mt-0.5 truncate">🎭 <span class="text-slate-500">…</span></p></div></div>';
             });
@@ -1327,9 +1441,11 @@
         skuespillerCache.set(nokkel, navn);
         return navn;
     }
+    function typeEtikett(t) { return t === 'Serie' ? '📺 Serie' : t === 'Samling' ? '📦 Samling' : '🎬 Film'; }
     function fyllInnSkuespillere(kandidater) {
         kandidater.forEach(async (f, i) => {
             let tekst = '';
+            if (f.type === 'Samling') { const el = document.getElementById('filmValgSkuesp_' + i); if (el) el.innerHTML = ''; return; }
             try { const navn = await hentHovedskuespillere(f.id, f.type); tekst = navn.length ? esc(navn.join(', ')) : '<span class="text-slate-500">Ingen rolleliste</span>'; }
             catch (e) { tekst = '<span class="text-slate-500">Kunne ikke hente</span>'; }
             const el = document.getElementById('filmValgSkuesp_' + i);
@@ -1609,7 +1725,7 @@
       huskLagringsplass(nyttElement.lagret);
       nullstillHovedSkjema();   // fyller automatisk inn forrige lagringsplass igjen
       byggLagringsplasserListe();
-      document.getElementById('eieFilter').value = 'min_alle';
+      document.getElementById('eieFilter').value = 'min_alle'; sikreMinSamlingVises();
       utforSok();
       alert("✅ Lagret i samlingen din!");
     }
@@ -1684,7 +1800,24 @@
       return nyttElement;
     }
 
-    function slettElement(id) {
+    async function slettElement(id) {
+        const item = database.find(i => i.id === id);
+        const medl = item ? pakkeMedlemmer(item.pakke_id) : [];
+        if (medl.length > 1) {
+            if (confirm("«" + item.tittel + "» ligger i en samleboks med " + (medl.length - 1) + " andre film(er).\n\nOK = slett HELE boksen (" + medl.length + " filmer)\nAvbryt = velg å slette bare denne filmen")) {
+                if (!confirm("Er du sikker? Hele boksen slettes, og det kan ikke angres!")) return;
+                database = database.filter(i => i.pakke_id !== item.pakke_id);
+                await supabaseDb.from('samlerbase_data').delete().eq('pakke_id', item.pakke_id);
+                utforSok();
+                return;
+            }
+            if (!confirm("Slette bare «" + item.tittel + "» fra boksen? Dette kan ikke angres!")) return;
+            database = database.filter(i => i.id !== id);
+            await supabaseDb.from('samlerbase_data').delete().eq('id', id);
+            await ryddPakke(item.pakke_id);
+            utforSok();
+            return;
+        }
         if(confirm("Er du sikker på at du vil slette dette objektet? Dette kan ikke angres!")) {
             database = database.filter(item => item.id !== id);
             supabaseDb.from('samlerbase_data').delete().eq('id', id).then();
@@ -1693,6 +1826,112 @@
     }
     
     let endreNyRegistreringId = null;   // satt når vinduet viser en registrering som akkurat ble lagret fra veiviseren
+
+    // ---------- SAMLEBOKSER (flere filmer på samme disk) ----------
+    const MAKS_PAKKE = 50;
+    // Er pakkenavnet laget automatisk ("3 filmer: A / B / C")? Da lages det på nytt når innholdet endres.
+    function erAutoPakkeNavn(navn) { return !navn || /^\d+ filmer: /.test(navn); }
+    function pakkeNavnFor(medl, navn) { return erAutoPakkeNavn(navn) ? lagPakkeNavn(medl) : navn; }
+    function pakkeMedlemmer(pakkeId) {
+        if (!pakkeId) return [];
+        return database.filter(i => i.pakke_id === pakkeId).sort((a, b) => a.id - b.id);
+    }
+    function lagPakkeNavn(medlemmer) {
+        return medlemmer.length + ' filmer: ' + medlemmer.map(m => m.tittel || 'Uten tittel').join(' / ');
+    }
+    // Viser alle filmene i en boks i listen (søker på pakkenavnet)
+    function visPakke(pakkeId) {
+        const m = pakkeMedlemmer(pakkeId)[0];
+        if (!m) return;
+        document.getElementById('sokeFelt').value = m.pakke_navn || '';
+        utforSok();
+        window.scrollTo({ top: document.getElementById('vareTabell').offsetTop - 120, behavior: 'smooth' });
+    }
+    // Oppdaterer pakkenavn (og fjerner pakken hvis bare én film er igjen)
+    async function ryddPakke(pakkeId) {
+        const medl = pakkeMedlemmer(pakkeId);
+        if (medl.length === 0) return;
+        if (medl.length === 1) {
+            medl[0].pakke_id = null; medl[0].pakke_navn = null;
+            await supabaseDb.from('samlerbase_data').update({ pakke_id: null, pakke_navn: null }).eq('id', medl[0].id);
+            return;
+        }
+        const navn = pakkeNavnFor(medl, medl[0].pakke_navn);
+        medl.forEach(m => m.pakke_navn = navn);
+        await supabaseDb.from('samlerbase_data').update({ pakke_navn: navn }).eq('pakke_id', pakkeId);
+    }
+    function tegnPakkeSeksjon(item, erMin) {
+        const seksjon = document.getElementById('endrePakkeSeksjon');
+        if (item.kategori !== 'film') { seksjon.classList.add('hidden'); return; }
+        const medl = pakkeMedlemmer(item.pakke_id);
+        // Vis seksjonen hvis filmen er i en pakke, eller som "legg til" for egne filmer
+        seksjon.classList.toggle('hidden', !medl.length && !erMin);
+        document.getElementById('btnLeggTilPakke').classList.toggle('hidden', !erMin || medl.length >= MAKS_PAKKE);
+        document.getElementById('endrePakkeInfo').classList.toggle('hidden', !medl.length);
+        const liste = document.getElementById('endrePakkeListe');
+        document.getElementById('endrePakkeFelter').classList.toggle('hidden', !medl.length);
+        document.getElementById('endrePakkeAntall').innerText = medl.length ? '(' + medl.length + ' filmer)' : '';
+        if (!medl.length) { liste.innerHTML = '<p class="text-[11px] text-slate-400">Ligger det flere filmer på denne disken eller i denne boksen? Legg dem til her, så får hver film sin egen IMDb-score.</p>'; return; }
+        const navnFelt = document.getElementById('endrePakkeNavnFelt');
+        navnFelt.value = erAutoPakkeNavn(item.pakke_navn) ? '' : (item.pakke_navn || '');
+        navnFelt.placeholder = lagPakkeNavn(medl).substring(0, 60) + (lagPakkeNavn(medl).length > 60 ? '…' : '');
+        document.getElementById('endrePakkePris').value = item.pakke_pris || '';
+        document.getElementById('endreDiskNr').value = item.disk_nr || '';
+        document.getElementById('endrePakkeSok').value = '';
+        document.getElementById('endrePakkeSokBoks').classList.toggle('hidden', medl.length <= 8);
+        liste.innerHTML = medl.map((m, i) => {
+            const aktiv = m.id === item.id;
+            return '<button type="button" data-pakkesok="' + esc((m.tittel || '') + ' ' + (m.aar || '')).toLowerCase() + '" onclick="byttTilPakkeFilm(' + m.id + ')" class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded border transition ' +
+                (aktiv ? 'bg-indigo-600/30 border-indigo-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500') + '">' +
+                '<span class="text-[10px] font-black text-indigo-300 w-14 shrink-0">' + (m.disk_nr ? 'Disk ' + esc(m.disk_nr) : 'Film ' + (i + 1)) + '</span>' +
+                '<span class="flex-1 truncate font-bold text-xs">' + esc(m.tittel || 'Uten tittel') + '</span>' +
+                '<span class="text-[10px] text-slate-400 shrink-0">' + (m.aar || '') + ' ⭐ ' + (m.rating || '-') + '</span>' +
+                (aktiv ? '<span class="text-[9px] text-indigo-200 shrink-0">(vises)</span>' : '') + '</button>';
+        }).join('');
+        const aktivKnapp = liste.querySelector('.border-indigo-400'); if (aktivKnapp) aktivKnapp.scrollIntoView({ block: 'nearest' });
+    }
+    function filtrerPakkeListe() {
+        const q = document.getElementById('endrePakkeSok').value.toLowerCase().trim();
+        document.querySelectorAll('#endrePakkeListe [data-pakkesok]').forEach(b => b.classList.toggle('hidden', !!q && !b.dataset.pakkesok.includes(q)));
+    }
+    function byttTilPakkeFilm(id) {
+        const varNy = !!endreNyRegistreringId;
+        apneEndreModal(id, varNy);
+    }
+    // Legger til en ny film i samme boks som filmen som vises i Endre-vinduet
+    async function leggTilFilmIPakke() {
+        const id = Number(document.getElementById('endreId').value);
+        const item = database.find(i => i.id === id);
+        if (!item) return;
+        let medl = pakkeMedlemmer(item.pakke_id);
+        if (medl.length >= MAKS_PAKKE) { alert("En boks kan ha maks " + MAKS_PAKKE + " filmer."); return; }
+        const tittel = (prompt("Cover-tittel på filmen som ligger i samme boks som «" + item.tittel + "»:") || '').trim();
+        if (!tittel) return;
+
+        const pakkeId = item.pakke_id || ('pk' + Date.now());
+        const ny = { ...item, id: Date.now(), tittel, tittel_eng: '', tittel_orig: '', aar: '', sjanger: '', rating: '', imdb: '',
+            imdb_tittel: '', imdb_bilde: '', verdi: 0, kommentar: '', mediatype: 'Film', registrert_dato: new Date().toISOString().split('T')[0], pakke_id: pakkeId };
+        try {
+            visLaster("Søker i TMDb/IMDb...", tittel);
+            const valg = await finnTmdbTreff(tittel, '', 'Film', true);
+            if (valg) { visLaster("Henter detaljer...", valg.tittel || ''); brukTmdbPaaItem(ny, await tmdbDetaljer(valg.id, valg.type)); }
+        } catch (e) { console.error(e); }
+
+        if (!item.pakke_id) { item.pakke_id = pakkeId; medl = [item]; }
+        ny.disk_nr = null;
+        const alle = [...medl, ny];
+        const navn = pakkeNavnFor(alle, item.pakke_navn);
+        alle.forEach(m => m.pakke_navn = navn);
+        visLaster("Lagrer...", tittel);
+        const { error } = await supabaseDb.from('samlerbase_data').insert([ny]);
+        if (!error) await supabaseDb.from('samlerbase_data').update({ pakke_id: pakkeId, pakke_navn: navn }).eq('id', item.id);
+        if (!error) await supabaseDb.from('samlerbase_data').update({ pakke_navn: navn }).eq('pakke_id', pakkeId);
+        skjulLaster();
+        if (error) { alert("🚨 Kunne ikke lagre: " + error.message + (/pakke/.test(error.message) ? "\n\nHar du lagt til kolonnene pakke_id og pakke_navn i Supabase?" : "")); return; }
+        database.unshift(ny);
+        utforSok();
+        apneEndreModal(item.id, !!endreNyRegistreringId);
+    }   // satt når vinduet viser en registrering som akkurat ble lagret fra veiviseren
 
     function apneEndreModal(id, nyRegistrering = false) {
       const item = database.find(i => i.id === id);
@@ -1827,6 +2066,8 @@
       // Sørg for at den har de nyeste lagringsplassene
       byggLagringsplasserListe();
 
+      tegnPakkeSeksjon(item, erMin);
+
       // Ny registrering fra veiviseren: vis banner og Kanseller / Oppdater
       const erNy = !!endreNyRegistreringId;
       document.getElementById('endreNyBanner').classList.toggle('hidden', !erNy);
@@ -1848,10 +2089,17 @@
     async function kansellerNyRegistrering() {
       const id = endreNyRegistreringId;
       if (!id) return;
-      if (!confirm("Vil du kansellere og fjerne denne registreringen fra samlingen din?")) return;
-      const { error } = await supabaseDb.from('samlerbase_data').delete().eq('id', id);
+      const item = database.find(i => i.id === id);
+      const medl = item ? pakkeMedlemmer(item.pakke_id) : [];
+      const tekst = medl.length > 1
+          ? "Vil du kansellere og fjerne hele boksen (" + medl.length + " filmer) fra samlingen din?"
+          : "Vil du kansellere og fjerne denne registreringen fra samlingen din?";
+      if (!confirm(tekst)) return;
+      const { error } = medl.length > 1
+          ? await supabaseDb.from('samlerbase_data').delete().eq('pakke_id', item.pakke_id)
+          : await supabaseDb.from('samlerbase_data').delete().eq('id', id);
       if (error) { alert("🚨 Kunne ikke fjerne registreringen: " + error.message); return; }
-      database = database.filter(i => i.id !== id);
+      database = medl.length > 1 ? database.filter(i => i.pakke_id !== item.pakke_id) : database.filter(i => i.id !== id);
       lukkEndreModal();
       utforSok();
       alert("Registreringen er kansellert og fjernet.");
@@ -1914,6 +2162,18 @@
 
       database[index] = item;
       huskLagringsplass(item.lagret, item.kategori);
+
+      // Samleboks: felles felt (og oppdatert pakkenavn) gjelder alle filmene i boksen
+      if (item.pakke_id) {
+          item.disk_nr = document.getElementById('endreDiskNr').value.trim() || null;
+          const medl = pakkeMedlemmer(item.pakke_id);
+          const egetNavn = document.getElementById('endrePakkeNavnFelt').value.trim();
+          const felles = { lagret: item.lagret, tilstand: item.tilstand, status: item.status, synlighet: item.synlighet,
+                           pakke_navn: egetNavn || lagPakkeNavn(medl), pakke_pris: document.getElementById('endrePakkePris').value.trim() || null };
+          if (nyttBilde) { felles.cover = nyttBilde; felles.bruker_bilde = nyttBilde; }
+          medl.forEach(m => Object.assign(m, felles));
+          supabaseDb.from('samlerbase_data').update(felles).eq('pakke_id', item.pakke_id).then(svar => { if (svar.error) console.error("Pakke-oppdatering feilet:", svar.error); });
+      }
       supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(svar => { if (svar.error) { console.error("Supabase oppdateringsfeil:", svar.error); alert("🚨 Supabase nektet å lagre endringen: " + svar.error.message); } });
       const varNy = !!endreNyRegistreringId;
       lukkEndreModal();
@@ -2054,6 +2314,198 @@
     const wizMaxSteg = 7;
     let wizErAktiv = false;
     let wizTmdbDetaljer = null;   // TMDb-treffet som er valgt/godkjent i veiviseren
+    let wizKjenteDetaljer = {};   // kjente IMDb-detaljer for pakkefilmer (fra egen database), nøkkel = normalisert tittel
+
+    let wizKjenteValg = {};       // TMDb-id for filmer valgt fra en TMDb-samling, nøkkel = normalisert tittel
+
+    function wizTogglePakke() {
+        const paa = document.getElementById('wizErPakke').checked;
+        document.getElementById('wizPakkeFelter').classList.toggle('hidden', !paa);
+        const liste = document.getElementById('wizPakkeListe');
+        if (paa && !liste.value.trim() && document.getElementById('wizTittel').value.trim() && !document.getElementById('wizPakkeNavn').value.trim()) {
+            liste.value = document.getElementById('wizTittel').value.trim();
+        }
+        wizOppdaterPakkeAntall();
+    }
+    // Fyller samleboks-feltene. flett=true legger til titler som mangler i stedet for å erstatte.
+    function settWizPakke(titler, navn = '', flett = false) {
+        const liste = document.getElementById('wizPakkeListe');
+        if (flett && liste.value.trim()) {
+            const finnes = new Set(wizPakkeFilmer().map(f => normaliserNavn(f.tittel)));
+            const nye = titler.filter(t => !finnes.has(normaliserNavn(parsePakkeLinje(t).tittel)));
+            if (nye.length) liste.value = liste.value.trim() + '\n' + nye.join('\n');
+        } else {
+            liste.value = titler.join('\n');
+        }
+        if (navn) document.getElementById('wizPakkeNavn').value = navn;
+        document.getElementById('wizErPakke').checked = titler.length > 1 || !!navn || (flett && document.getElementById('wizErPakke').checked);
+        wizTogglePakke();
+    }
+    // "Disk 3: Goldfinger" → { tittel: 'Goldfinger', disk: '3' }
+    function parsePakkeLinje(l) {
+        const m = String(l).match(/^\s*(?:disk|disc|dvd|d)\s*(\d{1,3})\s*[:.\-–]\s*(.+)$/i);
+        return m ? { tittel: m[2].trim(), disk: m[1] } : { tittel: String(l).trim(), disk: '' };
+    }
+    function wizPakkeFilmer() {
+        return document.getElementById('wizPakkeListe').value.split('\n').map(parsePakkeLinje).filter(f => f.tittel).slice(0, MAKS_PAKKE);
+    }
+    function wizErPakkeModus() {
+        return aktivKategori === 'film' && document.getElementById('wizErPakke').checked && wizPakkeFilmer().length > 0;
+    }
+    function wizOppdaterPakkeAntall() {
+        const n = wizPakkeFilmer().length;
+        document.getElementById('wizPakkeAntall').innerText = n ? n + (n === 1 ? ' film' : ' filmer') + (n >= MAKS_PAKKE ? ' (maks)' : '') : '';
+    }
+
+    // ---------- Hent hel samling fra TMDb ----------
+    let samlingResolver = null, samlingDeler = [];
+    function visSamlingValg(navn, deler) {
+        return new Promise(resolve => {
+            samlingResolver = resolve; samlingDeler = deler;
+            document.getElementById('samlingTittel').innerText = '📦 ' + navn;
+            document.getElementById('samlingListe').innerHTML = deler.map((f, i) =>
+                '<label class="flex gap-3 items-center bg-slate-950 p-2 rounded-lg border border-slate-800 hover:border-indigo-500 cursor-pointer">' +
+                '<input type="checkbox" class="samlingCb w-4 h-4 rounded shrink-0" data-i="' + i + '" checked onchange="samlingTellValgte()">' +
+                (f.poster_path ? '<img src="https://image.tmdb.org/t/p/w92' + f.poster_path + '" class="w-9 h-12 object-cover rounded border border-slate-700 shrink-0">' : '<div class="w-9 h-12 bg-slate-800 rounded flex items-center justify-center shrink-0">🎬</div>') +
+                '<div class="flex-1 min-w-0"><p class="text-sm font-bold text-white truncate">' + esc(f.title || f.original_title || '') + '</p>' +
+                '<p class="text-[11px] text-slate-400">' + ((f.release_date || '').substring(0, 4) || 'Ukjent år') + ' • ⭐ ' + (f.vote_average ? Number(f.vote_average).toFixed(1) : '-') + '</p></div></label>'
+            ).join('');
+            samlingTellValgte();
+            skjulLaster();
+            document.getElementById('samlingModal').classList.remove('hidden');
+        });
+    }
+    function samlingTellValgte() {
+        const n = document.querySelectorAll('.samlingCb:checked').length;
+        document.getElementById('samlingAntall').innerText = n + ' av ' + samlingDeler.length + ' valgt';
+    }
+    function samlingVelgAlle(paa) { document.querySelectorAll('.samlingCb').forEach(cb => cb.checked = paa); samlingTellValgte(); }
+    function lukkSamlingValg(ok) {
+        document.getElementById('samlingModal').classList.add('hidden');
+        const valgte = ok ? [...document.querySelectorAll('.samlingCb:checked')].map(cb => samlingDeler[Number(cb.dataset.i)]) : null;
+        const r = samlingResolver; samlingResolver = null;
+        if (r) r(valgte);
+    }
+    async function hentTmdbSamling() {
+        const utgangspunkt = document.getElementById('wizPakkeNavn').value.trim() || document.getElementById('wizTittel').value.trim();
+        const forslag = utgangspunkt.replace(/ultimate|collection|samling(en)?|box\s*set|boks|complete|edition|the\s+/gi, ' ').replace(/\s+/g, ' ').trim() || utgangspunkt;
+        const q = (prompt("Søk etter en samling i TMDb (f.eks. «James Bond», «Harry Potter», «Indiana Jones»):", forslag) || '').trim();
+        if (!q) return;
+        try {
+            visLaster("Søker etter samlinger...", q);
+            const res = await fetch('https://api.themoviedb.org/3/search/collection?query=' + encodeURIComponent(q) + '&language=no-NO', tmdbOptions());
+            const treff = ((await res.json()).results || []);
+            if (!treff.length) { skjulLaster(); alert("Fant ingen samling som heter «" + q + "» i TMDb.\nSkriv filmene inn i listen i stedet (én per linje)."); return; }
+            let samling = { id: treff[0].id, navn: treff[0].name };
+            if (treff.length > 1) {
+                const valg = await visFilmValg(treff.slice(0, 10).map(t => ({ id: t.id, type: 'Samling', tittel: t.name, orig: t.original_name || '', dato: '', poster: t.poster_path || '', rating: 0 })),
+                    '📦 Velg samling', 'Fant flere samlinger for «' + q + '». Hvilken er boksen din?', q);
+                if (!valg || valg.nyttNavn || valg.flere) return;
+                samling = { id: valg.id, navn: valg.tittel };
+            }
+            visLaster("Henter filmene i samlingen...", samling.navn);
+            const data = await (await fetch('https://api.themoviedb.org/3/collection/' + samling.id + '?language=no-NO', tmdbOptions())).json();
+            const deler = (data.parts || []).filter(d => d.title).sort((a, b) => (a.release_date || '9999').localeCompare(b.release_date || '9999'));
+            if (!deler.length) { skjulLaster(); alert("Samlingen har ingen filmer i TMDb."); return; }
+            const valgte = await visSamlingValg(data.name || samling.navn, deler);
+            if (!valgte || !valgte.length) return;
+            valgte.forEach(d => { wizKjenteValg[normaliserNavn(d.title)] = { id: d.id, type: 'Film' }; });
+            if (!document.getElementById('wizPakkeNavn').value.trim()) document.getElementById('wizPakkeNavn').value = utgangspunkt || data.name || '';
+            settWizPakke(valgte.map(d => d.title), '', true);
+            document.getElementById('wizErPakke').checked = true; wizTogglePakke();
+        } catch (e) { console.error(e); skjulLaster(); alert("Kunne ikke hente samlingen fra TMDb."); }
+    }
+
+    // ---------- Gå gjennom usikre treff samlet ----------
+    let usikreResolver = null, usikreForslag = [];
+    async function visUsikreListe(titler) {
+        visLaster("Henter forslag for usikre treff...", titler.length + ' filmer');
+        const forslag = await Promise.all(titler.map(t => tmdbSok(t, '', 'Film').then(r => r.slice(0, 10)).catch(() => [])));
+        skjulLaster();
+        return new Promise(resolve => {
+            usikreResolver = resolve; usikreForslag = forslag;
+            document.getElementById('usikreAntall').innerText = '(' + titler.length + ')';
+            document.getElementById('usikreListe').innerHTML = titler.map((t, i) => {
+                const valg = forslag[i].map((f, k) => '<option value="' + k + '">' + esc(f.tittel) + ' (' + ((f.dato || '').substring(0, 4) || '?') + ') ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + '</option>').join('');
+                return '<div class="bg-slate-950 p-2 rounded-lg border border-slate-800 flex gap-2 items-center">' +
+                    '<img id="usikkerBilde_' + i + '" class="w-10 h-14 object-cover rounded border border-slate-700 shrink-0 bg-slate-800">' +
+                    '<div class="flex-1 min-w-0"><p class="text-xs font-bold text-amber-300 truncate mb-1">«' + esc(t) + '»</p>' +
+                    '<select id="usikkerValg_' + i + '" onchange="oppdaterUsikkerBilde(' + i + ')" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-white text-xs">' +
+                    valg + '<option value="">— Lagre uten IMDb-kobling —</option></select></div></div>';
+            }).join('');
+            titler.forEach((t, i) => oppdaterUsikkerBilde(i));
+            document.getElementById('usikreModal').classList.remove('hidden');
+        });
+    }
+    function oppdaterUsikkerBilde(i) {
+        const v = document.getElementById('usikkerValg_' + i).value;
+        const f = v === '' ? null : usikreForslag[i][Number(v)];
+        const img = document.getElementById('usikkerBilde_' + i);
+        if (f && f.poster) img.src = 'https://image.tmdb.org/t/p/w92' + f.poster; else img.removeAttribute('src');
+    }
+    function lukkUsikre(ok) {
+        document.getElementById('usikreModal').classList.add('hidden');
+        const valg = usikreForslag.map((liste, i) => {
+            if (!ok) return null;
+            const v = document.getElementById('usikkerValg_' + i).value;
+            return v === '' ? null : liste[Number(v)];
+        });
+        const r = usikreResolver; usikreResolver = null;
+        if (r) r(valg);
+    }
+
+    // Kobler mange titler til TMDb: eksakte navnetreff automatisk (5 om gangen), usikre gjennomgås samlet
+    async function lostPakkeTitler(titler) {
+        const res = new Array(titler.length).fill(null);
+        const usikre = [];
+        for (let start = 0; start < titler.length; start += 5) {
+            visLaster("Kobler filmer til IMDb...", Math.min(start + 5, titler.length) + ' av ' + titler.length);
+            await Promise.all(titler.slice(start, start + 5).map(async (t, k) => {
+                const i = start + k, nokkel = normaliserNavn(t);
+                try {
+                    if (wizKjenteDetaljer[nokkel]) { res[i] = wizKjenteDetaljer[nokkel]; return; }
+                    if (wizKjenteValg[nokkel]) { res[i] = await tmdbDetaljer(wizKjenteValg[nokkel].id, wizKjenteValg[nokkel].type); return; }
+                    const valg = await finnTmdbTreff(t, '', 'Film', false);
+                    if (valg) res[i] = await tmdbDetaljer(valg.id, valg.type); else usikre.push(i);
+                } catch (e) { console.error(e); usikre.push(i); }
+            }));
+        }
+        skjulLaster();
+        if (usikre.length) {
+            usikre.sort((a, b) => a - b);
+            const valg = await visUsikreListe(usikre.map(i => titler[i]));
+            for (let j = 0; j < usikre.length; j++) {
+                if (!valg[j]) continue;
+                visLaster("Henter detaljer...", titler[usikre[j]]);
+                try { res[usikre[j]] = await tmdbDetaljer(valg[j].id, valg[j].type); } catch (e) { console.error(e); }
+            }
+            skjulLaster();
+        }
+        return res;
+    }
+
+    // Lager én rad per film i boksen, med felles boks-data, boksnavn og boks-pris
+    async function byggPakkeElementer(base, filmer, navn, pris) {
+        const pakkeId = 'pk' + base.id;
+        const tom = { tittel_eng: '', tittel_orig: '', aar: '', sjanger: '', rating: '', imdb: '', imdb_tittel: '', imdb_bilde: '', mediatype: 'Film', verdi: 0, kommentar: base.kommentar || '' };
+        const detaljer = await lostPakkeTitler(filmer.map(f => f.tittel));
+        const alle = filmer.map((f, i) => {
+            const el = { ...base, ...tom, id: base.id + i, tittel: f.tittel, disk_nr: f.disk || null };
+            if (detaljer[i]) brukTmdbPaaItem(el, detaljer[i]);
+            return el;
+        });
+        const pakkeNavn = navn || lagPakkeNavn(alle);
+        const prisTekst = String(pris || '').trim();
+        alle.forEach(el => { el.pakke_id = pakkeId; el.pakke_navn = pakkeNavn; el.pakke_pris = prisTekst || null; });
+        return alle;
+    }
+
+    // Bygger IMDb-detaljer fra en lagret film (brukes når strekkoden finnes fra før)
+    function detaljerFraItem(i) {
+        const k = bildeKilder(i);
+        if (!(i.imdb_tittel || k.imdb || i.imdb)) return null;
+        return { type: i.mediatype || 'Film', tittelNo: '', tittelEn: i.imdb_tittel || i.tittel_eng || '', orig: i.tittel_orig || '', aar: i.aar || '', rating: i.rating || '', imdbUrl: i.imdb || '', sjanger: i.sjanger || '', poster: k.imdb || '' };
+    }
 
     // Fyller bildeformat / utgave / type fra AI-svaret (forside eller bakside). Overskriver ikke det som allerede står der.
     // Bildeformat hentes KUN fra baksiden (der tekniske spesifikasjoner står) – forsiden ga mye feil gjetting.
@@ -2091,6 +2543,12 @@
         wizErAktiv = true;
         
         wizTmdbDetaljer = null;
+        wizKjenteDetaljer = {};
+        wizKjenteValg = {};
+        document.getElementById('wizPakkeNavn').value = '';
+        document.getElementById('wizPakkePris').value = '';
+        settWizPakke([]);
+        document.getElementById('wizPakkeBoks').classList.toggle('hidden', aktivKategori !== 'film');
         document.getElementById('wizBildeInput').value = '';
         document.getElementById('wizBildePreviewBoks').classList.add('hidden');
         document.getElementById('wizBaksidePreviewBoks').classList.add('hidden');
@@ -2227,8 +2685,12 @@
             const data = await response.json();
 
             if (!erBakside) {
-                if (data.tittel) {
-                    let renTittel = data.tittel.replace(/"/g, ''); 
+                // Samleboks: AI returnerer "titler" med 2–5 filmer
+                const aiTitler = (aktivKategori === 'film' && Array.isArray(data.titler)) ? data.titler.map(t => String(t || '').replace(/"/g, '').trim()).filter(Boolean).slice(0, MAKS_PAKKE) : [];
+                const aiBoksNavn = aktivKategori === 'film' ? String(data.boks_navn || '').replace(/"/g, '').trim() : '';
+                const erAiPakke = aiTitler.length >= 2 || !!aiBoksNavn;
+                if (data.tittel || erAiPakke) {
+                    let renTittel = (erAiPakke ? (aiBoksNavn || aiTitler[0]) : data.tittel).replace(/"/g, ''); 
                     document.getElementById('wizAiResultat').innerText = "Fant: " + renTittel;
                     
                     if (data.format) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
@@ -2244,6 +2706,14 @@
                         wizFyllAiFelter(data);
                         if (!data.mediatype && vaskMediatype(renTittel) === 'Serie') document.getElementById('wizMediatype').value = 'Serie';
                         if (data.aar && !document.getElementById('wizAarFilm').value) document.getElementById('wizAarFilm').value = data.aar;
+                        if (erAiPakke) {
+                            // Hver film søkes opp og bekreftes når du lagrer
+                            settWizPakke(aiTitler.length >= 2 ? aiTitler : [], aiBoksNavn, true);
+                            document.getElementById('wizErPakke').checked = true; wizTogglePakke();
+                            wizTmdbDetaljer = null;
+                            document.getElementById('wizAiResultat').innerText = "📦 Samleboks" + (aiBoksNavn ? " «" + aiBoksNavn + "»" : "") +
+                                (aiTitler.length >= 2 ? " med " + aiTitler.length + " filmer:\n" + aiTitler.slice(0, 8).join(' / ') + (aiTitler.length > 8 ? ' …' : '') : "\nTa bilde av baksiden, eller hent samlingen fra TMDb i steg 4.");
+                        } else {
                         document.getElementById('wizAiResultat').innerText = "Fant: " + renTittel + " – søker i TMDb/IMDb...";
                         try {
                             const d = wizTmdbDetaljer || await wizKobleTilTmdb(renTittel);
@@ -2251,6 +2721,7 @@
                                 ? "Fant: " + renTittel + "  →  IMDb: " + imdbTittelFra(d) + (d.aar ? " (" + d.aar + ")" : "")
                                 : "Fant: " + renTittel + " (ikke koblet til TMDb/IMDb)";
                         } catch(e) { console.error(e); }
+                        }
                     }
 
                     setTimeout(() => wizGaa(1), 1500);
@@ -2270,6 +2741,9 @@
                 if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
                 if (data.tittel_orig && !document.getElementById('wizTittelOrig').value) document.getElementById('wizTittelOrig').value = data.tittel_orig;
                 if (aktivKategori === 'film') {
+                    // Samlebokser lister ofte alle filmene på baksiden
+                    const bakTitler = Array.isArray(data.titler) ? data.titler.map(t => String(t || '').replace(/"/g, '').trim()).filter(Boolean).slice(0, MAKS_PAKKE) : [];
+                    if (bakTitler.length >= 2 || data.boks_navn) settWizPakke(bakTitler.length >= 2 ? bakTitler : [], String(data.boks_navn || '').trim(), true);
                     wizFyllAiFelter(data, true);   // bildeformat / utgave / type fra baksiden
                     const raa = data.bildeformat || data.aspect_ratio || '';
                     const tolket = normaliserBildeformat(raa);
@@ -2278,6 +2752,7 @@
                     if (tekstListe) deler.push('Tekst: ' + tekstListe);
                     if (lydListe) deler.push('Lyd: ' + lydListe);
                     if (data.alder) deler.push('Alder: ' + data.alder);
+                    if (wizErPakkeModus()) deler.push('📦 Filmer i boksen: ' + wizPakkeFilmer().length);
                     document.getElementById('wizBaksideResultat').innerText = '✅ ' + deler.join('\n');
                 }
 
@@ -2355,8 +2830,21 @@
         visLaster("Søker på strekkode...", strekkode);
 
         // 1. Sjekk din egen database FØRST
-        const egetTreff = database.find(i => i.strekkode === strekkode && i.kategori === aktivKategori);
+        const egetTreff = database.find(i => i.strekkode === strekkode && i.kategori === aktivKategori && i.eier === innloggetBruker)
+                       || database.find(i => i.strekkode === strekkode && i.kategori === aktivKategori);
         if (egetTreff) {
+            const erEgen = egetTreff.eier === innloggetBruker;
+            const pakke = pakkeMedlemmer(egetTreff.pakke_id);
+            if (aktivKategori === 'film' && pakke.length > 1) {
+                pakke.forEach(m => { const d = detaljerFraItem(m); if (d) wizKjenteDetaljer[normaliserNavn(m.tittel)] = d; });
+                settWizPakke(pakke.map(m => (m.disk_nr ? 'Disk ' + m.disk_nr + ': ' : '') + m.tittel), erAutoPakkeNavn(pakke[0].pakke_navn) ? '' : pakke[0].pakke_navn);
+                document.getElementById('wizPakkePris').value = pakke[0].pakke_pris || '';
+                document.getElementById('wizTittel').value = erAutoPakkeNavn(pakke[0].pakke_navn) ? (pakke[0].tittel || '') : pakke[0].pakke_navn;
+                wizTmdbDetaljer = detaljerFraItem(pakke[0]);
+                ['bildeformat', 'utgave'].forEach(f => { if (pakke[0][f]) document.getElementById('wiz' + f.charAt(0).toUpperCase() + f.slice(1)).value = pakke[0][f]; });
+                wizEtterStrekkode("📦 " + (erAutoPakkeNavn(pakke[0].pakke_navn) ? 'Samleboks' : pakke[0].pakke_navn) + " (" + pakke.length + " filmer)" + (erEgen ? "\n(finnes allerede i samlingen din)" : "\n(funnet i " + egetTreff.eier + "s samling)"));
+                return;
+            }
             if (egetTreff.tittel) document.getElementById('wizTittel').value = egetTreff.tittel;
             if (egetTreff.tittel_eng) document.getElementById('wizTittelEng').value = egetTreff.tittel_eng;
             if (egetTreff.tittel_orig) document.getElementById('wizTittelOrig').value = egetTreff.tittel_orig;
@@ -2371,7 +2859,7 @@
                     wizTmdbDetaljer = { type: egetTreff.mediatype || 'Film', tittelNo: '', tittelEn: egetTreff.imdb_tittel || egetTreff.tittel_eng || '', orig: egetTreff.tittel_orig || '', aar: egetTreff.aar || '', rating: egetTreff.rating || '', imdbUrl: egetTreff.imdb || '', sjanger: egetTreff.sjanger || '', poster: k.imdb || '' };
                 }
             }
-            wizEtterStrekkode((egetTreff.tittel || '') + (egetTreff.aar ? ' (' + egetTreff.aar + ')' : '') + "\n(finnes allerede i samlingen din)");
+            wizEtterStrekkode((egetTreff.tittel || '') + (egetTreff.aar ? ' (' + egetTreff.aar + ')' : '') + (erEgen ? "\n(finnes allerede i samlingen din)" : "\n(funnet i " + egetTreff.eier + "s samling)"));
             return;
         }
 
@@ -2478,8 +2966,12 @@
 
         lukkWizard();
 
-        // Film: koble til IMDb før lagring (bruker treffet fra veiviseren, ellers søk med bekreftelse)
-        if (aktivKategori === 'film' && wizTmdbDetaljer) {
+        // Film: koble til IMDb før lagring (bruker treffet fra veiviseren, ellers søk med bekreftelse).
+        // Samlebokser kobles film for film nedenfor.
+        const erPakke = wizErPakkeModus();
+        if (erPakke) {
+            if (!document.getElementById('feltTittel').value.trim()) document.getElementById('feltTittel').value = document.getElementById('wizPakkeNavn').value.trim() || wizPakkeFilmer()[0].tittel;
+        } else if (aktivKategori === 'film' && wizTmdbDetaljer) {
             fyllSkjemaFraTmdb(wizTmdbDetaljer);
         } else if (aktivKategori === 'film' && document.getElementById('feltTittel').value) {
             await simulerApiOppslag(document.getElementById('feltTittel').value, false, document.getElementById('feltAar').value);
@@ -2492,21 +2984,29 @@
 
         // Lagre direkte, og vis registreringen etterpå (Kanseller / Oppdater)
         const nyttElement = byggElementFraSkjema();
-        visLaster("Lagrer...", nyttElement.tittel);
-        const { error } = await supabaseDb.from('samlerbase_data').insert([nyttElement]);
+        let alle = [nyttElement];
+
+        // Samleboks: én rad per film (opptil 50), felles boks-data, boksnavn og boks-pris (telles én gang)
+        if (erPakke) {
+            alle = await byggPakkeElementer(nyttElement, wizPakkeFilmer(), document.getElementById('wizPakkeNavn').value.trim(),
+                document.getElementById('wizPakkePris').value || document.getElementById('wizKjopsPris').value);
+        }
+
+        visLaster("Lagrer...", alle.length > 1 ? alle.length + ' filmer' : alle[0].tittel);
+        const { error } = await supabaseDb.from('samlerbase_data').insert(alle);
         skjulLaster();
         if (error) {
             console.error("Klarte ikke lagre:", error);
-            alert("🚨 Kunne ikke lagre: " + error.message + "\n\nSkjemaet er fylt ut – sjekk og trykk «Lagre på min profil».");
+            alert("🚨 Kunne ikke lagre: " + error.message + (/pakke|disk_nr/.test(error.message) ? "\n\nHar du lagt til kolonnene pakke_id, pakke_navn, pakke_pris og disk_nr i Supabase?" : "") + "\n\nSkjemaet er fylt ut – sjekk og trykk «Lagre på min profil».");
             return;
         }
-        database.unshift(nyttElement);
+        database.unshift(...alle);
         huskLagringsplass(nyttElement.lagret);
         nullstillHovedSkjema();
         byggLagringsplasserListe();
-        document.getElementById('eieFilter').value = 'min_alle';
+        document.getElementById('eieFilter').value = 'min_alle'; sikreMinSamlingVises();
         utforSok();
-        apneEndreModal(nyttElement.id, true);
+        apneEndreModal(alle[0].id, true);
     }
 
     function startAutoRegistrering(metode, slettSkjema = true) {
@@ -2934,7 +3434,7 @@
                         if (svar.error) feilSjekk = svar.error;
                     }
                     if(feilSjekk) { document.getElementById('loadingOverlay').classList.add('hidden'); alert("FEIL: Klarte ikke lagre til skyen. " + feilSjekk.message); } 
-                    else { database = await hentAlleFraSkyen('samlerbase_data'); document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('eieFilter').value = 'min_alle'; utforSok(); alert("Importert ferdig!"); }
+                    else { database = await hentAlleFraSkyen('samlerbase_data'); document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('eieFilter').value = 'min_alle'; sikreMinSamlingVises(); utforSok(); alert("Importert ferdig!"); }
                 }
                 lastOppIbolker();
             }
@@ -3021,6 +3521,7 @@
       document.getElementById('btnMasseOppdater').style.display = kat === 'film' ? 'inline-block' : 'none';
 
       document.getElementById('btnSokImdbManuelt').style.display = kat === 'film' ? 'block' : 'none';
+      samlingVisningKat = null;   // bygg "Vis samling"-listen på nytt for denne kategorien
       settForrigeLagringsplass(true);   // (1) forrige lagringsplass for denne kategorien
       oppdaterRegBilder();
       byggLagringsplasserListe();
@@ -3066,6 +3567,12 @@
             lokalHtml += flis('Type', item.mediatype === 'Serie' ? '📺 Serie' : '🎬 Film');
             lokalHtml += flis('Utgave / Versjon', (item.utgave && item.utgave !== 'Ukjent') ? item.utgave : 'Standard');
             lokalHtml += flis('Bildeformat', item.bildeformat || 'Ukjent', 'text-slate-300', true);
+            if (item.pakke_id && pakkeMedlemmer(item.pakke_id).length > 1) {
+                const medl = pakkeMedlemmer(item.pakke_id);
+                lokalHtml += flis('📦 Samleboks', (erAutoPakkeNavn(item.pakke_navn) ? 'Samleboks' : item.pakke_navn) + ' (' + medl.length + ' filmer)', 'text-indigo-300', true);
+                lokalHtml += flis('Disk nr.', item.disk_nr || 'Ikke oppgitt', 'text-indigo-200');
+                lokalHtml += flis('Pris for boksen', item.pakke_pris ? item.pakke_pris + ' kr' : 'Ikke oppgitt', 'text-emerald-400');
+            }
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Tekstspråk</span><span class="font-bold text-slate-300">' + (item.tekst_spraak || 'Ikke oppgitt') + '</span></div>';
@@ -3129,8 +3636,13 @@
     function tegnListe(elementer) {
       const container = document.getElementById('vareTabell');
       document.getElementById('antallTreff').innerText = elementer.length;
+      const antallBokser = new Set(elementer.map(i => i.pakke_id || ('id' + i.id))).size;
+      document.getElementById('antallBokser').innerText = (aktivKategori === 'film' && antallBokser !== elementer.length) ? ' · ' + antallBokser + ' bokser' : '';
       
       let totalVerdi = elementer.reduce((sum, item) => sum + (Number(item.verdi) || 0), 0);
+      // Boksens pris telles én gang per boks
+      const talteBokser = new Set();
+      elementer.forEach(i => { if (i.pakke_id && i.pakke_pris && !talteBokser.has(i.pakke_id)) { talteBokser.add(i.pakke_id); totalVerdi += Number(i.pakke_pris) || 0; } });
       document.getElementById('totalVerdi').innerText = totalVerdi.toLocaleString('no-NO');
 
       container.innerHTML = '';
@@ -3205,6 +3717,17 @@
             metaTekst = 'Serie: ' + (item.bladserie || '-') + ' | År: ' + (item.aar || '-');
         }
 
+        let pakkeMerke = '';
+        if (item.pakke_id) {
+            const medl = pakkeMedlemmer(item.pakke_id);
+            const andre = medl.filter(m => m.id !== item.id).map(m => m.tittel || 'Uten tittel');
+            const egetNavn = !erAutoPakkeNavn(item.pakke_navn);
+            const merkeTekst = (egetNavn || medl.length > 3)
+                ? (egetNavn ? item.pakke_navn : 'Samleboks') + ' · ' + medl.length + ' filmer'
+                : medl.length + '-i-1 · sammen med ' + andre.join(', ');
+            if (medl.length > 1) pakkeMerke = '<button type="button" onclick="visPakke(\'' + item.pakke_id + '\')" title="Vis alle filmene i boksen" class="mt-1 inline-block text-left bg-indigo-500/15 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-indigo-500/30 transition max-w-full truncate">📦 ' + esc(merkeTekst) + (item.disk_nr ? ' · Disk ' + esc(item.disk_nr) : '') + '</button>';
+        }
+
         let hovedKort = '<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">' +
             '<div class="flex gap-3 w-full overflow-hidden flex-1">' +
               bildeHtml + 
@@ -3213,6 +3736,7 @@
                   '<a href="' + linkUrl + '" target="_blank" class="truncate flex-1 group block hover:opacity-80 transition">' + tittelString + tittelSub + '</a>' + eierBadge +
                 '</div>' +
                 '<div class="text-[11px] text-slate-400 mt-1">' + metaTekst + '</div>' +
+                pakkeMerke +
               '</div>' +
             '</div>' + adminKnapper +
           '</div>';
@@ -3258,32 +3782,91 @@
         }
     }
 
+    // ==========================================
+    // HVEM SIN SAMLING SOM VISES
+    //  meg            = bare min samling (standard)
+    //  meg+alle       = min + alle som deler
+    //  alle           = alle som deler (uten min)
+    //  bruker:NAVN    = bare NAVN sin samling
+    //  meg+bruker:NAVN= min + NAVN sin samling
+    // ==========================================
+    let samlingVisningKat = null;
+    function visningNokkel() { return 'samler_visning_' + (innloggetBruker || ''); }
+    function delerSamling(eier) {
+        const prof = profiler[eier];
+        return !prof || prof.standardSynlighet !== 'privat' || database.some(i => i.eier === eier && i.synlighet === 'offentlig');
+    }
+    function erSynligForMeg(item) {
+        if (item.eier === innloggetBruker) return true;
+        const eierProfil = profiler[item.eier] || { standardSynlighet: 'offentlig' };
+        const effektiv = item.synlighet && item.synlighet !== 'standard' ? item.synlighet : eierProfil.standardSynlighet;
+        return effektiv !== 'privat';
+    }
+    function byggSamlingVisning() {
+        const sel = document.getElementById('samlingVisning');
+        if (!sel) return;
+        const lagret = (() => { try { return localStorage.getItem(visningNokkel()); } catch (e) { return null; } })();
+        const naa = (samlingVisningKat === null ? (lagret || sel.value) : sel.value) || 'meg';
+        // Andre brukere som deler, og som har synlige gjenstander i denne kategorien
+        const antall = {};
+        database.forEach(i => { if (i.kategori === aktivKategori && i.eier && i.eier !== innloggetBruker && erSynligForMeg(i)) antall[i.eier] = (antall[i.eier] || 0) + 1; });
+        const andre = Object.keys(antall).filter(delerSamling).sort((a, b) => a.localeCompare(b, 'no'));
+        let html = '<option value="meg">👤 Min samling</option>';
+        if (andre.length) {
+            html += '<option value="meg+alle">👥 Min + alle som deler</option>';
+            html += '<option value="alle">🌐 Alle som deler (uten min)</option>';
+            html += '<optgroup label="Bare én annen samling">' + andre.map(n => '<option value="bruker:' + esc(n) + '">👤 ' + esc(n) + ' (' + antall[n] + ')</option>').join('') + '</optgroup>';
+            html += '<optgroup label="Min + én annen samling">' + andre.map(n => '<option value="meg+bruker:' + esc(n) + '">👥 Min + ' + esc(n) + '</option>').join('') + '</optgroup>';
+        }
+        sel.innerHTML = html;
+        sel.value = [...sel.options].some(o => o.value === naa) ? naa : 'meg';
+        samlingVisningKat = aktivKategori;
+    }
+    function byttSamlingVisning() {
+        try { localStorage.setItem(visningNokkel(), document.getElementById('samlingVisning').value); } catch (e) {}
+        utforSok();
+    }
+    function visesEier(eier) {
+        const v = document.getElementById('samlingVisning').value || 'meg';
+        const meg = eier === innloggetBruker;
+        if (v === 'meg') return meg;
+        if (v === 'meg+alle') return true;
+        if (v === 'alle') return !meg;
+        if (v.startsWith('meg+bruker:')) return meg || eier === v.slice(11);
+        if (v.startsWith('bruker:')) return eier === v.slice(7);
+        return meg;
+    }
+    // Sørger for at min egen samling vises (f.eks. rett etter at jeg har lagret noe)
+    function sikreMinSamlingVises() {
+        const sel = document.getElementById('samlingVisning');
+        if (sel && (sel.value === 'alle' || sel.value.startsWith('bruker:'))) { sel.value = 'meg'; try { localStorage.setItem(visningNokkel(), 'meg'); } catch (e) {} }
+    }
+
     function utforSok() {
       if(!innloggetBruker) return;
+      if (samlingVisningKat !== aktivKategori || document.getElementById('samlingVisning').options.length <= 1) byggSamlingVisning();
       const q = document.getElementById('sokeFelt').value.toLowerCase();
       const filt = document.getElementById('eieFilter').value;
       const sortFilt = document.getElementById('sorteringFilt').value;
       const filterTekstFelt = document.getElementById('filterTekst');
 
-      if (filt === 'min_alle') filterTekstFelt.innerText = "- Mitt: Vis alt";
-      else if (filt === 'min_har') filterTekstFelt.innerText = "- Mitt: Kun eide";
-      else if (filt === 'min_mangler') filterTekstFelt.innerText = "- Mitt: Ønskeliste";
-      else if (filt === 'venner') filterTekstFelt.innerText = "- Nettverk: Venners samlinger";
-      else if (filt === 'globalt') filterTekstFelt.innerText = "- Nettverk: Globalt søk";
+      const visSel = document.getElementById('samlingVisning');
+      const visTekst = visSel.options[visSel.selectedIndex] ? visSel.options[visSel.selectedIndex].text.replace(/\s*\(\d+\)$/, '') : 'Min samling';
+      const statusTekst = { min_alle: 'Vis alt', min_har: 'Kun eide', min_mangler: 'Ønskeliste', plante_marked: '🌱 Plante-marked' }[filt] || '';
+      filterTekstFelt.innerText = filt === 'plante_marked' ? '- 🌱 Plante-marked (alle som deler)' : '- ' + visTekst + ' · ' + statusTekst;
 
       let filtrert = database.filter(item => {
-        if (item.kategori !== aktivKategori) return false;
-        if (filt === 'min_alle' && item.eier !== innloggetBruker) return false;
-        if (filt === 'min_har' && (item.eier !== innloggetBruker || item.status !== 'Har')) return false;
-        if (filt === 'min_mangler' && (item.eier !== innloggetBruker || item.status !== 'Har ikke')) return false;
-        if (filt === 'venner' && item.eier === innloggetBruker) return false;
-
-        if (item.eier !== innloggetBruker) {
-            let eierProfil = profiler[item.eier] || { standardSynlighet: 'offentlig' };
-            let effektivSynlighet = item.synlighet && item.synlighet !== 'standard' ? item.synlighet : eierProfil.standardSynlighet;
-            if (effektivSynlighet === 'privat') return false; 
+                if (item.kategori !== aktivKategori) return false;
+        if (!erSynligForMeg(item)) return false;   // andres private gjenstander vises aldri
+        if (filt === 'plante_marked') {
+            // Plante-marked: planter som er til salgs/bytte/gis bort, fra alle som deler
+            if (!item.dele_selge || /^(nei|ikke|-)/i.test(item.dele_selge.trim())) return false;
+        } else {
+            if (!visesEier(item.eier)) return false;
+            if (filt === 'min_har' && item.status !== 'Har') return false;
+            if (filt === 'min_mangler' && item.status !== 'Har ikke') return false;
         }
-        const fritekst = ((item.tittel||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
+        const fritekst = ((item.tittel||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
         return fritekst.includes(q);
       });
 
