@@ -20,7 +20,10 @@ Returner ALLTID et JSON-objekt med disse feltene:
 - "alder": aldersgrense, f.eks. "15", "18", "A", ellers "".
 - "tekst": en LISTE med ALLE undertekstspråk som står oppført, f.eks. ["Norsk","Svensk","Dansk","Finsk"]. Tom liste [] hvis ingen.
 - "lyd": en LISTE med ALLE lydspor inkludert lydformat, f.eks. ["Engelsk DTS-HD MA 5.1","Norsk Dolby Digital 2.0"]. Tom liste [] hvis ingen.
-- "bildeformat": skjermformatet NØYAKTIG slik det er trykt, f.eks. "2.35:1", "1.85:1", "16:9 Anamorphic Widescreen", "4:3". Ikke forveksle med lydformat (5.1, 7.1) eller oppløsning (1080p, 2160p). Står det ikke tydelig, svar "".
+- "bildeformat": skjermformatet NØYAKTIG slik det er trykt, f.eks. "2.35:1", "1.85:1", "2.40:1", "16:9 Anamorphic Widescreen", "4:3".
+  Les den lille tekniske teksten nøye – den står oftest i en boks/stripe nederst på baksiden, ved siden av lyd, undertekster, spilletid og region.
+  Se etter ord som "Bildeformat", "Bilde", "Picture format", "Aspect ratio", "Screen format", "Format", "Widescreen", eller tall som "x.xx:1" og "16:9".
+  Ikke forveksle med lydformat (5.1, 7.1, 2.0) eller oppløsning (1080p, 2160p). Står det ikke, svar "".
 - "utgave": KUN hvis baksiden tydelig sier en spesiell utgave (Director's Cut, Extended Edition, Unrated, Steelbook o.l.). Ellers "".
 - "format": f.eks. "Blu-ray", "4K UHD", "DVD", "Hardcover" hvis det står på baksiden, ellers "".
 - "mediatype": "Serie" hvis det står episoder, sesong, season e.l., ellers "Film".
