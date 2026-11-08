@@ -6,6 +6,10 @@ export const config = {
 const PROMPT_FORSIDE = `Du er en ekspert på filmer, TV-serier og tegneserier. Se på dette bildet av en FORSIDE.
 Returner ALLTID et JSON-objekt med disse feltene:
 - "tittel": hovedtittelen NØYAKTIG slik den står på coveret (ikke oversett, ikke rett på den).
+  Er det en SAMLEBOKS med flere filmer (f.eks. "2 filmer", "Double Feature", "Trilogy", "Collection", "Box Set", eller flere titler side om side), skal "tittel" være boksens navn hvis den har et, ellers den FØRSTE filmen.
+- "boks_navn": navnet på samleboksen hvis det er en samleboks med eget navn, f.eks. "Ultimate Collection James Bond", "Harry Potter – The Complete 8-Film Collection". Ellers "".
+- "titler": en LISTE med tittelen til HVER film som står på coveret, i rekkefølge, f.eks. ["Down to You","Boys and Girls"]. Maks 50.
+  Er det bare én film, returner en liste med én tittel. Ikke ta med samlenavnet som en egen film. Står ikke filmene på forsiden, returner [].
 - "tittel_orig": originaltittel hvis den står på coveret, ellers "".
 - "aar": utgivelsesår hvis det står tydelig på coveret, ellers "".
 - "format": f.eks. "Blu-ray", "4K UHD", "DVD", "3D", "Manga", "Pocket", "Hardcover". Står både 4K og Blu-ray på en kombipakke, svar "4K UHD".
@@ -28,6 +32,8 @@ Returner ALLTID et JSON-objekt med disse feltene:
 - "format": f.eks. "Blu-ray", "4K UHD", "DVD", "Hardcover" hvis det står på baksiden, ellers "".
 - "mediatype": "Serie" hvis det står episoder, sesong, season e.l., ellers "Film".
 - "tittel_orig": originaltittel hvis den er nevnt, ellers "".
+- "boks_navn": navnet på samleboksen hvis baksiden viser at det er en samleboks, ellers "".
+- "titler": er det en SAMLEBOKS, en LISTE med ALLE filmtitlene som står oppført på baksiden, i rekkefølge (f.eks. ["Dr. No","From Russia with Love","Goldfinger"]). Maks 50. Står det disknummer, skriv det som "Disk 3: Goldfinger". Er det bare én film, returner [].
 VIKTIG: Ikke gjett. Ta bare med det som faktisk står på bildet.`;
 
 export default async function handler(req, res) {
@@ -58,7 +64,7 @@ export default async function handler(req, res) {
                         ]
                     }
                 ],
-                max_tokens: 600          // var 150 – for lite til lange språklister (svaret ble kuttet)
+                max_tokens: 1500         // nok til lange språk- og filmlister (samlebokser med mange filmer)
             })
         });
 
