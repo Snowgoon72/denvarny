@@ -190,6 +190,11 @@
       <form id="skjemaEndre" onsubmit="lagreEndring(event)" class="space-y-4 text-xs">
         <input type="hidden" id="endreId" />
         <input type="hidden" id="endreNyttBildeBase64" />
+
+        <div id="endreNyBanner" class="hidden bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 rounded-lg px-3 py-2 text-xs font-bold text-center">
+            ✅ Registreringen er lagret i samlingen din.<br>
+            <span class="font-normal text-emerald-200/80">Se over skjemaet. Endrer du noe, trykk «Oppdater». Vil du fjerne den igjen, trykk «Kanseller».</span>
+        </div>
         
         <!-- NY BILDEVISNING I REDIGER-MODALEN -->
         <div id="endreBildeVisning" class="flex gap-4 items-start justify-center mb-4 overflow-x-auto">
@@ -399,7 +404,8 @@
         </div>
 
         <div class="flex gap-2 pt-3">
-          <button type="button" onclick="lukkEndreModal()" class="flex-1 bg-slate-800 text-slate-300 py-3 rounded-lg border border-slate-700 hover:bg-slate-700 font-bold transition">Lukk</button>
+          <button type="button" id="btnKansellerNy" onclick="kansellerNyRegistrering()" class="hidden flex-1 bg-red-600/20 text-red-300 py-3 rounded-lg border border-red-500/50 hover:bg-red-600/40 font-bold transition">❌ Kanseller</button>
+          <button type="button" id="btnLukkEndre" onclick="lukkEndreModal()" class="flex-1 bg-slate-800 text-slate-300 py-3 rounded-lg border border-slate-700 hover:bg-slate-700 font-bold transition">Lukk</button>
           <button type="submit" id="btnLagreEndring" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-lg transition">Lagre Endringer</button>
         </div>
       </form>
@@ -666,7 +672,7 @@
        <div class="flex justify-between gap-2 mt-8 pt-4 border-t border-slate-800">
           <button id="wizBtnForrige" onclick="wizGaa(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg font-bold transition">Forrige</button>
           <button id="wizBtnNeste" onclick="wizGaa(1)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold ml-auto transition">Hopp over / Neste ➔</button>
-          <button id="wizBtnFullfor" onclick="wizFullfor()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-lg font-black hidden ml-auto transition shadow-lg">Fyll inn skjema ✔</button>
+          <button id="wizBtnFullfor" onclick="wizFullfor()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-lg font-black hidden ml-auto transition shadow-lg">💾 Lagre ✔</button>
        </div>
     </div>
   </div>
@@ -1123,7 +1129,7 @@
         const t = String(v).toLowerCase().replace(/,/g, '.');
         if (/^(standard|ukjent|unknown|n\/a|ikke oppgitt|none|null|-)$/.test(t.trim())) return '';
         const deler = [];
-        const ratio = t.match(/\b([12]\.\d{1,2})\s*:\s*1\b/);
+        const ratio = t.match(/\b([12]\.\d{1,2})\s*(?::|to|til|x)\s*1\b/) || t.match(/\b([12]\.\d{2})\b/);
         if (ratio) {
             let r = ratio[1]; if (r.split('.')[1].length === 1) r += '0';
             const n = parseFloat(r); if (n >= 1.3 && n <= 2.8) deler.push(r + ':1');
@@ -1282,6 +1288,7 @@
                     '<h3 class="font-black text-white text-lg leading-tight">' + esc(f.tittel) + '</h3>' +
                     (f.orig && f.orig !== f.tittel ? '<p class="text-xs text-slate-500 italic">' + esc(f.orig) + '</p>' : '') +
                     '<p class="text-xs text-slate-400 mt-1">' + aarTxt + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • ' + (f.type === 'Serie' ? '📺 Serie' : '🎬 Film') + '</p>' +
+                    '<p id="filmValgSkuesp_0" class="text-xs text-slate-300 mt-1">🎭 <span class="text-slate-500">henter skuespillere…</span></p>' +
                     '<button type="button" onclick="lukkFilmValg(0)" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black transition">✓ Ja, dette er riktig</button></div>';
             }
             if (!html) kandidater.forEach((f, i) => {
@@ -1292,7 +1299,8 @@
                 html += '<div onclick="lukkFilmValg(' + i + ')" class="bg-slate-950 p-3 rounded-lg border ' + (likNavn ? 'border-emerald-700/60' : 'border-slate-800') + ' hover:border-amber-500 cursor-pointer transition flex gap-3 items-center">' + bilde +
                     '<div class="flex-1 overflow-hidden"><h3 class="font-bold text-white text-sm leading-tight">' + esc(f.tittel) + '</h3>' + origTekst +
                     '<p class="text-xs text-slate-400 mt-1">' + aar + ' • ⭐ ' + (f.rating ? Number(f.rating).toFixed(1) : '-') + ' • <span class="' + (f.type === 'Serie' ? 'text-sky-400' : 'text-amber-400') + '">' + (f.type === 'Serie' ? '📺 Serie' : '🎬 Film') + '</span>' +
-                    (likNavn ? ' • <span class="text-emerald-400 font-bold">✓ Samme navn</span>' : '') + '</p></div></div>';
+                    (likNavn ? ' • <span class="text-emerald-400 font-bold">✓ Samme navn</span>' : '') + '</p>' +
+                    '<p id="filmValgSkuesp_' + i + '" class="text-[11px] text-slate-300 mt-0.5 truncate">🎭 <span class="text-slate-500">…</span></p></div></div>';
             });
             const iVeiviser = !document.getElementById('wizardModal').classList.contains('hidden');
             const mittCover = iVeiviser ? document.getElementById('wizBildePreview').getAttribute('src') : document.getElementById('feltBrukerBilde').value;
@@ -1303,6 +1311,29 @@
             document.getElementById('filmValgListe').innerHTML = html;
             skjulLaster();
             document.getElementById('filmValgModal').classList.remove('hidden');
+            fyllInnSkuespillere(kandidater);
+        });
+    }
+
+    // Henter hovedrollene (de 3 første på rollelisten) for hvert forslag og viser dem i listen
+    const skuespillerCache = new Map();
+    async function hentHovedskuespillere(id, type) {
+        const nokkel = type + id;
+        if (skuespillerCache.has(nokkel)) return skuespillerCache.get(nokkel);
+        const sti = type === 'Serie' ? 'tv/' + id + '/aggregate_credits' : 'movie/' + id + '/credits';
+        const res = await fetch('https://api.themoviedb.org/3/' + sti + '?language=no-NO', tmdbOptions());
+        const data = await res.json();
+        const navn = (data.cast || []).sort((a, b) => (a.order ?? 999) - (b.order ?? 999)).slice(0, 3).map(c => c.name);
+        skuespillerCache.set(nokkel, navn);
+        return navn;
+    }
+    function fyllInnSkuespillere(kandidater) {
+        kandidater.forEach(async (f, i) => {
+            let tekst = '';
+            try { const navn = await hentHovedskuespillere(f.id, f.type); tekst = navn.length ? esc(navn.join(', ')) : '<span class="text-slate-500">Ingen rolleliste</span>'; }
+            catch (e) { tekst = '<span class="text-slate-500">Kunne ikke hente</span>'; }
+            const el = document.getElementById('filmValgSkuesp_' + i);
+            if (el && filmValgKandidater[i] === f) el.innerHTML = '🎭 ' + tekst;
         });
     }
     function lukkFilmValg(index) {
@@ -1570,6 +1601,21 @@
           }
       }
       
+      const nyttElement = byggElementFraSkjema();
+
+      database.unshift(nyttElement);
+      supabaseDb.from('samlerbase_data').insert([nyttElement]).then(res => { if(res.error) { console.error("Klarte ikke lagre:", res.error); alert("🚨 Supabase nektet å lagre: " + res.error.message); } });
+
+      huskLagringsplass(nyttElement.lagret);
+      nullstillHovedSkjema();   // fyller automatisk inn forrige lagringsplass igjen
+      byggLagringsplasserListe();
+      document.getElementById('eieFilter').value = 'min_alle';
+      utforSok();
+      alert("✅ Lagret i samlingen din!");
+    }
+
+    // Leser hovedskjemaet og lager et ferdig objekt for databasen
+    function byggElementFraSkjema() {
       let nyttElement = {
         id: Date.now(),
         eier: innloggetBruker,
@@ -1635,16 +1681,7 @@
         nyttElement.plassering = document.getElementById('feltPlantePlassering').value.trim();
         nyttElement.verdi = document.getElementById('feltVerdi').value;
       }
-
-      database.unshift(nyttElement);
-      supabaseDb.from('samlerbase_data').insert([nyttElement]).then(res => { if(res.error) { console.error("Klarte ikke lagre:", res.error); alert("🚨 Supabase nektet å lagre: " + res.error.message); } });
-
-      huskLagringsplass(nyttElement.lagret);
-      nullstillHovedSkjema();   // fyller automatisk inn forrige lagringsplass igjen
-      byggLagringsplasserListe();
-      document.getElementById('eieFilter').value = 'min_alle';
-      utforSok();
-      alert("✅ Lagret i samlingen din!");
+      return nyttElement;
     }
 
     function slettElement(id) {
@@ -1655,9 +1692,12 @@
         }
     }
     
-    function apneEndreModal(id) {
+    let endreNyRegistreringId = null;   // satt når vinduet viser en registrering som akkurat ble lagret fra veiviseren
+
+    function apneEndreModal(id, nyRegistrering = false) {
       const item = database.find(i => i.id === id);
       if (!item) return;
+      endreNyRegistreringId = nyRegistrering ? id : null;
 
       const erMin = item.eier === innloggetBruker;
 
@@ -1786,10 +1826,36 @@
       
       // Sørg for at den har de nyeste lagringsplassene
       byggLagringsplasserListe();
+
+      // Ny registrering fra veiviseren: vis banner og Kanseller / Oppdater
+      const erNy = !!endreNyRegistreringId;
+      document.getElementById('endreNyBanner').classList.toggle('hidden', !erNy);
+      document.getElementById('btnKansellerNy').classList.toggle('hidden', !erNy);
+      document.getElementById('btnLukkEndre').innerText = erNy ? 'Ferdig' : 'Lukk';
+      if (erMin) document.getElementById('btnLagreEndring').innerText = erNy ? '💾 Oppdater' : 'Lagre Endringer';
+      if (erNy) document.getElementById('endreModalTittelTekst').innerText = '✅ Lagret – sjekk registreringen';
+
       document.getElementById('endreModal').classList.remove('hidden');
+      const innhold = document.querySelector('#endreModal > div'); if (innhold) innhold.scrollTop = 0;
     }
 
-    function lukkEndreModal() { document.getElementById('endreModal').classList.add('hidden'); }
+    function lukkEndreModal() {
+      document.getElementById('endreModal').classList.add('hidden');
+      endreNyRegistreringId = null;
+    }
+
+    // Fjerner en registrering som akkurat ble lagret fra veiviseren
+    async function kansellerNyRegistrering() {
+      const id = endreNyRegistreringId;
+      if (!id) return;
+      if (!confirm("Vil du kansellere og fjerne denne registreringen fra samlingen din?")) return;
+      const { error } = await supabaseDb.from('samlerbase_data').delete().eq('id', id);
+      if (error) { alert("🚨 Kunne ikke fjerne registreringen: " + error.message); return; }
+      database = database.filter(i => i.id !== id);
+      lukkEndreModal();
+      utforSok();
+      alert("Registreringen er kansellert og fjernet.");
+    }
 
     function lagreEndring(e) {
       e.preventDefault();
@@ -1849,8 +1915,10 @@
       database[index] = item;
       huskLagringsplass(item.lagret, item.kategori);
       supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(svar => { if (svar.error) { console.error("Supabase oppdateringsfeil:", svar.error); alert("🚨 Supabase nektet å lagre endringen: " + svar.error.message); } });
+      const varNy = !!endreNyRegistreringId;
       lukkEndreModal();
       utforSok();
+      if (varNy) alert("✅ Registreringen er oppdatert!");
     }
 
     // ==========================================
@@ -1892,7 +1960,9 @@
     function utforCrop() {
         if (!cropperInstans) return;
         document.getElementById('cropModal').classList.add('hidden');
-        const kuttetCanvas = cropperInstans.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 });
+        // Baksiden har liten teknisk tekst (bildeformat, språk) – send den i høyere oppløsning til AI-en
+        const maksStr = (erVeiviserCrop && erVeiviserBakside) ? 2000 : 1200;
+        const kuttetCanvas = cropperInstans.getCroppedCanvas({ maxWidth: maksStr, maxHeight: maksStr, imageSmoothingQuality: 'high' });
         
         if (erVeiviserCrop) {
             fortsettVeiviserAnalyse(kuttetCanvas, erVeiviserBakside);
@@ -2128,7 +2198,9 @@
             document.getElementById('wizBaksideResultat').innerText = "Analyserer bakside...";
         }
         
-        const forminsketBilde = kuttetCanvas.toDataURL('image/jpeg', 0.8);
+        // Bilde til AI-analyse: bakside i høy kvalitet (liten tekst), forside litt lavere. Holder seg under ~3 MB.
+        let forminsketBilde = kuttetCanvas.toDataURL('image/jpeg', erBakside ? 0.9 : 0.8);
+        if (forminsketBilde.length > 3000000) forminsketBilde = kuttetCanvas.toDataURL('image/jpeg', 0.7);
         
         const canvasLiten = document.createElement('canvas');
         const maxLagringBredde = 450; 
@@ -2197,9 +2269,19 @@
                 if (data.aar) { document.getElementById('wizAarFilm').value = data.aar; document.getElementById('wizAar').value = data.aar; }
                 if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
                 if (data.tittel_orig && !document.getElementById('wizTittelOrig').value) document.getElementById('wizTittelOrig').value = data.tittel_orig;
-                if (aktivKategori === 'film') wizFyllAiFelter(data, true);   // bildeformat / utgave / type fra baksiden
+                if (aktivKategori === 'film') {
+                    wizFyllAiFelter(data, true);   // bildeformat / utgave / type fra baksiden
+                    const raa = data.bildeformat || data.aspect_ratio || '';
+                    const tolket = normaliserBildeformat(raa);
+                    const deler = [];
+                    deler.push('Bildeformat: ' + (tolket || (raa ? '«' + raa + '» (ikke gjenkjent)' : 'ikke funnet')));
+                    if (tekstListe) deler.push('Tekst: ' + tekstListe);
+                    if (lydListe) deler.push('Lyd: ' + lydListe);
+                    if (data.alder) deler.push('Alder: ' + data.alder);
+                    document.getElementById('wizBaksideResultat').innerText = '✅ ' + deler.join('\n');
+                }
 
-                setTimeout(() => wizGaa(1), 1500);
+                setTimeout(() => wizGaa(1), aktivKategori === 'film' ? 3500 : 1500);   // litt lenger tid til å lese resultatet
             }
         } catch (err) {
             if (!erBakside) document.getElementById('wizAiResultat').innerText = "Feil ved AI-analyse.";
@@ -2341,7 +2423,7 @@
         }
     }
 
-    function wizFullfor() {
+    async function wizFullfor() {
         nullstillHovedSkjema();
 
         const wizPre = document.getElementById('wizBildePreview').getAttribute('src');
@@ -2396,16 +2478,35 @@
 
         lukkWizard();
 
+        // Film: koble til IMDb før lagring (bruker treffet fra veiviseren, ellers søk med bekreftelse)
         if (aktivKategori === 'film' && wizTmdbDetaljer) {
-            // Allerede godkjent treff i veiviseren – ingen nytt søk
             fyllSkjemaFraTmdb(wizTmdbDetaljer);
-            alert("Perfekt! Skjemaet er fylt ut og koblet til IMDb: " + imdbTittelFra(wizTmdbDetaljer) + ".\nSjekk over og trykk 'Lagre på min profil' i bunnen.");
         } else if (aktivKategori === 'film' && document.getElementById('feltTittel').value) {
-            let existingYear = document.getElementById('feltAar').value;
-            simulerApiOppslag(document.getElementById('feltTittel').value, false, existingYear);
-        } else {
-            alert("Perfekt! Skjemaet er fylt ut. Sjekk over og trykk 'Lagre på min profil' i bunnen.");
+            await simulerApiOppslag(document.getElementById('feltTittel').value, false, document.getElementById('feltAar').value);
         }
+
+        if (!document.getElementById('feltTittel').value.trim()) {
+            alert("Mangler cover-tittel, så registreringen ble ikke lagret.\nSkjemaet er fylt ut – skriv inn tittel og trykk «Lagre på min profil».");
+            return;
+        }
+
+        // Lagre direkte, og vis registreringen etterpå (Kanseller / Oppdater)
+        const nyttElement = byggElementFraSkjema();
+        visLaster("Lagrer...", nyttElement.tittel);
+        const { error } = await supabaseDb.from('samlerbase_data').insert([nyttElement]);
+        skjulLaster();
+        if (error) {
+            console.error("Klarte ikke lagre:", error);
+            alert("🚨 Kunne ikke lagre: " + error.message + "\n\nSkjemaet er fylt ut – sjekk og trykk «Lagre på min profil».");
+            return;
+        }
+        database.unshift(nyttElement);
+        huskLagringsplass(nyttElement.lagret);
+        nullstillHovedSkjema();
+        byggLagringsplasserListe();
+        document.getElementById('eieFilter').value = 'min_alle';
+        utforSok();
+        apneEndreModal(nyttElement.id, true);
     }
 
     function startAutoRegistrering(metode, slettSkjema = true) {
