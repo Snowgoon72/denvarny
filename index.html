@@ -12,6 +12,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* ================= MOBILTILPASNING ================= */
+    /* Ingen elementer skal kunne gjøre siden bredere enn skjermen (da zoomer mobilen ut hele siden) */
+    html, body { max-width: 100%; overflow-x: clip; }
+    select, input, textarea, img { max-width: 100%; }
+    select { min-width: 0; text-overflow: ellipsis; }
+
     /* (7) Innhold holdes unna hakk og avrundede hjørner (iPhone m.fl.) */
     body {
       padding-left: env(safe-area-inset-left);
@@ -862,22 +867,22 @@
           </div>
         </div>
         
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 mt-2 sm:mt-0">
           <button onclick="tipsEnVenn()" class="text-sky-400 hover:text-sky-300 text-[10px] sm:text-xs px-2 font-bold">💌 Tips en venn</button>
           <button id="btnAdmin" onclick="aapneAdminPanel()" class="hidden bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs px-3 py-1.5 rounded border border-rose-700 transition shadow">👑 Admin</button>
-          <div class="text-right ml-2 border-l border-slate-800 pl-3">
+          <div class="text-right sm:ml-2 border-l border-slate-800 pl-3">
             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider leading-none">Innlogget</p>
             <p class="text-sm font-bold text-emerald-400 leading-none mt-0.5" id="innloggetBrukerNavn">Gjest</p>
           </div>
           <button onclick="aapneProfil()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold text-xs px-3 py-1.5 rounded border border-slate-700 transition">⚙️ Profil</button>
-          <button onclick="loggUt()" class="bg-slate-800 hover:bg-rose-900 hover:text-rose-400 text-slate-300 text-xs px-3 py-1.5 rounded border border-slate-700 transition hidden sm:block">Logg ut</button>
+          <button onclick="loggUt()" class="bg-slate-800 hover:bg-rose-900 hover:text-rose-400 text-slate-300 text-xs px-3 py-1.5 rounded border border-slate-700 transition">Logg ut</button>
         </div>
 
       <div class="flex flex-col sm:flex-row items-center gap-2 w-full mt-3">
         <input type="text" id="sokeFelt" oninput="planleggSok()" placeholder="Søk (tittel, sjanger, kommentar)..." class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500" />
         
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <select id="sorteringFilt" onchange="utforSok()" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none cursor-pointer">
+        <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
+          <select id="sorteringFilt" onchange="utforSok()" class="w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none cursor-pointer">
             <option value="nyeste">Nyeste først</option>
             <option value="tittel">Cover tittel</option>
             <option value="tittel_eng">Tittel (Engelsk)</option>
@@ -890,18 +895,18 @@
             <option value="eier">Eier</option>
           </select>
 
-          <select id="visAntallValg" onchange="byttVisAntall()" title="Hvor mange som vises om gangen (færre = raskere)" class="flex-1 sm:flex-none bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none cursor-pointer">
+          <select id="visAntallValg" onchange="byttVisAntall()" title="Hvor mange som vises om gangen (færre = raskere)" class="w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none cursor-pointer">
             <option value="50">Vis 50</option>
             <option value="100">Vis 100</option>
             <option value="200">Vis 200</option>
             <option value="0">Vis alle</option>
           </select>
 
-          <select id="samlingVisning" onchange="byttSamlingVisning()" title="Hvem sin samling vil du se?" class="flex-1 sm:flex-none bg-slate-900 border border-sky-500/50 text-sky-300 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+          <select id="samlingVisning" onchange="byttSamlingVisning()" title="Hvem sin samling vil du se?" class="w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-sky-500/50 text-sky-300 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
             <option value="meg">👤 Min samling</option>
           </select>
 
-          <select id="eieFilter" onchange="utforSok()" title="Filtrer på status" class="flex-1 sm:flex-none bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+          <select id="eieFilter" onchange="utforSok()" title="Filtrer på status" class="w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
             <optgroup label="Status">
               <option value="min_alle">Vis alt</option>
               <option value="min_har">Kun eide</option>
