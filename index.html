@@ -74,12 +74,12 @@
 
       <form id="skjemaLoggInn" onsubmit="loggInn(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn</label>
-          <input type="text" id="loginBrukernavn" required placeholder="F.eks. Jørn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Brukernavn eller e-post</label>
+          <input type="text" id="loginBrukernavn" required autocomplete="username" placeholder="F.eks. Jørn" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Passord</label>
-          <input type="password" id="loginPassord" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none" />
+          <input type="password" id="loginPassord" required autocomplete="current-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:outline-none" />
         </div>
         <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Logg inn</button>
         
@@ -134,8 +134,7 @@
         <div>
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Synlighet</label>
           <select id="regSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:outline-none">
-            <option value="offentlig">Del samlingen min med andre brukere</option>
-            <option value="privat">Ikke del samlingen min</option>
+<option value="offentlig">Alle brukere kan se samlingen min</option><option value="utvalgte">Bare brukere jeg velger (kun lesetilgang)</option><option value="privat">Ingen – bare jeg</option>
           </select>
         </div>
         <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-lg mt-2 transition">Registrer meg</button>
@@ -147,7 +146,7 @@
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Skriv inn din E-post</label>
           <input type="email" id="glemtEpostFelt" required placeholder="din@epost.no" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none" />
         </div>
-        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-3 rounded-lg mt-2 transition">Send passord</button>
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-3 rounded-lg mt-2 transition">Send lenke for nytt passord</button>
         <p class="text-center text-sm text-slate-400 mt-4"><button type="button" onclick="byttTilLoggInn()" class="text-slate-300 hover:text-white underline">Tilbake til innlogging</button></p>
       </form>
     </div>
@@ -161,8 +160,8 @@
         <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-3">
           <h3 class="font-bold text-slate-300 text-xs uppercase tracking-wider">Kontodetaljer</h3>
           <div><label class="block text-slate-400 mb-1 font-semibold">Brukernavn</label><input type="text" id="profilBrukernavn" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
-          <div><label class="block text-slate-400 mb-1 font-semibold">E-postadresse</label><input type="email" id="profilEpost" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
-          <div><label class="block text-slate-400 mb-1 font-semibold">Nytt passord (La stå tomt for å beholde)</label><input type="password" id="profilPassord" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
+          <div><label class="block text-slate-400 mb-1 font-semibold">E-postadresse <span class="font-normal text-[10px] text-slate-500">(bytte krever bekreftelse på e-post)</span></label><input type="email" id="profilEpost" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
+          <div><label class="block text-slate-400 mb-1 font-semibold">Nytt passord (la stå tomt for å beholde – min. 6 tegn)</label><input type="password" id="profilPassord" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
         </div>
         <div><label class="block text-slate-400 mb-1 font-semibold">Litt om meg / min samling</label><textarea id="profilInfo" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"></textarea></div>
         <div class="grid grid-cols-2 gap-2">
@@ -178,7 +177,18 @@
           <div><label class="block text-slate-400 mb-1 font-semibold">Mitt Land</label><input type="text" id="profilLand" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none" /></div>
           <div><label class="block text-slate-400 mb-1 font-semibold">Foretrukket språk</label><select id="profilSpraak" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"><option value="Norsk">Norsk</option><option value="Svensk">Svensk</option><option value="Dansk">Dansk</option><option value="Engelsk">Engelsk</option></select></div>
         </div>
-        <div><label class="block text-slate-400 mb-1 font-semibold">Deling av samlingen min</label><select id="profilSynlighet" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"><option value="offentlig">Del samlingen – andre brukere kan velge å se den</option><option value="privat">Ikke del – bare jeg ser samlingen min</option></select></div>
+        <div><label class="block text-slate-400 mb-1 font-semibold">Deling av samlingen min</label><select id="profilSynlighet" onchange="tegnDelingsliste()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-amber-500 outline-none"><option value="offentlig">Alle brukere kan se samlingen min</option><option value="utvalgte">Bare brukere jeg velger (kun lesetilgang)</option><option value="privat">Ingen – bare jeg</option></select></div>
+        <div class="bg-slate-800 p-3 rounded-lg border border-sky-900/60 space-y-2">
+          <h3 class="font-bold text-sky-300 text-xs uppercase tracking-wider">👥 Lesetilgang for bestemte brukere</h3>
+          <p id="profilDelingInfo" class="text-[11px] text-slate-400"></p>
+          <div id="profilTilgangListe" class="space-y-1"></div>
+          <div class="flex gap-2">
+            <input type="text" id="profilTilgangNavn" list="andreBrukereListe" placeholder="Brukernavn..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-sky-500 outline-none" />
+            <button type="button" onclick="giLesetilgang()" class="shrink-0 bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-2 rounded-lg transition">+ Gi tilgang</button>
+          </div>
+          <datalist id="andreBrukereListe"></datalist>
+          <p id="profilHarTilgang" class="text-[11px] text-emerald-400"></p>
+        </div>
         <div class="flex gap-3 pt-2 pb-4">
           <button type="button" onclick="document.getElementById('profilModal').classList.add('hidden')" class="flex-1 bg-slate-800 text-slate-300 py-2.5 rounded-lg border border-slate-700 hover:bg-slate-700 transition">Avbryt</button>
           <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-lg transition">Lagre endringer</button>
@@ -334,7 +344,7 @@
             <div class="grid grid-cols-3 gap-2">
               <div>
                 <label class="block font-semibold text-slate-400 mb-1">Type</label>
-                <select id="endreMediatype" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+                <select id="endreMediatype" onchange="document.getElementById('endreEpisodeBoks').classList.toggle('hidden', this.value !== 'Serie')" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
                   <option value="Film">🎬 Film</option>
                   <option value="Serie">📺 Serie</option>
                 </select>
@@ -350,6 +360,21 @@
               <div><label class="block font-semibold text-slate-400 mb-1">Tekstspråk</label><input type="text" id="endreTekstSpraak" placeholder="F.eks Norsk" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
               <div><label class="block font-semibold text-slate-400 mb-1">Lydspor</label><input type="text" id="endreLydSpraak" placeholder="F.eks Engelsk 5.1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
               <div><label class="block font-semibold text-slate-400 mb-1">Alder</label><input type="text" id="endreAlder" placeholder="15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+            </div>
+            <div class="space-y-2">
+              <div><label class="block font-semibold text-slate-400 mb-1">🎭 Skuespillere</label><textarea id="endreSkuespillere" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"></textarea></div>
+              <div class="grid grid-cols-3 gap-2">
+                <div><label class="block font-semibold text-slate-400 mb-1">Regissør</label><input type="text" id="endreRegissor" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Produsent</label><input type="text" id="endreProdusent" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Land</label><input type="text" id="endreProduksjonsland" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+              </div>
+            </div>
+            <div id="endreEpisodeBoks" class="hidden bg-sky-500/10 border border-sky-500/40 rounded-lg p-3 space-y-2">
+              <div class="flex justify-between items-center gap-2">
+                <label class="text-xs font-black text-sky-300 uppercase tracking-wider">📺 Episoder <span id="endreEpisodeAntall" class="normal-case text-sky-200 font-bold"></span></label>
+                <button type="button" id="btnHentEpisoder" onclick="hentEpisoder()" class="text-[10px] bg-sky-600/30 hover:bg-sky-600/50 text-sky-100 px-2 py-1 rounded border border-sky-500/50 font-bold transition">⬇️ Hent fra TMDb</button>
+              </div>
+              <textarea id="endreEpisoder" rows="6" oninput="tellEpisoder()" placeholder="S01E01 – Pilot&#10;S01E02 – ...&#10;(én episode per linje)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs font-mono"></textarea>
             </div>
             <div>
               <label class="block font-semibold text-slate-400 mb-1">IMDb-lenke</label>
@@ -367,6 +392,18 @@
           <div class="pt-2 mb-2">
             <label class="block font-semibold text-slate-400 mb-1">Registrert i appen</label>
             <input type="date" id="endreRegistrertDato" readonly class="w-full bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-slate-500 cursor-not-allowed" />
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div id="endreHovedtypeBoks">
+              <label class="block font-semibold text-amber-400 mb-1">💿 Hovedtype</label>
+              <select id="endreHovedtype" class="w-full bg-slate-900 border border-amber-500/40 rounded-lg px-3 py-2 text-amber-300 font-bold"><option value="">Ikke valgt</option><option value="DVD">DVD</option><option value="Blu-ray">Blu-ray</option><option value="4K UHD">4K UHD</option><option value="3D">3D</option><option value="VHS">VHS</option><option value="LaserDisc">LaserDisc</option><option value="UMD Video">UMD Video</option></select>
+            </div>
+            <div id="endreDiskerBoks"><label class="block font-semibold text-slate-400 mb-1">Antall disker</label><input type="number" min="1" id="endreAntallDisker" placeholder="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+            <div id="endreStrekkodeBoks"><label class="block font-semibold text-slate-400 mb-1">Strekkode (EAN)</label><input type="text" inputmode="numeric" id="endreStrekkode" placeholder="—" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono" /></div>
+          </div>
+          <div id="endreEkstraFormatBoks">
+            <label class="block font-semibold text-slate-400 mb-1">Inneholder også (kombipakke)</label>
+            <div id="endreFormatValg" class="flex flex-wrap gap-3 text-slate-300"><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="DVD" class="endreFmtCb rounded"> <span>DVD</span></label><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="Blu-ray" class="endreFmtCb rounded"> <span>Blu-ray</span></label><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="4K UHD" class="endreFmtCb rounded"> <span>4K UHD</span></label><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="3D" class="endreFmtCb rounded"> <span>3D</span></label><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="VHS" class="endreFmtCb rounded"> <span>VHS</span></label><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="LaserDisc" class="endreFmtCb rounded"> <span>LaserDisc</span></label><label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="UMD Video" class="endreFmtCb rounded"> <span>UMD Video</span></label></div>
           </div>
           <div class="grid grid-cols-2 gap-2 pt-2">
             <div>
@@ -559,7 +596,7 @@
     <div class="bg-slate-900 p-6 rounded-2xl border border-rose-900/50 max-w-lg w-full shadow-2xl relative flex flex-col max-h-[90vh]">
       <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white font-black text-xl px-2">✕</button>
       <h2 class="text-xl font-black text-rose-500 mb-2">👑 Admin-panel</h2>
-      <p class="text-sm text-slate-400 mb-4 border-b border-slate-800 pb-3">Nye brukere som venter på aktivering:</p>
+      <p class="text-sm text-slate-400 mb-4 border-b border-slate-800 pb-3">Godkjenn nye brukere og administrer kontoene.</p>
       <div id="adminBrukerListe" class="space-y-3 overflow-y-auto flex-1 hide-scrollbar"></div>
     </div>
   </div>
@@ -702,11 +739,12 @@
        <div id="wizStep_5" class="wiz-step hidden space-y-3">
           <h3 class="font-bold text-white mb-2">6. Utforming / Format</h3>
           <div>
-             <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Hovedformat</label>
+             <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Hovedtype</label>
              <select id="wizFormat" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none">
                 <!-- Fylles med JS avhengig av kategori -->
              </select>
           </div>
+          <div id="wizDiskerBoks"><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Antall disker</label><input type="number" min="1" id="wizAntallDisker" placeholder="1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
           <div id="wizSiderBoks"><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Antall sider</label><input type="number" id="wizSider" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
        </div>
 
@@ -829,10 +867,10 @@
           <h2 class="text-lg font-bold mb-4 text-amber-400" id="skjemaTittel">Registrer ny film</h2>
           
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-5 text-[11px] sm:text-xs font-semibold">
-            <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">✨</span> 1. Smart Veiviser</button>
-            <button type="button" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> 2. Strekkode</button>
-            <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> 3. Diktering</button>
-            <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> 4. Fil-import</button>
+            <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">✨</span> Smart Veiviser</button>
+            <button type="button" id="btnMenyStrekkode" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> Strekkode</button>
+            <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> Diktering</button>
+            <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> Fil-import</button>
           </div>
 
           <!-- Skjulte fil-velgere for Plante/Crop -->
@@ -909,6 +947,13 @@
             </div>
 
             <div id="filmFelter" class="space-y-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800/50">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-amber-500 uppercase tracking-wider mb-1">💿 Hovedtype</label>
+                  <select id="feltHovedtype" class="w-full bg-slate-900 border border-amber-500/40 rounded-lg px-3 py-2 text-amber-300 font-bold"><option value="">Velg type...</option><option value="DVD">DVD</option><option value="Blu-ray">Blu-ray</option><option value="4K UHD">4K UHD</option><option value="3D">3D</option><option value="VHS">VHS</option><option value="LaserDisc">LaserDisc</option><option value="UMD Video">UMD Video</option></select>
+                </div>
+                <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Antall disker</label><input type="number" min="1" id="feltAntallDisker" placeholder="1" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
+              </div>
               <div class="grid grid-cols-3 gap-2">
                 <div>
                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Type</label>
@@ -930,7 +975,7 @@
                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Aldersgrense</label><input type="text" id="feltAlder" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
               </div>
               <div>
-                <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-2">Format(er)</label>
+                <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-2">Inneholder også (kombipakke)</label>
                 <div id="formatValg" class="flex flex-wrap gap-2">
                   <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="4K UHD" class="rounded text-amber-500"> <span>4K UHD</span></label>
                   <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="Blu-ray" class="rounded text-amber-500"> <span>Blu-ray</span></label>
@@ -939,6 +984,14 @@
                   <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="LaserDisc" class="rounded text-amber-500"> <span>LaserDisc</span></label>
                   <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="UMD Video" class="rounded text-amber-500"> <span>UMD (PSP)</span></label>
                   <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="VHS" class="rounded text-amber-500"> <span>VHS</span></label>
+                </div>
+              </div>
+              <div class="space-y-2 pt-1">
+                <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">🎭 Skuespillere</label><input type="text" id="feltSkuespillere" placeholder="Hentes fra TMDb" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Regissør</label><input type="text" id="feltRegissor" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
+                  <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Produsent</label><input type="text" id="feltProdusent" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
+                  <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Land</label><input type="text" id="feltProduksjonsland" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-100" /></div>
                 </div>
               </div>
               <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Info-lenke (IMDb/TMDb)</label><input type="url" id="feltImdb" placeholder="https://www.imdb.com/..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-blue-400" /></div>
@@ -1110,7 +1163,11 @@
     // GRUNNLEGGENDE VARIABLER & SUPABASE OPPTSETT
     // ==========================================
     let aktivKategori = 'film';
-    let innloggetBruker = localStorage.getItem('samler_bruker');
+    let innloggetBruker = null;   // brukernavn til innlogget bruker (settes etter sikker innlogging)
+    let minBrukerId = null;       // Supabase Auth-id
+    let minEpost = null;
+    let tilgangTilMeg = new Set();   // eier_id for samlinger jeg har fått lesetilgang til
+    let minDelingsliste = [];        // leser_id for brukere jeg har gitt lesetilgang
     let profiler = {};
     let database = [];
 
@@ -1360,7 +1417,7 @@
         const erSerie = type === 'Serie';
         const base = 'https://api.themoviedb.org/3/' + (erSerie ? 'tv' : 'movie') + '/' + id;
         const [no, en] = await Promise.all([
-            fetch(base + '?language=no-NO&append_to_response=external_ids', tmdbOptions()).then(r => r.json()),
+            fetch(base + '?language=no-NO&append_to_response=external_ids,' + (erSerie ? 'aggregate_credits' : 'credits'), tmdbOptions()).then(r => r.json()),
             fetch(base + '?language=en-US', tmdbOptions()).then(r => r.json())
         ]);
         const imdbId = no.imdb_id || (no.external_ids && no.external_ids.imdb_id) || '';
@@ -1376,8 +1433,38 @@
             rating: no.vote_average ? Number(no.vote_average).toFixed(1) : '',
             imdbUrl: imdbId ? 'https://www.imdb.com/title/' + imdbId + '/' : '',
             sjanger: sjangre,
-            poster: poster ? 'https://image.tmdb.org/t/p/w500' + poster : ''
+            poster: poster ? 'https://image.tmdb.org/t/p/w500' + poster : '',
+            ...personerOgLand(no, erSerie)
         };
+    }
+    // Skuespillere, regissør, produsent og produksjonsland fra TMDb-svaret
+    function landNavn(kode) {
+        try { return new Intl.DisplayNames(['nb', 'no'], { type: 'region' }).of(kode) || kode; } catch (e) { return kode; }
+    }
+    function personerOgLand(d, erSerie) {
+        const cred = (erSerie ? d.aggregate_credits : d.credits) || {};
+        const cast = (cred.cast || []).slice().sort((a, b) => (a.order ?? 999) - (b.order ?? 999)).slice(0, 8).map(c => c.name);
+        const crew = cred.crew || [];
+        const harJobb = (c, jobb) => c.job === jobb || (Array.isArray(c.jobs) && c.jobs.some(j => j.job === jobb));
+        const unike = arr => [...new Set(arr)];
+        const regissor = erSerie ? unike((d.created_by || []).map(c => c.name)) : unike(crew.filter(c => harJobb(c, 'Director')).map(c => c.name));
+        const produsent = unike(crew.filter(c => harJobb(c, erSerie ? 'Executive Producer' : 'Producer')).map(c => c.name)).slice(0, 3);
+        const koder = (d.production_countries || []).map(c => c.iso_3166_1).concat(d.origin_country || []);
+        return {
+            skuespillere: cast.join(', '),
+            regissor: regissor.slice(0, 3).join(', '),
+            produsent: produsent.join(', '),
+            produksjonsland: unike(koder.filter(Boolean)).map(landNavn).join(', ')
+        };
+    }
+    // Finner TMDb-id ut fra IMDb-lenken (tt1234567)
+    async function tmdbIdFraImdb(imdbUrl) {
+        const tt = String(imdbUrl || '').match(/tt\d+/);
+        if (!tt) return null;
+        const data = await (await fetch('https://api.themoviedb.org/3/find/' + tt[0] + '?external_source=imdb_id', tmdbOptions())).json();
+        if (data.movie_results && data.movie_results[0]) return { id: data.movie_results[0].id, type: 'Film' };
+        if (data.tv_results && data.tv_results[0]) return { id: data.tv_results[0].id, type: 'Serie' };
+        return null;
     }
     // Det offisielle internasjonale navnet (engelsk tittel, ellers originaltittel)
     function imdbTittelFra(d) { return d.tittelEn || d.orig || d.tittelNo || ''; }
@@ -1575,6 +1662,8 @@
         if (d.sjanger) document.getElementById('feltSjanger').value = d.sjanger;
         document.getElementById('feltImdbBilde').value = d.poster || '';
         document.getElementById('feltMediatype').value = d.type || 'Film';
+        [['skuespillere', 'feltSkuespillere'], ['regissor', 'feltRegissor'], ['produsent', 'feltProdusent'], ['produksjonsland', 'feltProduksjonsland']]
+            .forEach(([k, id]) => { if (d[k]) document.getElementById(id).value = d[k]; });
         oppdaterRegBilder();   // viser ditt cover + bakside + IMDb-plakaten side om side
     }
 
@@ -1592,6 +1681,7 @@
             if (erTmdbBilde(item.cover)) item.cover = '';   // flytter gammel TMDb-plakat ut av cover-feltet
         }
         item.mediatype = d.type || item.mediatype || 'Film';
+        ['skuespillere', 'regissor', 'produsent', 'produksjonsland'].forEach(k => { if (d[k]) item[k] = d[k]; });
     }
 
     async function hentAlleFraSkyen(tabell) {
@@ -1601,7 +1691,8 @@
         let merData = true;
 
         while (merData) {
-            let spoerring = supabaseDb.from(tabell).select('*');
+            // Profiler: bare offentlige felt (e-post og passord er skjult av sikkerhetsreglene)
+            let spoerring = supabaseDb.from(tabell).select(tabell === 'samlerbase_profiler' ? PROFIL_FELT : '*');
             if (tabell === 'samlerbase_data') spoerring = spoerring.order('id', { ascending: false });
             spoerring = spoerring.range(start, start + step);
             const { data, error } = await spoerring;
@@ -1612,18 +1703,25 @@
         return altInnhold;
     }
 
+    const PROFIL_FELT = 'user_id,brukernavn,land,spraak,info,standardSynlighet,kategorier,godkjent';
+    function appUrl() { return location.origin + location.pathname; }
+
     async function startApp() {
         try {
-            const profilerData = await hentAlleFraSkyen('samlerbase_profiler');
-            profilerData.forEach(p => { profiler[p.brukernavn] = p; });
-            database = await hentAlleFraSkyen('samlerbase_data');
+            // Lenke fra "Glemt passord"-e-posten: be om nytt passord
+            supabaseDb.auth.onAuthStateChange((hendelse) => {
+                if (hendelse === 'PASSWORD_RECOVERY') setTimeout(nyttPassordEtterLenke, 400);
+            });
+            velgKategori('film');
+            const { data } = await supabaseDb.auth.getSession();
+            if (data && data.session && data.session.user) await etterInnlogging(data.session.user);
+            else sjekkInnlogging();
         } catch (error) {
             console.error("Feil ved tilkobling til skyen:", error);
             alert("Kunne ikke koble til skydatabasen. Prøv å laste siden på nytt.");
+            sjekkInnlogging();
         } finally {
             document.getElementById('loadingOverlay').classList.add('hidden');
-            velgKategori('film'); 
-            sjekkInnlogging();
         }
     }
 
@@ -1641,69 +1739,468 @@
           document.getElementById('loginModal').classList.add('hidden'); 
           document.getElementById('innloggetBrukerNavn').innerText = innloggetBruker;
           const minProfil = profiler[innloggetBruker];
-          if (minProfil && minProfil.epost === 'jorn.garder@gmail.com') { document.getElementById('btnAdmin').classList.remove('hidden'); } else { document.getElementById('btnAdmin').classList.add('hidden'); }
+          document.getElementById('btnAdmin').classList.toggle('hidden', !erAdmin());
+          oppdaterAdminKnapp();
           oppdaterKategoriMeny();
           settForrigeLagringsplass(true);
           utforSok();
       }
     }
     
-    async function loggInn(e) { 
-      e.preventDefault(); 
-      const forsokNavn = document.getElementById('loginBrukernavn').value.trim();
-      const forsokPassord = document.getElementById('loginPassord').value;
-      let funnetBruker = Object.keys(profiler).find(navn => navn.toLowerCase() === forsokNavn.toLowerCase());
-      if (!funnetBruker) { alert("Fant ikke denne brukeren. Har du skrevet navnet riktig?"); return; } 
-      const profil = profiler[funnetBruker];
-      if (profil.passord && profil.passord !== forsokPassord) { alert("Feil passord! Prøv på nytt."); return; }
-      if (profil.godkjent === false && profil.epost !== 'jorn.garder@gmail.com') { alert("🔒 Kontoen din venter på å bli godkjent av administratoren før du kan logge inn."); return; }
-      innloggetBruker = funnetBruker; 
-      localStorage.setItem('samler_bruker', innloggetBruker); 
-      sjekkInnlogging(); 
+    // Etter vellykket innlogging: hent profil, sjekk godkjenning, last samlingen
+    async function etterInnlogging(user) {
+      minBrukerId = user.id;
+      minEpost = (user.email || '').toLowerCase();
+      visLaster("Henter samlingen...");
+      await oppdaterProfilerFraSkyen();
+      const minProfil = Object.values(profiler).find(pr => pr.user_id === user.id);
+      if (!minProfil) {
+          skjulLaster();
+          alert("Fant ingen profil koblet til kontoen din (" + minEpost + "). Kontakt administrator.");
+          await loggUt(true); return false;
+      }
+      if (minProfil.godkjent === false && minEpost !== ADMIN_EPOST) {
+          skjulLaster();
+          alert("🔒 Kontoen din venter på å bli godkjent av administratoren. Du får beskjed når den er klar.");
+          await loggUt(true); return false;
+      }
+      innloggetBruker = minProfil.brukernavn;
+      database = await hentAlleFraSkyen('samlerbase_data');
+      await hentTilganger();
+      skjulLaster();
+      samlingVisningKat = null;
+      sjekkInnlogging();
+      return true;
     }
-    
+
+    async function loggInn(e) {
+      e.preventDefault();
+      const ident = document.getElementById('loginBrukernavn').value.trim();
+      const passord = document.getElementById('loginPassord').value;
+      if (!ident || !passord) { alert("Fyll inn brukernavn/e-post og passord."); return; }
+      visLaster("Logger inn...");
+      try {
+        let epost = ident.includes('@') ? ident.toLowerCase() : null;
+        if (!epost) {
+            const svar = await supabaseDb.rpc('epost_for_innlogging', { p_ident: ident });
+            if (svar.error) throw svar.error;
+            epost = svar.data;
+        }
+        if (!epost) { skjulLaster(); alert("Fant ikke denne brukeren. Har du skrevet navnet riktig?"); return; }
+        const { data, error } = await supabaseDb.auth.signInWithPassword({ email: epost, password: passord });
+        if (error) {
+            // Konto fra før sikker innlogging? Flytt den over (engangs)
+            const gammel = await supabaseDb.rpc('gammel_konto', { p_ident: ident, p_passord: passord });
+            skjulLaster();
+            if (gammel.data) { await flyttGammelKonto(gammel.data, passord); return; }
+            if (/confirm/i.test(error.message)) alert("📧 Du må bekrefte e-postadressen din først.\n\nSjekk innboksen (og søppelpost) for e-posten med bekreftelseslenken.");
+            else alert("Feil brukernavn/e-post eller passord. Prøv igjen, eller bruk «Glemt passord?».");
+            return;
+        }
+        document.getElementById('loginPassord').value = '';
+        await etterInnlogging(data.user);
+      } catch (err) { skjulLaster(); alert("Kunne ikke logge inn: " + supabaseFeil(err)); }
+    }
+
+    // Engangs-overføring av gamle kontoer (fra før Supabase Auth)
+    async function flyttGammelKonto(epost, passord) {
+      if (!confirm("🔐 Samlerbasen har fått sikrere innlogging.\n\nKontoen din flyttes over nå (bare denne ene gangen), og samlingen din følger med.\nFortsette?")) return;
+      let nyttPassord = passord;
+      if (nyttPassord.length < 6) {
+          nyttPassord = prompt("Det nye systemet krever passord på minst 6 tegn.\nVelg et nytt passord:") || '';
+          if (nyttPassord.length < 6) { alert("Passordet må ha minst 6 tegn. Prøv igjen."); return; }
+      }
+      visLaster("Oppgraderer kontoen...");
+      const { data, error } = await supabaseDb.auth.signUp({ email: epost, password: nyttPassord, options: { emailRedirectTo: appUrl() } });
+      skjulLaster();
+      if (error) { alert("Kunne ikke oppgradere kontoen: " + supabaseFeil(error)); return; }
+      if (data && data.session) { if (await etterInnlogging(data.user)) alert("✅ Kontoen din er oppgradert til sikker innlogging."); }
+      else alert("✅ Nesten ferdig!\n\nVi har sendt en e-post til " + epost + ".\nKlikk på lenken i e-posten for å bekrefte, og logg så inn igjen med samme passord.");
+    }
+
     async function registrerBruker(e) {
       e.preventDefault();
       const nyttNavn = document.getElementById('regBrukernavn').value.trim();
       const passord = document.getElementById('regPassord').value;
       const passordBekreft = document.getElementById('regPassordBekreft').value;
       const epost = document.getElementById('regEpost').value.trim().toLowerCase();
+      if (nyttNavn.length < 2 || nyttNavn.length > 30) { alert("Brukernavnet må være mellom 2 og 30 tegn."); return; }
+      if (/[<>"'\\@]/.test(nyttNavn)) { alert("Brukernavnet kan ikke inneholde tegnene < > \" ' \\ @"); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(epost)) { alert("Skriv inn en gyldig e-postadresse."); return; }
       if (passord.length < 6) { alert("Passordet må bestå av minst 6 tegn."); return; }
       if (passord !== passordBekreft) { alert("Passordene er ikke like! Sjekk at du har skrevet dem riktig."); return; }
-      let eksisterer = Object.keys(profiler).find(navn => navn.toLowerCase() === nyttNavn.toLowerCase());
-      if (eksisterer) { alert("Brukernavn er tatt. Velg et annet."); return; }
-      
-      const erAdmin = epost === 'jorn.garder@gmail.com';
-      const nyProfil = { brukernavn: nyttNavn, info: '', land: document.getElementById('regLand').value.trim() || 'Norge', spraak: document.getElementById('regSpraak').value, standardSynlighet: document.getElementById('regSynlighet').value, passord: passord, epost: epost, kategorier: ['film', 'tegneserie', 'plante', 'brettspill'], godkjent: erAdmin };
-      
-      const { data, error } = await supabaseDb.from('samlerbase_profiler').insert([nyProfil]);
-      if (error) { alert("🚨 Supabase nektet å lagre: " + error.message); console.error("Database-feil:", error); return; }
-      
-      profiler[nyttNavn] = nyProfil;
-      if(erAdmin) {
-          innloggetBruker = nyttNavn; 
-          localStorage.setItem('samler_bruker', innloggetBruker); 
-          document.getElementById('skjemaRegistrer').reset(); 
-          sjekkInnlogging();
-      } else {
-          alert("✅ PROFIL OPPRETTET!\n\nKontoen din (" + nyttNavn + ") er registrert trygt i databasen.\n\nSikkerhetstiltak: Før du kan logge inn, må administratoren godkjenne og aktivere profilen din manuelt. Du vil motta en e-post når kontoen er klar til bruk.");
-          byttTilLoggInn();
-          document.getElementById('modalUndertekst').innerText = 'Konto registrert. Venter på aktivering fra admin.';
-          document.getElementById('modalUndertekst').classList.add('text-amber-400');
-      }
-    }
-    
-    function sendGlemtPassord(e) {
-      e.preventDefault();
-      const epostSok = document.getElementById('glemtEpostFelt').value.trim().toLowerCase();
-      let brukerFunnet = false;
-      for (const [brukernavn, profilData] of Object.entries(profiler)) {
-        if (profilData.epost && profilData.epost.toLowerCase() === epostSok) { brukerFunnet = true; break; }
-      }
-      if (brukerFunnet) { alert("SIMULERING AV E-POST:\n\nEn e-post har blitt sendt til " + epostSok + " med instruksjoner for å tilbakestille passordet."); byttTilLoggInn(); } else { alert("Fant ingen bruker med denne e-postadressen."); }
+
+      visLaster("Oppretter konto...");
+      try {
+        const [navnSvar, epostSvar] = await Promise.all([
+            supabaseDb.rpc('brukernavn_ledig', { p_navn: nyttNavn }),
+            supabaseDb.rpc('epost_ledig', { p_epost: epost })
+        ]);
+        if (navnSvar.error) throw navnSvar.error;
+        if (navnSvar.data === false) { skjulLaster(); alert("Brukernavnet er tatt. Velg et annet."); return; }
+        if (epostSvar.data === false) { skjulLaster(); alert("Denne e-postadressen er allerede registrert. Logg inn, eller bruk «Glemt passord?»."); return; }
+
+        // Profilen lages automatisk i databasen (venter på godkjenning)
+        const { data, error } = await supabaseDb.auth.signUp({
+            email: epost, password: passord,
+            options: { emailRedirectTo: appUrl(), data: {
+                brukernavn: nyttNavn, land: document.getElementById('regLand').value.trim() || 'Norge',
+                spraak: document.getElementById('regSpraak').value, standardSynlighet: document.getElementById('regSynlighet').value } }
+        });
+        skjulLaster();
+        if (error) { alert("🚨 Kunne ikke opprette konto: " + supabaseFeil(error)); return; }
+        document.getElementById('skjemaRegistrer').reset();
+        if (data && data.session) {
+            await etterInnlogging(data.user);   // admin slipper rett inn, andre får beskjed om godkjenning
+        } else {
+            alert("✅ KONTO OPPRETTET!\n\n1. Bekreft e-postadressen via lenken vi har sendt til " + epost + ".\n2. Deretter må administratoren godkjenne kontoen før du kan logge inn.");
+            byttTilLoggInn();
+            document.getElementById('modalUndertekst').innerText = 'Konto registrert. Bekreft e-posten og vent på godkjenning.';
+            document.getElementById('modalUndertekst').classList.add('text-amber-400');
+        }
+      } catch (err) { skjulLaster(); alert("🚨 Kunne ikke opprette konto: " + supabaseFeil(err)); }
     }
 
-    function loggUt() { localStorage.removeItem('samler_bruker'); innloggetBruker = null; document.getElementById('loginBrukernavn').value = ''; document.getElementById('loginPassord').value = ''; byttTilLoggInn(); sjekkInnlogging(); }
+    async function sendGlemtPassord(e) {
+      e.preventDefault();
+      const epost = document.getElementById('glemtEpostFelt').value.trim().toLowerCase();
+      visLaster("Sender e-post...");
+      const { error } = await supabaseDb.auth.resetPasswordForEmail(epost, { redirectTo: appUrl() });
+      skjulLaster();
+      if (error) { alert("Kunne ikke sende e-post: " + supabaseFeil(error)); return; }
+      alert("📧 Hvis e-postadressen er registrert, har vi sendt en lenke for å lage nytt passord til " + epost + ".\n\nKontoer fra før oppgraderingen: logg inn med det gamle passordet én gang først.");
+      byttTilLoggInn();
+    }
+
+    // Brukeren kom tilbake via lenken i "Glemt passord"-e-posten
+    async function nyttPassordEtterLenke() {
+      const p1 = prompt("🔐 Velg et nytt passord (minst 6 tegn):") || '';
+      if (p1.length < 6) { alert("Passordet må ha minst 6 tegn. Bruk «Glemt passord?» på nytt."); return; }
+      const p2 = prompt("Gjenta det nye passordet:") || '';
+      if (p1 !== p2) { alert("Passordene var ikke like. Bruk «Glemt passord?» på nytt."); return; }
+      const { error } = await supabaseDb.auth.updateUser({ password: p1 });
+      if (error) { alert("Kunne ikke lagre passordet: " + supabaseFeil(error)); return; }
+      alert("✅ Passordet er endret.");
+      history.replaceState(null, '', appUrl());
+    }
+
+    // ==========================================
+    // HJELPERE: admin, profiler, feilmeldinger
+    // ==========================================
+    const ADMIN_EPOST = 'jorn.garder@gmail.com';
+    // Kun for visning – databasen sjekker selv admin-rettigheter (er_admin())
+    function erAdmin() { return !!minEpost && minEpost === ADMIN_EPOST; }
+    function erAdminProfil(pr) { return !!pr && ((pr.epost || '').toLowerCase() === ADMIN_EPOST || (pr.user_id && pr.user_id === minBrukerId && erAdmin())); }
+    async function oppdaterProfilerFraSkyen() {
+        try {
+            const data = await hentAlleFraSkyen('samlerbase_profiler');
+            if (data && data.length) { profiler = {}; data.forEach(pr => { profiler[pr.brukernavn] = pr; }); }
+        } catch (e) { console.error(e); }
+    }
+    // Forklarer vanlige Supabase-feil
+    function supabaseFeil(err) {
+        const msg = (err && err.message) || String(err || 'Ukjent feil');
+        const kol = msg.match(/'([a-z_]+)' column|column "?([a-z_]+)"? (?:of|does not)/i);
+        if (kol) return msg + "\n\n➡️ Kolonnen «" + (kol[1] || kol[2]) + "» mangler i Supabase-tabellen. Legg den til og prøv igjen.";
+        if (/function .* does not exist|Could not find the function/i.test(msg)) return msg + "\n\n➡️ Databasen er ikke satt opp for sikker innlogging ennå. Kjør supabase_oppsett.sql i Supabase.";
+        if (/row-level security|permission denied/i.test(msg)) return msg + "\n\n➡️ Du har ikke tilgang til dette (er kontoen godkjent?).";
+        if (/rate limit/i.test(msg)) return msg + "\n\n➡️ For mange forsøk på kort tid. Vent litt og prøv igjen.";
+        return msg;
+    }
+
+    // ==========================================
+    // (8) ADMIN-PANEL: godkjenn og administrer brukere
+    // ==========================================
+    let adminListe = [];
+    function oppdaterAdminKnapp() {
+        const btn = document.getElementById('btnAdmin');
+        if (!erAdmin()) return;
+        const ventende = Object.values(profiler).filter(pr => pr.godkjent === false).length;
+        btn.innerText = ventende ? '👑 Admin (' + ventende + ' venter)' : '👑 Admin';
+        btn.classList.toggle('animate-pulse', ventende > 0);
+    }
+    async function aapneAdminPanel() {
+        if (!erAdmin()) { alert("Kun administrator har tilgang."); return; }
+        if (!(await hentAdminListe())) return;
+        tegnAdminPanel();
+        document.getElementById('adminModal').classList.remove('hidden');
+    }
+    async function hentAdminListe() {
+        visLaster("Henter brukere...");
+        const { data, error } = await supabaseDb.rpc('admin_brukere');
+        skjulLaster();
+        if (error) { alert("🚨 Kunne ikke hente brukere: " + supabaseFeil(error)); return false; }
+        adminListe = data || [];
+        await oppdaterProfilerFraSkyen();
+        oppdaterAdminKnapp();
+        return true;
+    }
+    function tegnAdminPanel() {
+        const ventende = adminListe.filter(pr => pr.godkjent === false);
+        const aktive = adminListe.filter(pr => pr.godkjent !== false);
+        const kort = (pr, erVentende) => {
+            const navn = pr.brukernavn || '';
+            const js = JSON.stringify(navn).replace(/"/g, '&quot;');
+            const meg = pr.user_id && pr.user_id === minBrukerId;
+            const status = pr.user_id ? '' : ' · <span class="text-amber-500">ikke logget inn etter oppgraderingen</span>';
+            return '<div class="bg-slate-950 p-3 rounded-lg border ' + (erVentende ? 'border-amber-500/50' : 'border-slate-800') + ' flex flex-col sm:flex-row sm:items-center gap-2">' +
+                '<div class="flex-1 min-w-0"><p class="font-bold text-white truncate">' + esc(navn) + ((pr.epost || '').toLowerCase() === ADMIN_EPOST ? ' <span class="text-rose-400 text-xs">👑 admin</span>' : '') + '</p>' +
+                '<p class="text-xs text-slate-400 truncate">✉️ ' + esc(pr.epost || 'ingen e-post') + ' · ' + esc(pr.land || '') + (erVentende ? '' : ' · ' + (pr.antall || 0) + ' gjenstander') + status + '</p></div>' +
+                '<div class="flex gap-1.5 shrink-0">' +
+                (erVentende
+                    ? '<button onclick="adminGodkjenn(' + js + ')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded transition">✓ Godkjenn</button>' +
+                      '<button onclick="adminAvslaa(' + js + ')" class="bg-slate-800 hover:bg-rose-900 text-rose-400 text-xs font-bold px-3 py-1.5 rounded border border-rose-900/50 transition">✕ Avslå</button>'
+                    : (meg ? '<span class="text-[10px] text-slate-500 px-2">(deg)</span>' :
+                      '<button onclick="adminDeaktiver(' + js + ')" class="bg-slate-800 hover:bg-amber-900/40 text-amber-400 text-xs font-bold px-3 py-1.5 rounded border border-slate-700 transition">⏸ Deaktiver</button>')) +
+                (pr.epost ? '<a href="mailto:' + encodeURIComponent(pr.epost) + '?subject=' + encodeURIComponent('Samlerbasen – kontoen din') + '&body=' + encodeURIComponent('Hei ' + navn + '!\n\nKontoen din i Samlerbasen er nå godkjent. Du kan logge inn med brukernavnet eller e-posten din.\n\nHilsen ' + innloggetBruker) + '" title="Send e-post" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs px-2 py-1.5 rounded border border-slate-700">✉️</a>' : '') +
+                '</div></div>';
+        };
+        let html = '<h3 class="text-xs font-black text-amber-400 uppercase tracking-wider mb-2">⏳ Venter på godkjenning (' + ventende.length + ')</h3>';
+        html += ventende.length ? ventende.map(pr => kort(pr, true)).join('') : '<p class="text-xs text-slate-500 mb-2">Ingen nye brukere venter. 🎉</p>';
+        html += '<h3 class="text-xs font-black text-emerald-400 uppercase tracking-wider mt-5 mb-2">✅ Aktive brukere (' + aktive.length + ')</h3>';
+        html += aktive.map(pr => kort(pr, false)).join('');
+        document.getElementById('adminBrukerListe').innerHTML = html;
+    }
+    async function adminSettGodkjent(navn, verdi) {
+        const { error } = await supabaseDb.rpc('admin_sett_godkjent', { p_navn: navn, p_verdi: verdi });
+        if (error) { alert("🚨 Kunne ikke oppdatere brukeren: " + supabaseFeil(error)); return false; }
+        await hentAdminListe(); tegnAdminPanel();
+        return true;
+    }
+    async function adminGodkjenn(navn) {
+        if (!erAdmin()) return;
+        if (await adminSettGodkjent(navn, true)) {
+            const pr = adminListe.find(x => x.brukernavn === navn);
+            if (pr && pr.epost && confirm("✅ " + navn + " er godkjent og kan logge inn.\n\nVil du sende en e-post til " + pr.epost + " om at kontoen er klar?")) {
+                window.location.href = 'mailto:' + encodeURIComponent(pr.epost) + '?subject=' + encodeURIComponent('Samlerbasen – kontoen din er godkjent') + '&body=' + encodeURIComponent('Hei ' + navn + '!\n\nKontoen din i Samlerbasen er nå godkjent. Du kan logge inn med brukernavnet eller e-posten din.\n\nHilsen ' + innloggetBruker);
+            }
+        }
+    }
+    async function adminAvslaa(navn) {
+        if (!erAdmin()) return;
+        if (!confirm("Avslå og slette registreringen til «" + navn + "»?")) return;
+        const { error } = await supabaseDb.rpc('admin_slett_bruker', { p_navn: navn });
+        if (error) { alert("🚨 Kunne ikke slette brukeren: " + supabaseFeil(error)); return; }
+        await hentAdminListe(); tegnAdminPanel();
+    }
+    async function adminDeaktiver(navn) {
+        if (!erAdmin() || navn === innloggetBruker) return;
+        if (!confirm("Deaktivere «" + navn + "»? Brukeren kan ikke logge inn før du godkjenner på nytt. Samlingen beholdes.")) return;
+        await adminSettGodkjent(navn, false);
+    }
+
+    // ==========================================
+    // (9) MIN PROFIL
+    // ==========================================
+    function aapneProfil() {
+        const pr = profiler[innloggetBruker];
+        if (!pr) { alert("Fant ikke profilen din. Prøv å logge inn på nytt."); return; }
+        document.getElementById('profilBrukernavn').value = pr.brukernavn || innloggetBruker;
+        document.getElementById('profilEpost').value = minEpost || '';
+        document.getElementById('profilPassord').value = '';
+        document.getElementById('profilInfo').value = pr.info || '';
+        document.getElementById('profilLand').value = pr.land || '';
+        document.getElementById('profilSpraak').value = pr.spraak || 'Norsk';
+        document.getElementById('profilSynlighet').value = ['offentlig', 'utvalgte', 'privat'].includes(pr.standardSynlighet) ? pr.standardSynlighet : 'offentlig';
+        const kat = Array.isArray(pr.kategorier) ? pr.kategorier : ['film', 'tegneserie', 'plante', 'brettspill'];
+        [['film', 'profilKatFilm'], ['tegneserie', 'profilKatTegneserie'], ['plante', 'profilKatPlante'], ['brettspill', 'profilKatBrettspill']]
+            .forEach(([k, id]) => document.getElementById(id).checked = kat.includes(k));
+        document.getElementById('andreBrukereListe').innerHTML = Object.values(profiler)
+            .filter(p2 => p2.user_id && p2.user_id !== minBrukerId && p2.godkjent !== false)
+            .map(p2 => '<option value="' + esc(p2.brukernavn) + '">').join('');
+        tegnDelingsliste();
+        document.getElementById('profilModal').classList.remove('hidden');
+    }
+    async function lagreProfil(e) {
+        e.preventDefault();
+        const gammeltNavn = innloggetBruker;
+        const pr = profiler[gammeltNavn];
+        if (!pr) return;
+        const nyttNavn = document.getElementById('profilBrukernavn').value.trim();
+        const epost = document.getElementById('profilEpost').value.trim().toLowerCase();
+        const nyttPassord = document.getElementById('profilPassord').value;
+        const kategorier = [['film', 'profilKatFilm'], ['tegneserie', 'profilKatTegneserie'], ['plante', 'profilKatPlante'], ['brettspill', 'profilKatBrettspill']]
+            .filter(([k, id]) => document.getElementById(id).checked).map(([k]) => k);
+
+        if (nyttNavn.length < 2 || nyttNavn.length > 30 || /[<>"'\\@]/.test(nyttNavn)) { alert("Brukernavnet må være 2–30 tegn og uten < > \" ' \\ @"); return; }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(epost)) { alert("Skriv inn en gyldig e-postadresse."); return; }
+        if (nyttPassord && nyttPassord.length < 6) { alert("Det nye passordet må bestå av minst 6 tegn."); return; }
+        if (!kategorier.length) { alert("Velg minst én ting du samler på."); return; }
+
+        visLaster("Lagrer profilen...");
+        if (nyttNavn.toLowerCase() !== gammeltNavn.toLowerCase()) {
+            const ledig = await supabaseDb.rpc('brukernavn_ledig', { p_navn: nyttNavn });
+            if (ledig.data === false) { skjulLaster(); alert("Brukernavnet «" + nyttNavn + "» er tatt."); return; }
+        }
+        const endring = { brukernavn: nyttNavn, info: document.getElementById('profilInfo').value.trim(), land: document.getElementById('profilLand').value.trim(),
+            spraak: document.getElementById('profilSpraak').value, standardSynlighet: document.getElementById('profilSynlighet').value, kategorier };
+        const { error } = await supabaseDb.from('samlerbase_profiler').update(endring).eq('user_id', minBrukerId);
+        if (error) { skjulLaster(); alert("🚨 Kunne ikke lagre profilen: " + supabaseFeil(error)); return; }
+        // Nytt brukernavn: samlingen følger med
+        if (nyttNavn !== gammeltNavn) {
+            const svar = await supabaseDb.from('samlerbase_data').update({ eier: nyttNavn }).eq('eier_id', minBrukerId);
+            if (svar.error) alert("⚠️ Profilen ble lagret, men samlingen kunne ikke flyttes til det nye navnet: " + supabaseFeil(svar.error));
+            database.forEach(i => { if (i.eier === gammeltNavn) i.eier = nyttNavn; });
+            delete profiler[gammeltNavn];
+            innloggetBruker = nyttNavn;
+        }
+        profiler[nyttNavn] = { ...pr, ...endring };
+        // E-post og passord ligger i den sikre innloggingen
+        const meldinger = [];
+        const authEndring = {};
+        if (epost !== minEpost) authEndring.email = epost;
+        if (nyttPassord) authEndring.password = nyttPassord;
+        if (Object.keys(authEndring).length) {
+            const svar = await supabaseDb.auth.updateUser(authEndring, { emailRedirectTo: appUrl() });
+            if (svar.error) meldinger.push("⚠️ Kunne ikke endre " + (authEndring.email ? "e-post" : "passord") + ": " + supabaseFeil(svar.error));
+            else {
+                if (authEndring.password) meldinger.push("🔐 Passordet er endret.");
+                if (authEndring.email) meldinger.push("📧 Bekreft den nye e-postadressen via lenken vi har sendt (sjekk både gammel og ny innboks). Til da gjelder den gamle.");
+            }
+        }
+        skjulLaster();
+        document.getElementById('profilModal').classList.add('hidden');
+        samlingVisningKat = null;
+        sjekkInnlogging();
+        alert(["✅ Profilen er lagret."].concat(meldinger).join("\n\n"));
+    }
+
+    // ---------- Lesetilgang for bestemte brukere ----------
+    async function hentTilganger() {
+        tilgangTilMeg = new Set(); minDelingsliste = [];
+        const { data, error } = await supabaseDb.from('samlerbase_tilgang').select('eier_id,leser_id');
+        if (error) { console.warn("Tilganger:", error.message); return; }
+        (data || []).forEach(t => {
+            if (t.leser_id === minBrukerId) tilgangTilMeg.add(t.eier_id);
+            if (t.eier_id === minBrukerId) minDelingsliste.push(t.leser_id);
+        });
+    }
+    function navnForId(id) { const pr = Object.values(profiler).find(p2 => p2.user_id === id); return pr ? pr.brukernavn : 'Ukjent bruker'; }
+    function tegnDelingsliste() {
+        const modus = document.getElementById('profilSynlighet').value;
+        document.getElementById('profilDelingInfo').innerText =
+            modus === 'utvalgte' ? 'Bare brukerne under kan se samlingen din. De kan se, men ikke endre noe.' :
+            modus === 'offentlig' ? 'Alle godkjente brukere kan se samlingen din nå. Brukerne under beholder tilgangen hvis du bytter til «Bare brukere jeg velger».' :
+            'Ingen kan se samlingen din nå. Bytt til «Bare brukere jeg velger» for å gi brukerne under lesetilgang.';
+        document.getElementById('profilTilgangListe').innerHTML = minDelingsliste.length
+            ? minDelingsliste.map(id => '<div class="flex justify-between items-center bg-slate-950 px-3 py-1.5 rounded border border-slate-700">' +
+                '<span class="text-sm text-white">👁️ ' + esc(navnForId(id)) + ' <span class="text-[10px] text-slate-500">kan se</span></span>' +
+                '<button type="button" onclick="fjernLesetilgang(\'' + id + '\')" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold">Fjern</button></div>').join('')
+            : '<p class="text-[11px] text-slate-500 italic">Du har ikke gitt noen lesetilgang ennå.</p>';
+        const fraAndre = [...tilgangTilMeg].map(navnForId);
+        document.getElementById('profilHarTilgang').innerText = fraAndre.length ? '✅ Du kan se samlingen til: ' + fraAndre.join(', ') : '';
+    }
+    async function giLesetilgang() {
+        const navn = document.getElementById('profilTilgangNavn').value.trim();
+        if (!navn) return;
+        const pr = Object.values(profiler).find(p2 => (p2.brukernavn || '').toLowerCase() === navn.toLowerCase());
+        if (!pr || !pr.user_id) { alert("Fant ingen aktiv bruker som heter «" + navn + "».\n(Brukeren må ha logget inn etter oppgraderingen.)"); return; }
+        if (pr.user_id === minBrukerId) { alert("Du har alltid tilgang til din egen samling 🙂"); return; }
+        if (minDelingsliste.includes(pr.user_id)) { alert(pr.brukernavn + " har allerede lesetilgang."); return; }
+        const { error } = await supabaseDb.from('samlerbase_tilgang').insert([{ eier_id: minBrukerId, leser_id: pr.user_id }]);
+        if (error) { alert("🚨 Kunne ikke gi tilgang: " + supabaseFeil(error)); return; }
+        minDelingsliste.push(pr.user_id);
+        document.getElementById('profilTilgangNavn').value = '';
+        const sel = document.getElementById('profilSynlighet');
+        if (sel.value === 'privat' && confirm(pr.brukernavn + " har fått lesetilgang.\n\nSamlingen din er satt til «Ingen». Vil du bytte til «Bare brukere jeg velger», så " + pr.brukernavn + " faktisk kan se den?\n(Husk å trykke «Lagre endringer».)")) sel.value = 'utvalgte';
+        tegnDelingsliste();
+    }
+    async function fjernLesetilgang(leserId) {
+        if (!confirm("Fjerne lesetilgangen til " + navnForId(leserId) + "?")) return;
+        const { error } = await supabaseDb.from('samlerbase_tilgang').delete().eq('eier_id', minBrukerId).eq('leser_id', leserId);
+        if (error) { alert("🚨 Kunne ikke fjerne tilgang: " + supabaseFeil(error)); return; }
+        minDelingsliste = minDelingsliste.filter(x => x !== leserId);
+        tegnDelingsliste();
+    }
+
+    async function slettMinSamling() {
+        const mine = database.filter(i => i.eier === innloggetBruker);
+        if (!mine.length) { alert("Samlingen din er allerede tom."); return; }
+        if (!confirm("Slette HELE samlingen din (" + mine.length + " gjenstander)? Dette kan ikke angres.\n\nTips: Ta en CSV-backup først.")) return;
+        if ((prompt("Skriv SLETT for å bekrefte:") || '').trim().toUpperCase() !== 'SLETT') return;
+        visLaster("Sletter samlingen...");
+        const { error } = await supabaseDb.from('samlerbase_data').delete().eq('eier_id', minBrukerId);
+        skjulLaster();
+        if (error) { alert("🚨 Kunne ikke slette: " + supabaseFeil(error)); return; }
+        database = database.filter(i => i.eier !== innloggetBruker);
+        document.getElementById('profilModal').classList.add('hidden');
+        utforSok();
+        alert("Samlingen din er slettet.");
+    }
+    async function slettMinProfil() {
+        if (erAdmin()) { alert("Admin-kontoen kan ikke slettes herfra."); return; }
+        if (!confirm("Slette profilen din, innloggingen OG hele samlingen? Dette kan ikke angres.")) return;
+        if ((prompt("Skriv SLETT for å bekrefte:") || '').trim().toUpperCase() !== 'SLETT') return;
+        visLaster("Sletter kontoen...");
+        const { error } = await supabaseDb.rpc('slett_meg');
+        skjulLaster();
+        if (error) { alert("🚨 Noe gikk galt: " + supabaseFeil(error)); return; }
+        document.getElementById('profilModal').classList.add('hidden');
+        alert("Kontoen din er slettet.");
+        await loggUt(true);
+    }
+
+    // Tips en venn: del lenken til appen
+    async function tipsEnVenn() {
+        const url = location.href.split('#')[0];
+        const tekst = 'Sjekk ut Samlerbasen – her kan du registrere film, tegneserier, planter og brettspill: ';
+        if (navigator.share) { try { await navigator.share({ title: 'Samlerbasen', text: tekst, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+        window.location.href = 'mailto:?subject=' + encodeURIComponent('Tips: Samlerbasen') + '&body=' + encodeURIComponent(tekst + url);
+    }
+
+    // ==========================================
+    // (7) CSV-BACKUP MED ALLE FELT
+    // ==========================================
+    function eksporterTilCSV() {
+      if (!innloggetBruker) return;
+      const mineData = database.filter(item => item.eier === innloggetBruker);
+      if (mineData.length === 0) { alert("Ingen gjenstander å eksportere."); return; }
+      const harEgneBilder = mineData.some(i => ['cover', 'bruker_bilde', 'bakside_bilde'].some(k => String(i[k] || '').startsWith('data:')));
+      const medBilder = harEgneBilder ? confirm("Ta med dine egne bilder (cover/bakside) i backupen?\n\nOK = komplett backup (stor fil – bildene lagres som tekst)\nAvbryt = uten egne bilder (mindre fil som åpnes fint i Excel)") : true;
+
+      // Alle kolonner fra alle rader (ikke bare den første), i en fast rekkefølge
+      const forst = ['id', 'kategori', 'tittel', 'imdb_tittel', 'tittel_eng', 'tittel_orig', 'aar', 'mediatype', 'format', 'antall_disker', 'utgave', 'bildeformat', 'status', 'tilstand', 'lagret', 'strekkode', 'verdi', 'pakke_navn', 'pakke_pris', 'disk_nr'];
+      const nokler = new Set();
+      mineData.forEach(i => Object.keys(i).forEach(k => nokler.add(k)));
+      const kolonner = [...forst.filter(k => nokler.has(k)), ...[...nokler].filter(k => !forst.includes(k)).sort()];
+
+      const rader = mineData.map(item => {
+        const rad = {};
+        kolonner.forEach(k => {
+          let v = item[k];
+          if (v === null || v === undefined) v = '';
+          else if (Array.isArray(v)) v = v.join(' / ');
+          else if (typeof v === 'object') v = JSON.stringify(v);
+          if (!medBilder && typeof v === 'string' && v.startsWith('data:')) v = '[eget bilde – ikke med]';
+          rad[k] = v;
+        });
+        return rad;
+      });
+      // Semikolon som skilletegn så filen åpnes riktig i norsk Excel
+      const csv = Papa.unparse({ fields: kolonner, data: rader.map(r => kolonner.map(k => r[k])) }, { delimiter: ';', quotes: true, newline: '\r\n' });
+      const blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
+      const filnavn = 'samlerbase_backup_' + innloggetBruker.replace(/[^\wæøåÆØÅ-]/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+      if (window.navigator && window.navigator.msSaveOrOpenBlob) { window.navigator.msSaveOrOpenBlob(blob, filnavn); return; }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filnavn;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 2000);
+      alert("✅ Backup lastet ned: " + filnavn + "\n" + mineData.length + " gjenstander, " + kolonner.length + " felt.");
+    }
+
+    async function loggUt(stille = false) {
+      try { await supabaseDb.auth.signOut(); } catch (e) {}
+      innloggetBruker = null; minBrukerId = null; minEpost = null;
+      database = []; profiler = {}; tilgangTilMeg = new Set(); minDelingsliste = [];
+      document.getElementById('loginBrukernavn').value = ''; document.getElementById('loginPassord').value = '';
+      document.getElementById('btnAdmin').classList.add('hidden');
+      document.getElementById('vareTabell').innerHTML = '';
+      byttTilLoggInn(); sjekkInnlogging();
+    }
 
     // ==========================================
     // LAGRING OG REDIGERING AV GJENSTANDER
@@ -1720,7 +2217,7 @@
       const nyttElement = byggElementFraSkjema();
 
       database.unshift(nyttElement);
-      supabaseDb.from('samlerbase_data').insert([nyttElement]).then(res => { if(res.error) { console.error("Klarte ikke lagre:", res.error); alert("🚨 Supabase nektet å lagre: " + res.error.message); } });
+      supabaseDb.from('samlerbase_data').insert([nyttElement]).then(res => { if(res.error) { console.error("Klarte ikke lagre:", res.error); alert("🚨 Supabase nektet å lagre: " + supabaseFeil(res.error)); } });
 
       huskLagringsplass(nyttElement.lagret);
       nullstillHovedSkjema();   // fyller automatisk inn forrige lagringsplass igjen
@@ -1730,11 +2227,68 @@
       alert("✅ Lagret i samlingen din!");
     }
 
+    // Valg fra listen over plantetreff (bildeanalyse)
+    function velgPlanteFraListe(navn) {
+        document.getElementById('planteValgModal').classList.add('hidden');
+        simulerApiOppslag(navn, false);
+    }
+
+    // ---------- (6) EPISODER FOR SERIER ----------
+    function tellEpisoder() {
+        const n = document.getElementById('endreEpisoder').value.split('\n').filter(l => l.trim()).length;
+        document.getElementById('endreEpisodeAntall').innerText = n ? '(' + n + ')' : '';
+    }
+    async function hentEpisoder() {
+        const id = Number(document.getElementById('endreId').value);
+        const item = database.find(i => i.id === id);
+        if (!item) return;
+        try {
+            visLaster("Finner serien i TMDb...", item.tittel);
+            let treff = await tmdbIdFraImdb(document.getElementById('endreImdb').value || item.imdb);
+            if (!treff || treff.type !== 'Serie') treff = await finnTmdbTreff(item.imdb_tittel || item.tittel, '', 'Serie', true);
+            if (!treff) { skjulLaster(); return; }
+            const serie = await (await fetch('https://api.themoviedb.org/3/tv/' + treff.id + '?language=no-NO', tmdbOptions())).json();
+            const sesonger = (serie.seasons || []).filter(se => se.season_number > 0);
+            skjulLaster();
+            if (!sesonger.length) { alert("Fant ingen sesonger for denne serien i TMDb."); return; }
+            const oversikt = sesonger.map(se => 'Sesong ' + se.season_number + ' (' + se.episode_count + ' ep.)').join(', ');
+            const svar = prompt("«" + (serie.name || item.tittel) + "» har " + sesonger.length + " sesonger:\n" + oversikt + "\n\nHvilke sesonger har du? Skriv f.eks. «1», «1-3» eller «1,3,5».\nLa feltet stå tomt for alle.", '');
+            if (svar === null) return;
+            let valgte = sesonger.map(se => se.season_number);
+            if (svar.trim()) {
+                const nr = new Set();
+                svar.split(',').forEach(del => { const m = del.trim().match(/^(\d+)\s*(?:-|–)\s*(\d+)$/); if (m) { for (let n = +m[1]; n <= +m[2]; n++) nr.add(n); } else if (/^\d+$/.test(del.trim())) nr.add(+del.trim()); });
+                valgte = valgte.filter(n => nr.has(n));
+            }
+            const linjer = [];
+            for (const n of valgte) {
+                visLaster("Henter episoder...", 'Sesong ' + n);
+                const [no, en] = await Promise.all([
+                    fetch('https://api.themoviedb.org/3/tv/' + treff.id + '/season/' + n + '?language=no-NO', tmdbOptions()).then(r => r.json()),
+                    fetch('https://api.themoviedb.org/3/tv/' + treff.id + '/season/' + n + '?language=en-US', tmdbOptions()).then(r => r.json())
+                ]);
+                (no.episodes || []).forEach((ep, k) => {
+                    // Bruk engelsk navn når det norske bare er "Episode 3" e.l.
+                    const enNavn = en.episodes && en.episodes[k] ? en.episodes[k].name : '';
+                    const navn = (!ep.name || /^(episode|episoden?)\s*\d+$/i.test(ep.name)) && enNavn ? enNavn : ep.name;
+                    linjer.push('S' + String(n).padStart(2, '0') + 'E' + String(ep.episode_number).padStart(2, '0') + ' – ' + (navn || ''));
+                });
+            }
+            skjulLaster();
+            const felt = document.getElementById('endreEpisoder');
+            if (felt.value.trim() && !confirm("Erstatte episodene som står i feltet med " + linjer.length + " episoder fra TMDb?")) return;
+            felt.value = linjer.join('\n');
+            tellEpisoder();
+            alert("✅ Hentet " + linjer.length + " episoder. Trykk «Lagre» for å lagre dem.");
+        } catch (e) { console.error(e); skjulLaster(); alert("Kunne ikke hente episoder fra TMDb."); }
+    }
+
     // Leser hovedskjemaet og lager et ferdig objekt for databasen
     function byggElementFraSkjema() {
       let nyttElement = {
         id: Date.now(),
         eier: innloggetBruker,
+        eier_id: minBrukerId,
         kategori: aktivKategori,
         registrert_dato: new Date().toISOString().split('T')[0],
         status: document.getElementById('feltStatus').value,
@@ -1766,9 +2320,16 @@
         nyttElement.imdb_bilde = document.getElementById('feltImdbBilde').value.trim();
         // Cover = kun ditt eget bilde. IMDb-plakaten ligger i imdb_bilde.
         nyttElement.cover = document.getElementById('feltBrukerBilde').value || '';
-        let valgteFmt = [];
-        document.querySelectorAll('#formatValg input:checked').forEach(cb => valgteFmt.push(cb.value));
+        // Hovedtype først, deretter evt. andre formater i kombipakken
+        const hovedtype = document.getElementById('feltHovedtype').value;
+        let valgteFmt = hovedtype ? [hovedtype] : [];
+        document.querySelectorAll('#formatValg input:checked').forEach(cb => { if (!valgteFmt.includes(cb.value)) valgteFmt.push(cb.value); });
         nyttElement.format = valgteFmt;
+        nyttElement.antall_disker = document.getElementById('feltAntallDisker').value || null;
+        nyttElement.skuespillere = document.getElementById('feltSkuespillere').value.trim();
+        nyttElement.regissor = document.getElementById('feltRegissor').value.trim();
+        nyttElement.produsent = document.getElementById('feltProdusent').value.trim();
+        nyttElement.produksjonsland = document.getElementById('feltProduksjonsland').value.trim();
       } else if (aktivKategori === 'tegneserie') {
         nyttElement.bladserie = document.getElementById('feltBladserie').value.trim();
         nyttElement.nr = document.getElementById('feltNummer').value.trim();
@@ -1927,7 +2488,7 @@
         if (!error) await supabaseDb.from('samlerbase_data').update({ pakke_id: pakkeId, pakke_navn: navn }).eq('id', item.id);
         if (!error) await supabaseDb.from('samlerbase_data').update({ pakke_navn: navn }).eq('pakke_id', pakkeId);
         skjulLaster();
-        if (error) { alert("🚨 Kunne ikke lagre: " + error.message + (/pakke/.test(error.message) ? "\n\nHar du lagt til kolonnene pakke_id og pakke_navn i Supabase?" : "")); return; }
+        if (error) { alert("🚨 Kunne ikke lagre: " + supabaseFeil(error)); return; }
         database.unshift(ny);
         utforSok();
         apneEndreModal(item.id, !!endreNyRegistreringId);
@@ -1982,6 +2543,18 @@
       document.getElementById('endreStatus').value = item.status || 'Har';
       document.getElementById('endreSynlighet').value = item.synlighet || 'standard';
       document.getElementById('endreKommentar').value = item.kommentar || '';
+      document.getElementById('endreStrekkode').value = item.strekkode || '';
+      {
+        const erFilmK = item.kategori === 'film';
+        const fmt = Array.isArray(item.format) ? item.format : (item.format ? String(item.format).split(/\s*[\/,]\s*/) : []);
+        document.getElementById('endreHovedtypeBoks').classList.toggle('hidden', !erFilmK);
+        document.getElementById('endreDiskerBoks').classList.toggle('hidden', !erFilmK);
+        document.getElementById('endreEkstraFormatBoks').classList.toggle('hidden', !erFilmK);
+        const hovedSel = document.getElementById('endreHovedtype');
+        hovedSel.value = fmt[0] && [...hovedSel.options].some(o => o.value === fmt[0]) ? fmt[0] : '';
+        document.querySelectorAll('.endreFmtCb').forEach(cb => cb.checked = fmt.slice(1).includes(cb.value));
+        document.getElementById('endreAntallDisker').value = item.antall_disker || '';
+      }
 
       const erFilm = (item.kategori === 'film');
       const erTegne = (item.kategori === 'tegneserie');
@@ -2014,6 +2587,13 @@
         document.getElementById('endreLydSpraak').value = item.lyd_spraak || '';
         document.getElementById('endreAlder').value = item.alder || '';
         document.getElementById('endreImdbTittel').value = item.imdb_tittel || '';
+        document.getElementById('endreSkuespillere').value = item.skuespillere || '';
+        document.getElementById('endreRegissor').value = item.regissor || '';
+        document.getElementById('endreProdusent').value = item.produsent || '';
+        document.getElementById('endreProduksjonsland').value = item.produksjonsland || '';
+        document.getElementById('endreEpisoder').value = item.episoder || '';
+        document.getElementById('endreEpisodeBoks').classList.toggle('hidden', item.mediatype !== 'Serie');
+        tellEpisoder();
         document.getElementById('endreMediatype').value = item.mediatype === 'Serie' ? 'Serie' : 'Film';
         document.getElementById('endreBildeformat').value = ellerUkjent(item.bildeformat);
         document.getElementById('endreUtgave').value = ellerStandard(item.utgave);
@@ -2121,6 +2701,7 @@
       item.status = document.getElementById('endreStatus').value;
       item.synlighet = document.getElementById('endreSynlighet').value;
       item.kommentar = document.getElementById('endreKommentar').value.trim();
+      item.strekkode = document.getElementById('endreStrekkode').value.replace(/\s/g, '');
 
       const nyttBilde = document.getElementById('endreNyttBildeBase64').value;
       if (nyttBilde) { item.bruker_bilde = nyttBilde; item.cover = nyttBilde; }
@@ -2135,6 +2716,16 @@
         item.lyd_spraak = document.getElementById('endreLydSpraak').value.trim();
         item.alder = document.getElementById('endreAlder').value.trim();
         item.mediatype = document.getElementById('endreMediatype').value || 'Film';
+        const hovedtypeE = document.getElementById('endreHovedtype').value;
+        const fmtE = hovedtypeE ? [hovedtypeE] : [];
+        document.querySelectorAll('.endreFmtCb:checked').forEach(cb => { if (!fmtE.includes(cb.value)) fmtE.push(cb.value); });
+        item.format = fmtE;
+        item.antall_disker = document.getElementById('endreAntallDisker').value || null;
+        item.skuespillere = document.getElementById('endreSkuespillere').value.trim();
+        item.regissor = document.getElementById('endreRegissor').value.trim();
+        item.produsent = document.getElementById('endreProdusent').value.trim();
+        item.produksjonsland = document.getElementById('endreProduksjonsland').value.trim();
+        item.episoder = item.mediatype === 'Serie' ? document.getElementById('endreEpisoder').value.trim() : (item.episoder || '');
         item.bildeformat = ellerUkjent(document.getElementById('endreBildeformat').value);
         item.utgave = ellerStandard(document.getElementById('endreUtgave').value);
         // imdb_tittel er skrivebeskyttet – settes kun fra TMDb
@@ -2169,12 +2760,13 @@
           const medl = pakkeMedlemmer(item.pakke_id);
           const egetNavn = document.getElementById('endrePakkeNavnFelt').value.trim();
           const felles = { lagret: item.lagret, tilstand: item.tilstand, status: item.status, synlighet: item.synlighet,
+                           strekkode: item.strekkode, antall_disker: item.antall_disker, format: item.format,
                            pakke_navn: egetNavn || lagPakkeNavn(medl), pakke_pris: document.getElementById('endrePakkePris').value.trim() || null };
           if (nyttBilde) { felles.cover = nyttBilde; felles.bruker_bilde = nyttBilde; }
           medl.forEach(m => Object.assign(m, felles));
           supabaseDb.from('samlerbase_data').update(felles).eq('pakke_id', item.pakke_id).then(svar => { if (svar.error) console.error("Pakke-oppdatering feilet:", svar.error); });
       }
-      supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(svar => { if (svar.error) { console.error("Supabase oppdateringsfeil:", svar.error); alert("🚨 Supabase nektet å lagre endringen: " + svar.error.message); } });
+      supabaseDb.from('samlerbase_data').update(item).eq('id', item.id).then(svar => { if (svar.error) { console.error("Supabase oppdateringsfeil:", svar.error); alert("🚨 Supabase nektet å lagre endringen: " + supabaseFeil(svar.error)); } });
       const varNy = !!endreNyRegistreringId;
       lukkEndreModal();
       utforSok();
@@ -2510,6 +3102,8 @@
     // Fyller bildeformat / utgave / type fra AI-svaret (forside eller bakside). Overskriver ikke det som allerede står der.
     // Bildeformat hentes KUN fra baksiden (der tekniske spesifikasjoner står) – forsiden ga mye feil gjetting.
     function wizFyllAiFelter(data, erBakside = false) {
+        const disker = parseInt(data.antall_disker || data.disker, 10);
+        if (disker > 0 && !document.getElementById('wizAntallDisker').value) document.getElementById('wizAntallDisker').value = disker;
         const bfFelt = document.getElementById('wizBildeformat');
         const utFelt = document.getElementById('wizUtgave');
         if (erBakside) {
@@ -2587,11 +3181,13 @@
         
         let formatValg = '<option value="">Ikke spesifisert</option>';
         if (aktivKategori === 'film') {
-            ['Blu-ray', '4K UHD', 'DVD', '3D', 'LaserDisc', 'UMD Video', 'VHS'].forEach(f => formatValg += `<option value="${f}">${f}</option>`);
+            ['DVD', 'Blu-ray', '4K UHD', '3D', 'VHS', 'LaserDisc', 'UMD Video'].forEach(f => formatValg += `<option value="${f}">${f}</option>`);
         } else {
             ['Amerikansk hefte (Comic)', 'Norsk hefte', 'Julehefte', 'Pocket', 'Trade Paperback (TPB)', 'Hardcover (HC)', 'Tegneserieroman', 'Album', 'Manga'].forEach(f => formatValg += `<option value="${f}">${f}</option>`);
         }
         document.getElementById('wizFormat').innerHTML = formatValg;
+        document.getElementById('wizAntallDisker').value = '';
+        document.getElementById('wizDiskerBoks').classList.toggle('hidden', aktivKategori !== 'film');
         
         byggLagringsplasserListe();
         oppdaterWizardUI();
@@ -2948,11 +3544,8 @@
             document.getElementById('feltBildeformat').value = document.getElementById('wizBildeformat').value;
             document.getElementById('feltUtgave').value = document.getElementById('wizUtgave').value;
 
-            let valgtFormat = document.getElementById('wizFormat').value;
-            if (valgtFormat) {
-                let cb = document.querySelector(`#formatValg input[value="${valgtFormat}"]`);
-                if (cb) cb.checked = true;
-            }
+            document.getElementById('feltHovedtype').value = document.getElementById('wizFormat').value || '';
+            document.getElementById('feltAntallDisker').value = document.getElementById('wizAntallDisker').value || '';
             document.getElementById('feltVerdi').value = document.getElementById('wizKjopsPris').value;
         } else {
             document.getElementById('feltAar').value = document.getElementById('wizAar').value;
@@ -2997,7 +3590,7 @@
         skjulLaster();
         if (error) {
             console.error("Klarte ikke lagre:", error);
-            alert("🚨 Kunne ikke lagre: " + error.message + (/pakke|disk_nr/.test(error.message) ? "\n\nHar du lagt til kolonnene pakke_id, pakke_navn, pakke_pris og disk_nr i Supabase?" : "") + "\n\nSkjemaet er fylt ut – sjekk og trykk «Lagre på min profil».");
+            alert("🚨 Kunne ikke lagre: " + supabaseFeil(error) + "\n\nSkjemaet er fylt ut – sjekk og trykk «Lagre på min profil».");
             return;
         }
         database.unshift(...alle);
@@ -3343,7 +3936,7 @@
 
     async function masseOppdaterTMDb() {
       if(!innloggetBruker) return;
-      const filmerAOppdatere = database.filter(i => i.eier === innloggetBruker && i.kategori === 'film' && (!i.rating || !bildeKilder(i).imdb || !i.imdb_tittel));
+      const filmerAOppdatere = database.filter(i => i.eier === innloggetBruker && i.kategori === 'film' && (!i.rating || !bildeKilder(i).imdb || !i.imdb_tittel || !i.regissor));
       if(filmerAOppdatere.length === 0) { alert("Alle filmene dine har allerede rating, IMDb-tittel og IMDb-bilde registrert!"); return; }
       if(!confirm("Vil du la appen søke opp og fylle inn for " + filmerAOppdatere.length + " filmer/serier automatisk via TMDb nå?\n\nKun treff med SAMME navn brukes automatisk. Resten kan du koble én og én med 🔄-knappen.")) return;
 
@@ -3358,7 +3951,8 @@
         try {
           const titlerAaProeve = [...new Set([item.tittel, item.tittel_eng, item.tittel_orig, item.imdb_tittel].filter(t => t && t.trim() !== ""))];
           let valg = null;
-          for (let t of titlerAaProeve) {
+          try { valg = await tmdbIdFraImdb(item.imdb); } catch (e) {}
+          if (!valg) for (let t of titlerAaProeve) {
               valg = await finnTmdbTreff(t, item.aar || '', item.mediatype || 'Film', false);
               if (valg) break;
           }
@@ -3382,24 +3976,6 @@
       alert(melding);
     }
 
-    function eksporterTilCSV() {
-      if (!innloggetBruker) return;
-      const mineData = database.filter(item => item.eier === innloggetBruker);
-      if (mineData.length === 0) { alert("Ingen gjenstander å eksportere."); return; }
-      const eksportData = mineData.map(item => {
-        let eksportObj = { ...item };
-        if (Array.isArray(eksportObj.format)) eksportObj.format = eksportObj.format.join(' / ');
-        return eksportObj;
-      });
-      const csv = Papa.unparse(eksportData);
-      const blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `samlerbase_backup_${innloggetBruker}_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    }
-
     function importerCSV(event) {
       const filer = event.target.files; 
       if (!filer.length) return;
@@ -3414,7 +3990,7 @@
             results.data.forEach((row, index) => {
               const erFilm = row.hasOwnProperty('Disc format') || row.hasOwnProperty('Title') || (row['Kategori'] && row['Kategori'].toLowerCase() === 'film');
               let nyItem = { 
-                id: baseId + index + (fullførteFiler * 100000), eier: innloggetBruker, registrert_dato: new Date().toISOString().split('T')[0], synlighet: 'standard', status: row['Status'] || row['status'] || 'Har', lagret: row['Location'] || row['Lagret'] || '', tilstand: row['Tilstand'] || row['Condition'] || 'Ok', kommentar: row['Comment'] || row['Commentar'] || row['Kommentar'] || '', verdi: row['Verdi'] || row['Value'] || ''
+                id: baseId + index + (fullførteFiler * 100000), eier: innloggetBruker, eier_id: minBrukerId, registrert_dato: new Date().toISOString().split('T')[0], synlighet: 'standard', status: row['Status'] || row['status'] || 'Har', lagret: row['Location'] || row['Lagret'] || '', tilstand: row['Tilstand'] || row['Condition'] || 'Ok', kommentar: row['Comment'] || row['Commentar'] || row['Kommentar'] || '', verdi: row['Verdi'] || row['Value'] || ''
               };
               if (erFilm) {
                 nyItem.kategori = 'film'; nyItem.tittel = row['Title'] || row['Tittel'] || 'Ukjent'; nyItem.tittel_eng = row['Orignal title'] || row['Tittel_eng'] || row['Original title'] || ''; nyItem.sjanger = row['Genre'] || row['Sjanger'] || ''; nyItem.aar = row['Year'] || row['År'] || ''; nyItem.imdb = row['Link to IMDb'] || row['IMDb/Link'] || row['imdb'] || '';
@@ -3522,6 +4098,7 @@
 
       document.getElementById('btnSokImdbManuelt').style.display = kat === 'film' ? 'block' : 'none';
       samlingVisningKat = null;   // bygg "Vis samling"-listen på nytt for denne kategorien
+      document.getElementById('btnMenyStrekkode').classList.toggle('hidden', kat === 'film' || kat === 'tegneserie');
       settForrigeLagringsplass(true);   // (1) forrige lagringsplass for denne kategorien
       oppdaterRegBilder();
       byggLagringsplasserListe();
@@ -3567,13 +4144,22 @@
             lokalHtml += flis('Type', item.mediatype === 'Serie' ? '📺 Serie' : '🎬 Film');
             lokalHtml += flis('Utgave / Versjon', (item.utgave && item.utgave !== 'Ukjent') ? item.utgave : 'Standard');
             lokalHtml += flis('Bildeformat', item.bildeformat || 'Ukjent', 'text-slate-300', true);
+            if (item.antall_disker) lokalHtml += flis('Antall disker', item.antall_disker);
+            if (item.regissor) lokalHtml += flis(item.mediatype === 'Serie' ? 'Skapt av' : 'Regissør', item.regissor);
+            if (item.produsent) lokalHtml += flis('Produsent', item.produsent);
+            if (item.produksjonsland) lokalHtml += flis('Land', item.produksjonsland);
+            if (item.skuespillere) lokalHtml += flis('🎭 Skuespillere', item.skuespillere, 'text-slate-300', true);
+            if (item.mediatype === 'Serie' && item.episoder) {
+                const eps = item.episoder.split('\n').filter(l => l.trim());
+                lokalHtml += '<details class="col-span-2 bg-slate-950 p-3 rounded border border-sky-900/60"><summary class="cursor-pointer text-[10px] text-sky-400 uppercase tracking-wider font-bold">📺 Episoder (' + eps.length + ') – klikk for å vise</summary><div class="mt-2 max-h-60 overflow-y-auto text-xs text-slate-300 font-mono space-y-0.5">' + eps.map(l => '<div>' + esc(l) + '</div>').join('') + '</div></details>';
+            }
             if (item.pakke_id && pakkeMedlemmer(item.pakke_id).length > 1) {
                 const medl = pakkeMedlemmer(item.pakke_id);
                 lokalHtml += flis('📦 Samleboks', (erAutoPakkeNavn(item.pakke_navn) ? 'Samleboks' : item.pakke_navn) + ' (' + medl.length + ' filmer)', 'text-indigo-300', true);
                 lokalHtml += flis('Disk nr.', item.disk_nr || 'Ikke oppgitt', 'text-indigo-200');
                 lokalHtml += flis('Pris for boksen', item.pakke_pris ? item.pakke_pris + ' kr' : 'Ikke oppgitt', 'text-emerald-400');
             }
-            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Format & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
+            lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Hovedtype & Tilstand</span><span class="font-bold text-amber-400">' + (item.format && item.format.length > 0 ? item.format.join(', ') : 'Standard') + ' • ' + (item.tilstand || 'Ok') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Sjanger / Rating</span><span class="font-bold text-slate-300">' + (item.sjanger || '-') + ' ⭐ ' + (item.rating || '-') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Tekstspråk</span><span class="font-bold text-slate-300">' + (item.tekst_spraak || 'Ikke oppgitt') + '</span></div>';
             lokalHtml += '<div class="bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">Lydspor</span><span class="font-bold text-slate-300">' + (item.lyd_spraak || 'Ikke oppgitt') + '</span></div>';
@@ -3706,7 +4292,8 @@
             let filmStatus = item.status === 'Har ikke' ? '📝 Ønskeliste' : '✅ I samling';
             let filmLagret = item.lagret ? '📦 ' + item.lagret : '📦 Uspesifisert plass';
             let filmRating = item.rating ? '⭐ ' + item.rating : '⭐ -';
-            let filmFormat = (item.format && item.format.length > 0) ? '💿 ' + item.format.join(', ') : '💿 Ukjent format';
+            let filmFormat = (item.format && item.format.length > 0) ? '💿 ' + (Array.isArray(item.format) ? item.format.join(' + ') : item.format) : '💿 Ukjent type';
+            if (item.antall_disker && Number(item.antall_disker) > 1) filmFormat += ' (' + item.antall_disker + ' disker)';
             let filmType = item.mediatype === 'Serie' ? '📺 Serie' : '🎬 Film';
             let filmUtgave = item.utgave ? ' | 🏷️ ' + item.utgave : '';
             let filmBildeformat = item.bildeformat ? ' | 🖼️ ' + item.bildeformat : '';
@@ -3792,15 +4379,22 @@
     // ==========================================
     let samlingVisningKat = null;
     function visningNokkel() { return 'samler_visning_' + (innloggetBruker || ''); }
+    function delingsModus(eierNavn) { const pr = profiler[eierNavn]; return pr ? (pr.standardSynlighet || 'offentlig') : 'offentlig'; }
     function delerSamling(eier) {
-        const prof = profiler[eier];
-        return !prof || prof.standardSynlighet !== 'privat' || database.some(i => i.eier === eier && i.synlighet === 'offentlig');
+        const pr = profiler[eier];
+        const modus = delingsModus(eier);
+        if (modus === 'offentlig') return true;
+        if (modus === 'utvalgte' && pr && tilgangTilMeg.has(pr.user_id)) return true;
+        return database.some(i => i.eier === eier && i.synlighet === 'offentlig');
     }
     function erSynligForMeg(item) {
-        if (item.eier === innloggetBruker) return true;
-        const eierProfil = profiler[item.eier] || { standardSynlighet: 'offentlig' };
-        const effektiv = item.synlighet && item.synlighet !== 'standard' ? item.synlighet : eierProfil.standardSynlighet;
-        return effektiv !== 'privat';
+        if (item.eier === innloggetBruker || (item.eier_id && item.eier_id === minBrukerId)) return true;
+        if (item.synlighet === 'privat') return false;
+        if (item.synlighet === 'offentlig') return true;
+        const modus = delingsModus(item.eier);
+        if (modus === 'privat') return false;
+        if (modus === 'utvalgte') return tilgangTilMeg.has(item.eier_id);
+        return true;
     }
     function byggSamlingVisning() {
         const sel = document.getElementById('samlingVisning');
@@ -3866,7 +4460,7 @@
             if (filt === 'min_har' && item.status !== 'Har') return false;
             if (filt === 'min_mangler' && item.status !== 'Har ikke') return false;
         }
-        const fritekst = ((item.tittel||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
+        const fritekst = ((item.tittel||'') + ' ' + (item.skuespillere||'') + ' ' + (item.regissor||'') + ' ' + (item.produksjonsland||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
         return fritekst.includes(q);
       });
 
