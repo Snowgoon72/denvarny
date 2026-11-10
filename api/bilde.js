@@ -15,6 +15,7 @@ Returner ALLTID et JSON-objekt med disse feltene:
 - "format": f.eks. "Blu-ray", "4K UHD", "DVD", "3D", "Manga", "Pocket", "Hardcover". Står både 4K og Blu-ray på en kombipakke, svar "4K UHD".
 - "utgave": KUN hvis coveret tydelig sier en spesiell utgave, f.eks. "Director's Cut", "Extended Edition", "Theatrical Cut", "Unrated", "Special Edition", "Collector's Edition", "Limited Edition", "Steelbook", "Anniversary Edition", "Remastered", "Criterion Collection". Ellers "".
 - "mediatype": "Serie" hvis det står Season, Sesong, Series, Complete Series, Miniserie e.l., ellers "Film".
+- "antall_disker": antall disker hvis det står på coveret (f.eks. "2-Disc", "2 disker", "3 Disc Set"), som et tall. Ellers "".
 - "pris": kun tall hvis du ser en cover-pris, ellers "".
 VIKTIG: Ikke gjett. Står noe ikke tydelig på bildet, svar "".`;
 
@@ -31,6 +32,7 @@ Returner ALLTID et JSON-objekt med disse feltene:
 - "utgave": KUN hvis baksiden tydelig sier en spesiell utgave (Director's Cut, Extended Edition, Unrated, Steelbook o.l.). Ellers "".
 - "format": f.eks. "Blu-ray", "4K UHD", "DVD", "Hardcover" hvis det står på baksiden, ellers "".
 - "mediatype": "Serie" hvis det står episoder, sesong, season e.l., ellers "Film".
+- "antall_disker": antall disker hvis det står (f.eks. "2 disker", "Disc 1 + Disc 2", "3-Disc"), som et tall. Ellers "".
 - "tittel_orig": originaltittel hvis den er nevnt, ellers "".
 - "boks_navn": navnet på samleboksen hvis baksiden viser at det er en samleboks, ellers "".
 - "titler": er det en SAMLEBOKS, en LISTE med ALLE filmtitlene som står oppført på baksiden, i rekkefølge (f.eks. ["Dr. No","From Russia with Love","Goldfinger"]). Maks 50. Står det disknummer, skriv det som "Disk 3: Goldfinger". Er det bare én film, returner [].
