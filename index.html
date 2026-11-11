@@ -310,6 +310,15 @@
                 <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Bakside</span>
                 <a id="endreBaksideLenke" href="#" target="_blank"><img id="endreBaksideTag" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl" /></a>
             </div>
+            <div class="flex flex-col items-center hidden" id="endreEkstraBoks">
+                <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">Extra bilde</span>
+                <img id="endreEkstraTag" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl hidden" />
+                <div id="endreEkstraTom" class="w-24 h-32 rounded-lg border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl text-slate-600">📷</div>
+                <button type="button" onclick="velgEndreEkstraBilde()" class="mt-2 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded border border-slate-700 transition font-bold">📷 Ta bilde</button>
+                <input type="file" id="endreEkstraInput" accept="image/*" capture="environment" class="hidden" onchange="lastInnEndreBilde(event, true)" />
+                <input type="hidden" id="endreNyttEkstraBase64" />
+                <span id="endreEkstraResultat" class="text-[10px] text-cyan-400 mt-1 max-w-[7rem] text-center"></span>
+            </div>
             <div class="flex flex-col items-center hidden" id="endreImdbBildeBoks">
                 <span class="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-wider">IMDb</span>
                 <a id="endreImdbBildeLenke" href="#" target="_blank"><img id="endreImdbBildeTag" src="" class="w-24 h-32 object-cover rounded-lg border-2 border-slate-700 shadow-xl" /></a>
@@ -343,7 +352,7 @@
             </div>
             
             <!-- Tegneserie felter -->
-            <div id="endreTegneserieFelter" class="hidden grid-cols-2 gap-2 col-span-2 sm:col-span-1 w-full">
+            <div id="endreTegneserieFelter" class="hidden grid-cols-2 gap-2 col-span-2 w-full">
                 <div><label class="block font-semibold text-slate-400 mb-1">Bladserie</label><input type="text" id="endreBladserie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
                 <div><label class="block font-semibold text-slate-400 mb-1">Nummer</label><input type="text" id="endreNummer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
                 <div><label class="block font-semibold text-slate-400 mb-1">Antall sider</label><input type="number" id="endreAntallSider" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
@@ -362,6 +371,12 @@
                     <option value="Manga">Manga</option>
                   </select>
                 </div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Skrevet av</label><input type="text" id="endreForfatter" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Oversatt av</label><input type="text" id="endreOversattAv" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Utgiver / forlag</label><input type="text" id="endreForlag" list="forlagListe" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Opplag</label><input type="text" id="endreOpplag" placeholder="F.eks. 1. opplag" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Språk</label><input type="text" id="endreSpraak" list="spraakListe" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
+                <div><label class="block font-semibold text-slate-400 mb-1">Utgitt i land</label><input type="text" id="endreLand" list="landListe" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" /></div>
             </div>
 
             <!-- Plante felter -->
@@ -735,13 +750,25 @@
        <!-- Steg 3: Bakside -->
        <div id="wizStep_2" class="wiz-step hidden">
           <h3 class="font-bold text-white mb-2">3. Skann baksiden (valgfritt)</h3>
-          <p class="text-xs text-slate-400 mb-4">Fanger opp lydspor, undertekster, bildeformat og aldersgrense.</p>
+          <p id="wizBaksideHjelp" class="text-xs text-slate-400 mb-4">Fanger opp lydspor, undertekster, bildeformat og aldersgrense.</p>
           <button onclick="document.getElementById('wizBaksideInput').click()" class="w-full bg-blue-600/20 border border-blue-500/50 text-blue-400 hover:bg-blue-600/40 transition py-4 rounded-xl font-bold">📷 Ta bilde av baksiden</button>
           <input type="file" id="wizBaksideInput" accept="image/*" capture="environment" class="hidden" onchange="wizardBildeAnalyse(event, true)" />
 
           <div id="wizBaksidePreviewBoks" class="hidden mt-4 text-center">
               <img id="wizBaksidePreview" src="" class="w-32 h-32 object-cover mx-auto rounded-lg border-2 border-slate-700 shadow-lg">
               <p id="wizBaksideResultat" class="text-cyan-400 text-sm font-bold mt-2"></p>
+          </div>
+
+          <!-- Extra bilde (kun tegneserier): f.eks. innsiden med forlag, oversetter og opplag -->
+          <div id="wizEkstraSeksjon" class="hidden mt-6 pt-4 border-t border-slate-800">
+              <h3 class="font-bold text-white mb-2">Extra bilde (valgfritt)</h3>
+              <p class="text-xs text-slate-400 mb-4">Ta bilde av siden med utgivelsesinfo (ofte innsiden av coveret eller første side). AI-en leser forfatter, oversetter, forlag, opplag, språk og land.</p>
+              <button onclick="document.getElementById('wizEkstraInput').click()" class="w-full bg-teal-600/20 border border-teal-500/50 text-teal-300 hover:bg-teal-600/40 transition py-4 rounded-xl font-bold">📷 Ta extra bilde</button>
+              <input type="file" id="wizEkstraInput" accept="image/*" capture="environment" class="hidden" onchange="wizardBildeAnalyse(event, false, true)" />
+              <div id="wizEkstraPreviewBoks" class="hidden mt-4 text-center">
+                  <img id="wizEkstraPreview" src="" class="w-32 h-32 object-cover mx-auto rounded-lg border-2 border-slate-700 shadow-lg">
+                  <p id="wizEkstraResultat" class="text-teal-300 text-sm font-bold mt-2 whitespace-pre-line"></p>
+              </div>
           </div>
        </div>
 
@@ -775,6 +802,18 @@
               <div class="grid grid-cols-2 gap-2 mt-3">
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nummer</label><input type="text" id="wizNummer" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgivelsesår</label><input type="number" id="wizAar" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 mt-3">
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Skrevet av</label><input type="text" id="wizForfatter" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Oversatt av</label><input type="text" id="wizOversattAv" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 mt-3">
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgiver / forlag</label><input type="text" id="wizForlag" list="forlagListe" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Opplag</label><input type="text" id="wizOpplag" placeholder="F.eks. 1. opplag" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 mt-3">
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Språk</label><input type="text" id="wizSpraak" list="spraakListe" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
+                  <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgitt i land</label><input type="text" id="wizLand" list="landListe" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
               </div>
           </div>
           
@@ -1096,6 +1135,27 @@
                  </div>
                  <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Antall sider</label><input type="number" id="feltAntallSider" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
                </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Skrevet av</label><input type="text" id="feltForfatter" placeholder="Forfatter / manus" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Oversatt av</label><input type="text" id="feltOversattAv" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Utgiver / forlag</label><input type="text" id="feltForlag" list="forlagListe" placeholder="F.eks. Egmont" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Opplag</label><input type="text" id="feltOpplag" placeholder="F.eks. 1. opplag" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
+               </div>
+               <div class="grid grid-cols-2 gap-2">
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Språk</label><input type="text" id="feltSpraak" list="spraakListe" placeholder="Norsk" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
+                 <div><label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Utgitt i land</label><input type="text" id="feltLand" list="landListe" placeholder="Norge" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" /></div>
+               </div>
+               <input type="hidden" id="feltEkstraBilde" />
+               <div id="regEkstraSlot" class="hidden flex items-center gap-3">
+                 <img id="regEkstraForhandsvisning" src="" class="w-16 h-20 object-cover rounded border border-slate-700" />
+                 <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Extra bilde</span>
+               </div>
+               <!-- Forslagslister for tegneserier -->
+               <datalist id="forlagListe"><option value="Egmont"><option value="Hjemmet"><option value="Semic"><option value="Bladkompaniet"><option value="Schibsted"><option value="Serieforlaget"><option value="Cappelen Damm"><option value="Outland"><option value="No Comprendo Press"><option value="Gyldendal"></datalist>
+               <datalist id="spraakListe"><option value="Norsk"><option value="Nynorsk"><option value="Svensk"><option value="Dansk"><option value="Engelsk"><option value="Tysk"><option value="Fransk"><option value="Italiensk"><option value="Japansk"></datalist>
+               <datalist id="landListe"><option value="Norge"><option value="Sverige"><option value="Danmark"><option value="Finland"><option value="USA"><option value="Storbritannia"><option value="Frankrike"><option value="Belgia"><option value="Italia"><option value="Tyskland"><option value="Japan"></datalist>
             </div>
 
             <!-- PLANTE FELTER -->
@@ -1161,7 +1221,7 @@
               <div id="tegneseriePrisFelter" class="hidden grid-cols-2 gap-2">
                 <div>
                   <label class="block font-semibold text-slate-400 uppercase tracking-wider mb-1">Cover-pris</label>
-                  <input type="number" id="feltCoverPris" oninput="if(!document.getElementById('feltVerdi').value) document.getElementById('feltVerdi').value = this.value" placeholder="Eks: 79" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
+                  <input type="number" id="feltCoverPris" oninput="if(!document.getElementById('feltVerdiTegne').value) document.getElementById('feltVerdiTegne').value = this.value" placeholder="Eks: 79" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white" />
                 </div>
                 <div>
                   <label class="block font-semibold text-emerald-500 uppercase tracking-wider mb-1">Kjøpspris / Verdi (NOK)</label>
@@ -1329,7 +1389,8 @@
     // Nullstiller hovedskjemaet helt (form.reset() tømmer IKKE skjulte felt)
     function nullstillHovedSkjema() {
         document.getElementById('hovedSkjema').reset();
-        ['feltCover', 'feltBrukerBilde', 'feltBaksideBilde', 'feltImdbTittel', 'feltImdbBilde'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        ['feltCover', 'feltBrukerBilde', 'feltBaksideBilde', 'feltEkstraBilde', 'feltImdbTittel', 'feltImdbBilde'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        document.getElementById('regEkstraSlot').classList.add('hidden');
         document.getElementById('regBildeBoks').classList.add('hidden');
         document.getElementById('regCoverSlot').classList.remove('hidden');
         document.getElementById('regBaksideSlot').classList.add('hidden');
@@ -1351,7 +1412,39 @@
     function bildeKilder(item) {
         const cover = item.bruker_bilde || (item.cover && !erTmdbBilde(item.cover) ? item.cover : '');
         const imdb = item.imdb_bilde || (erTmdbBilde(item.cover) ? item.cover : '');
-        return { cover, bakside: item.bakside_bilde || '', imdb };
+        return { cover, bakside: item.bakside_bilde || '', ekstra: item.ekstra_bilde || '', imdb };
+    }
+
+    // ==========================================
+    // TEGNESERIE: felles felt-liste og AI-utfylling
+    // ==========================================
+    // [databasekolonne, id-suffiks]  →  felt<Suffiks> / endre<Suffiks> / wiz<Suffiks>
+    const TEGNESERIE_INFOFELT = [
+        ['forfatter', 'Forfatter'], ['oversatt_av', 'OversattAv'], ['forlag', 'Forlag'],
+        ['opplag', 'Opplag'], ['spraak', 'Spraak'], ['land', 'Land']
+    ];
+    // Fyller tomme felt med det AI-en fant på et bilde. prefiks = 'wiz' | 'endre' | 'felt'.
+    // Overskriver aldri noe som allerede er fylt ut. Returnerer en liste med det som ble funnet.
+    function fyllTegneserieFraAi(data, prefiks) {
+        const funnet = [];
+        const sett = (id, verdi, etikett) => {
+            const el = document.getElementById(id);
+            verdi = (verdi == null) ? '' : String(verdi).replace(/"/g, '').trim();
+            if (!el || !verdi) return;
+            if (!String(el.value || '').trim()) el.value = verdi;
+            funnet.push(etikett + ': ' + verdi);
+        };
+        sett(prefiks + 'Forfatter', Array.isArray(data.forfatter) ? data.forfatter.join(', ') : data.forfatter, 'Skrevet av');
+        sett(prefiks + 'OversattAv', data.oversatt_av, 'Oversatt av');
+        sett(prefiks + 'Forlag', data.forlag, 'Forlag');
+        sett(prefiks + 'Opplag', data.opplag, 'Opplag');
+        sett(prefiks + 'Spraak', data.spraak, 'Språk');
+        sett(prefiks + 'Land', data.land, 'Land');
+        sett(prefiks === 'felt' ? 'feltNummer' : prefiks + 'Nummer', data.nr, 'Nr');
+        sett(prefiks === 'wiz' ? 'wizAar' : prefiks + 'Aar', /^\d{4}$/.test(String(data.aar || '').trim()) ? data.aar : '', 'År');
+        sett(prefiks === 'wiz' ? 'wizSider' : prefiks + 'AntallSider', parseInt(data.antall_sider, 10) > 0 ? parseInt(data.antall_sider, 10) : '', 'Sider');
+        sett(prefiks + 'Bladserie', data.bladserie, 'Bladserie');
+        return funnet;
     }
     function hovedBilde(item) {
         const b = bildeKilder(item);
@@ -2285,7 +2378,7 @@
       if (!innloggetBruker) return;
       const mineData = database.filter(item => item.eier === innloggetBruker);
       if (mineData.length === 0) { alert("Ingen gjenstander å eksportere."); return; }
-      const harEgneBilder = mineData.some(i => ['cover', 'bruker_bilde', 'bakside_bilde'].some(k => String(i[k] || '').startsWith('data:')));
+      const harEgneBilder = mineData.some(i => ['cover', 'bruker_bilde', 'bakside_bilde', 'ekstra_bilde'].some(k => String(i[k] || '').startsWith('data:')));
       const medBilder = harEgneBilder ? confirm("Ta med dine egne bilder (cover/bakside) i backupen?\n\nOK = komplett backup (stor fil – bildene lagres som tekst)\nAvbryt = uten egne bilder (mindre fil som åpnes fint i Excel)") : true;
 
       // Alle kolonner fra alle rader (ikke bare den første), i en fast rekkefølge
@@ -2469,6 +2562,8 @@
         nyttElement.kjopt_dato = document.getElementById('feltKjoptDato').value;
         nyttElement.cover_pris = document.getElementById('feltCoverPris').value;
         nyttElement.verdi = document.getElementById('feltVerdiTegne').value;
+        TEGNESERIE_INFOFELT.forEach(([kol, suf]) => { nyttElement[kol] = document.getElementById('felt' + suf).value.trim(); });
+        nyttElement.ekstra_bilde = document.getElementById('feltEkstraBilde').value || '';
       } else if (aktivKategori === 'plante') {
         nyttElement.sjanger = document.getElementById('feltPlanteFamilie').value.trim();
         nyttElement.divisjon = document.getElementById('feltPlanteDivisjon').value.trim();
@@ -2750,7 +2845,17 @@
         document.getElementById('endreTegneserieFormat').value = (item.format && item.format.length > 0) ? item.format[0] : '';
         document.getElementById('endreKjoptDato').value = item.kjopt_dato || '';
         document.getElementById('endreCoverPris').value = item.cover_pris || '';
+        TEGNESERIE_INFOFELT.forEach(([kol, suf]) => { document.getElementById('endre' + suf).value = item[kol] || ''; });
       }
+
+      // Extra bilde (tegneserier)
+      document.getElementById('endreEkstraBoks').classList.toggle('hidden', !erTegne);
+      document.getElementById('endreNyttEkstraBase64').value = '';
+      document.getElementById('endreEkstraResultat').innerText = '';
+      const ekstraTag = document.getElementById('endreEkstraTag');
+      if (erTegne && item.ekstra_bilde) { ekstraTag.src = item.ekstra_bilde; ekstraTag.classList.remove('hidden'); }
+      else { ekstraTag.removeAttribute('src'); ekstraTag.classList.add('hidden'); }
+      document.getElementById('endreEkstraTom').classList.toggle('hidden', !!(erTegne && item.ekstra_bilde));
       
       if (erPlante) {
           document.getElementById('endrePlanteVanning').value = item.vanning || '';
@@ -2877,6 +2982,9 @@
         item.cover_pris = document.getElementById('endreCoverPris').value;
         let formatInn = document.getElementById('endreTegneserieFormat').value;
         item.format = formatInn ? [formatInn] : [];
+        TEGNESERIE_INFOFELT.forEach(([kol, suf]) => { item[kol] = document.getElementById('endre' + suf).value.trim(); });
+        const nyttEkstra = document.getElementById('endreNyttEkstraBase64').value;
+        if (nyttEkstra) item.ekstra_bilde = nyttEkstra;
       } else if (item.kategori === 'plante') {
           item.vanning = document.getElementById('endrePlanteVanning').value.trim();
           item.sollys = document.getElementById('endrePlanteSollys').value.trim();
@@ -2887,6 +2995,11 @@
           item.dele_selge = document.getElementById('endrePlanteDeleSelge').value.trim();
           item.giftig = document.getElementById('endrePlanteGiftig').value.trim();
           item.sjanger = document.getElementById('endrePlanteFamilie').value.trim();
+          item.divisjon = document.getElementById('endrePlanteDivisjon').value.trim();
+          item.klasse = document.getElementById('endrePlanteKlasse').value.trim();
+          item.orden = document.getElementById('endrePlanteOrden').value.trim();
+          item.underfamilie = document.getElementById('endrePlanteUnderfamilie').value.trim();
+          item.plassering = document.getElementById('endrePlantePlassering').value.trim();
           item.spiredato = document.getElementById('endrePlanteSpiredato').value;
           item.eid_fra = document.getElementById('endrePlanteEidFra').value;
       }
@@ -2919,12 +3032,21 @@
     let cropperInstans = null;
     let erVeiviserCrop = false;
     let erVeiviserBakside = false;
+    let erVeiviserEkstra = false;   // Extra bilde i veiviseren (tegneserier)
+    let erEndreEkstra = false;      // Extra bilde i rediger-vinduet (tegneserier)
 
-    function lastInnEndreBilde(event) {
+    function velgEndreEkstraBilde() {
+        const input = document.getElementById('endreEkstraInput');
+        if (input.disabled) return;   // ikke din registrering
+        input.click();
+    }
+
+    function lastInnEndreBilde(event, ekstra = false) {
         const input = event.target;
         if (!input.files || input.files.length === 0) return;
         const fil = input.files[0];
-        
+        erEndreEkstra = ekstra;
+
         document.getElementById('cropImage').src = URL.createObjectURL(fil);
         document.getElementById('cropModal').classList.remove('hidden');
         if (cropperInstans) cropperInstans.destroy();
@@ -2947,17 +3069,87 @@
         if (cropperInstans) cropperInstans.destroy();
         erVeiviserCrop = false;
         erVeiviserBakside = false;
+        erVeiviserEkstra = false;
+        erEndreEkstra = false;
+    }
+
+    // Lager en liten versjon (maks 450 px bred) av bildet for lagring i databasen
+    function lagLagringsBilde(kuttetCanvas) {
+        const canvasLiten = document.createElement('canvas');
+        const maxLagringBredde = 450;
+        const skalaLiten = maxLagringBredde / kuttetCanvas.width;
+        canvasLiten.width = kuttetCanvas.width > maxLagringBredde ? maxLagringBredde : kuttetCanvas.width;
+        canvasLiten.height = kuttetCanvas.width > maxLagringBredde ? kuttetCanvas.height * skalaLiten : kuttetCanvas.height;
+        canvasLiten.getContext('2d').drawImage(kuttetCanvas, 0, 0, canvasLiten.width, canvasLiten.height);
+        return canvasLiten.toDataURL('image/jpeg', 0.6);
+    }
+    // Bilde i god kvalitet for AI-tolkning (liten tekst), holdt under ~3 MB
+    function lagAiBilde(kuttetCanvas) {
+        let b = kuttetCanvas.toDataURL('image/jpeg', 0.9);
+        if (b.length > 3000000) b = kuttetCanvas.toDataURL('image/jpeg', 0.7);
+        return b;
+    }
+    // Sender et tegneseriebilde (forside / bakside / ekstra) til AI-en
+    async function tolkTegneserieBilde(aiBilde, bildeType) {
+        const response = await fetch('/api/bilde', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bildeBase64: aiBilde, erBakside: bildeType === 'bakside', kategori: 'tegneserie', bildeType: bildeType })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Feil fra AI');
+        return data;
+    }
+
+    // Veiviseren: Extra bilde for tegneserier
+    async function fortsettEkstraAnalyse(kuttetCanvas) {
+        const ferdigBilde = lagLagringsBilde(kuttetCanvas);
+        document.getElementById('wizEkstraPreviewBoks').classList.remove('hidden');
+        document.getElementById('wizEkstraPreview').src = ferdigBilde;
+        document.getElementById('wizEkstraResultat').innerText = 'Analyserer extra bilde...';
+        try {
+            const data = await tolkTegneserieBilde(lagAiBilde(kuttetCanvas), 'ekstra');
+            const funnet = fyllTegneserieFraAi(data, 'wiz');
+            if (data.format && !document.getElementById('wizFormat').value) document.getElementById('wizFormat').value = vaskFormatVerdi(data.format);
+            document.getElementById('wizEkstraResultat').innerText = funnet.length ? '✅ ' + funnet.join('\n') : 'Bildet er lagret, men AI-en fant ingen utgivelsesinfo.';
+        } catch (err) {
+            console.error(err);
+            document.getElementById('wizEkstraResultat').innerText = 'Bildet er lagret, men AI-tolkningen feilet.';
+        }
+    }
+
+    // Rediger-vinduet: Extra bilde for tegneserier (lagres når du trykker Lagre, tomme felt fylles ut)
+    async function fortsettEndreEkstra(kuttetCanvas) {
+        const ferdigBilde = lagLagringsBilde(kuttetCanvas);
+        document.getElementById('endreNyttEkstraBase64').value = ferdigBilde;
+        const tag = document.getElementById('endreEkstraTag');
+        tag.src = ferdigBilde; tag.classList.remove('hidden');
+        document.getElementById('endreEkstraTom').classList.add('hidden');
+        const res = document.getElementById('endreEkstraResultat');
+        res.innerText = 'Analyserer...';
+        try {
+            const data = await tolkTegneserieBilde(lagAiBilde(kuttetCanvas), 'ekstra');
+            const funnet = fyllTegneserieFraAi(data, 'endre');
+            res.innerText = funnet.length ? '✅ Fant ' + funnet.length + ' felt – sjekk og lagre' : 'Ingen info funnet';
+        } catch (err) {
+            console.error(err);
+            res.innerText = 'AI-tolkning feilet';
+        }
     }
 
     function utforCrop() {
         if (!cropperInstans) return;
         document.getElementById('cropModal').classList.add('hidden');
-        // Baksiden har liten teknisk tekst (bildeformat, språk) – send den i høyere oppløsning til AI-en
-        const maksStr = (erVeiviserCrop && erVeiviserBakside) ? 2000 : 1200;
+        // Baksiden og extra bilde har liten tekst (bildeformat, språk, forlag) – send i høyere oppløsning til AI-en
+        const maksStr = ((erVeiviserCrop && (erVeiviserBakside || erVeiviserEkstra)) || erEndreEkstra) ? 2000 : 1200;
         const kuttetCanvas = cropperInstans.getCroppedCanvas({ maxWidth: maksStr, maxHeight: maksStr, imageSmoothingQuality: 'high' });
-        
-        if (erVeiviserCrop) {
+
+        if (erVeiviserCrop && erVeiviserEkstra) {
+            fortsettEkstraAnalyse(kuttetCanvas);
+        } else if (erVeiviserCrop) {
             fortsettVeiviserAnalyse(kuttetCanvas, erVeiviserBakside);
+        } else if (erEndreEkstra && document.getElementById('endreModal').classList.contains('hidden') === false) {
+            fortsettEndreEkstra(kuttetCanvas);
         } else if (document.getElementById('endreModal').classList.contains('hidden') === false) {
             // Hvis vi er i rediger-vinduet, lagrer vi bildet direkte
             const canvasLiten = document.createElement('canvas');
@@ -2974,9 +3166,11 @@
         } else {
             fortsettBildeAnalyse(kuttetCanvas);
         }
-        
+
         erVeiviserCrop = false;
         erVeiviserBakside = false;
+        erVeiviserEkstra = false;
+        erEndreEkstra = false;
     }
 
     async function fortsettBildeAnalyse(startCanvas) {
@@ -3301,6 +3495,15 @@
         document.getElementById('wizBladserie').value = '';
         document.getElementById('wizNummer').value = '';
         document.getElementById('wizAar').value = '';
+        TEGNESERIE_INFOFELT.forEach(([, suf]) => { document.getElementById('wiz' + suf).value = ''; });
+        document.getElementById('wizEkstraInput').value = '';
+        document.getElementById('wizEkstraPreviewBoks').classList.add('hidden');
+        document.getElementById('wizEkstraPreview').removeAttribute('src');
+        document.getElementById('wizEkstraResultat').innerText = '';
+        document.getElementById('wizEkstraSeksjon').classList.toggle('hidden', aktivKategori !== 'tegneserie');
+        document.getElementById('wizBaksideHjelp').innerText = aktivKategori === 'tegneserie'
+            ? 'Baksiden kan gi pris, strekkode, forlag og nummer.'
+            : 'Fanger opp lydspor, undertekster, bildeformat og aldersgrense.';
         document.getElementById('wizAarFilm').value = '';
         document.getElementById('wizFormat').value = '';
         document.getElementById('wizSider').value = '';
@@ -3370,12 +3573,13 @@
         oppdaterWizardUI();
     }
 
-    function wizardBildeAnalyse(event, erBakside = false) {
+    function wizardBildeAnalyse(event, erBakside = false, erEkstra = false) {
         const input = event.target;
         if (!input.files || input.files.length === 0) return;
-        
+
         erVeiviserCrop = true;
         erVeiviserBakside = erBakside;
+        erVeiviserEkstra = erEkstra;
         
         document.getElementById('cropImage').src = URL.createObjectURL(input.files[0]);
         document.getElementById('cropModal').classList.remove('hidden');
@@ -3416,9 +3620,10 @@
             const response = await fetch('/api/bilde', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bildeBase64: forminsketBilde, erBakside: erBakside })
+                body: JSON.stringify({ bildeBase64: forminsketBilde, erBakside: erBakside, kategori: aktivKategori, bildeType: erBakside ? 'bakside' : 'forside' })
             });
             const data = await response.json();
+            const erTegneserie = aktivKategori === 'tegneserie';
 
             if (!erBakside) {
                 // Samleboks: AI returnerer "titler" med 2–5 filmer
@@ -3436,6 +3641,11 @@
                     document.getElementById('wizTittelEng').value = "";
                     if (data.tittel_orig) document.getElementById('wizTittelOrig').value = data.tittel_orig;
                     document.getElementById('wizBladserie').value = renTittel.split(/[#\-]/)[0].trim();
+                    if (erTegneserie) {
+                        if (data.bladserie) document.getElementById('wizBladserie').value = String(data.bladserie).replace(/"/g, '').trim();
+                        const funnet = fyllTegneserieFraAi(data, 'wiz');
+                        if (funnet.length) document.getElementById('wizAiResultat').innerText = "Fant: " + renTittel + "\n" + funnet.join(' · ');
+                    }
 
                     // Film/serie: bildeformat, utgave og type fra forsiden + TMDb-kobling med godkjenning
                     if (aktivKategori === 'film') {
@@ -3490,6 +3700,11 @@
                     if (data.alder) deler.push('Alder: ' + data.alder);
                     if (wizErPakkeModus()) deler.push('📦 Filmer i boksen: ' + wizPakkeFilmer().length);
                     document.getElementById('wizBaksideResultat').innerText = '✅ ' + deler.join('\n');
+                }
+                if (erTegneserie) {
+                    const funnet = fyllTegneserieFraAi(data, 'wiz');
+                    document.getElementById('wizBaksideResultat').innerText = funnet.length ? '✅ ' + funnet.join('\n') : '✅ Bakside lagret (ingen ekstra info funnet).';
+                    return;   // bli på steget så du kan ta Extra bilde – trykk «Neste» når du er ferdig
                 }
 
                 setTimeout(() => wizGaa(1), aktivKategori === 'film' ? 3500 : 1500);   // litt lenger tid til å lese resultatet
@@ -3559,6 +3774,11 @@
             document.getElementById('wizBaksidePreviewBoks').classList.remove('hidden');
             document.getElementById('wizBaksideResultat').innerText = '📷 Bakside fra tidligere registrering';
         }
+        if (k.ekstra && item.kategori === 'tegneserie') {
+            document.getElementById('wizEkstraPreview').src = k.ekstra;
+            document.getElementById('wizEkstraPreviewBoks').classList.remove('hidden');
+            document.getElementById('wizEkstraResultat').innerText = '📷 Extra bilde fra tidligere registrering';
+        }
         return !!(cover || k.bakside);
     }
     // Kopierer detaljer fra en tidligere registrering (format, disker, språk, alder ...)
@@ -3570,6 +3790,10 @@
         sett('wizTekstSpraak', item.tekst_spraak);
         sett('wizLydSpraak', item.lyd_spraak);
         sett('wizAlder', item.alder);
+        if (item.kategori === 'tegneserie') {
+            sett('wizBladserie', item.bladserie); sett('wizNummer', item.nr); sett('wizSider', item.antall_sider);
+            TEGNESERIE_INFOFELT.forEach(([kol, suf]) => sett('wiz' + suf, item[kol]));
+        }
     }
     // Kobler treffet til IMDb: via lagret IMDb-lenke (sikkert), ellers søk med bekreftelse
     async function wizKobleTreffTilImdb(item) {
@@ -3747,6 +3971,13 @@
             document.getElementById('feltAntallSider').value = document.getElementById('wizSider').value;
             document.getElementById('feltCoverPris').value = document.getElementById('wizCoverPris').value;
             document.getElementById('feltVerdiTegne').value = document.getElementById('wizKjopsPris').value;
+            TEGNESERIE_INFOFELT.forEach(([, suf]) => { document.getElementById('felt' + suf).value = document.getElementById('wiz' + suf).value; });
+            const wizEkstra = document.getElementById('wizEkstraPreview').getAttribute('src');
+            if (wizEkstra) {
+                document.getElementById('feltEkstraBilde').value = wizEkstra;
+                document.getElementById('regEkstraForhandsvisning').src = wizEkstra;
+                document.getElementById('regEkstraSlot').classList.remove('hidden');
+            }
         }
 
         lukkWizard();
@@ -4018,6 +4249,11 @@
                   document.getElementById('feltBladserie').value = (bok.title || sokeord).split(/[:#-]/)[0].trim();
                   if (bok.publishedDate) document.getElementById('feltAar').value = bok.publishedDate.substring(0, 4);
                   if (bok.pageCount) document.getElementById('feltAntallSider').value = bok.pageCount;
+                  const settTom = (id, v) => { const el = document.getElementById(id); if (el && v && !el.value.trim()) el.value = v; };
+                  settTom('feltForfatter', Array.isArray(bok.authors) ? bok.authors.join(', ') : '');
+                  settTom('feltForlag', bok.publisher || '');
+                  const spraakKoder = { no: 'Norsk', nb: 'Norsk', nn: 'Nynorsk', sv: 'Svensk', da: 'Dansk', en: 'Engelsk', de: 'Tysk', fr: 'Fransk', it: 'Italiensk', ja: 'Japansk', fi: 'Finsk' };
+                  settTom('feltSpraak', spraakKoder[bok.language] || '');
                   if (bok.imageLinks && (bok.imageLinks.thumbnail || bok.imageLinks.smallThumbnail)) {
                       let bildeUrl = (bok.imageLinks.thumbnail || bok.imageLinks.smallThumbnail).replace('http:', 'https:');
                       document.getElementById('feltCover').value = bildeUrl;
@@ -4303,7 +4539,9 @@
         detaljerAktivId = id;
 
         document.getElementById('detTittel').innerText = item.tittel || 'Uten tittel';
-        let subTekst = item.kategori === 'film' ? 'År: ' + (item.aar || 'Ukjent') : 'Serie: ' + (item.bladserie || '');
+        let subTekst = item.kategori === 'tegneserie' ? 'Serie: ' + (item.bladserie || '-') + (item.nr ? ' #' + item.nr : '') + (item.aar ? ' (' + item.aar + ')' : '')
+                     : item.kategori === 'plante' ? (item.sjanger || 'Plante')
+                     : 'År: ' + (item.aar || 'Ukjent');
         document.getElementById('detSub').innerText = 'ID: ' + item.id + ' | ' + subTekst;
 
         let fallbackIkon = item.kategori === 'film' ? (item.mediatype === 'Serie' ? '📺' : '🎬') : item.kategori === 'plante' ? '🌿' : item.kategori === 'brettspill' ? '🎲' : '📚';
@@ -4319,18 +4557,51 @@
         
         const k = bildeKilder(item);
         const bildeKort = (url, etikett) => '<div class="flex-1 min-w-[140px]"><span class="block text-[10px] text-slate-500 uppercase tracking-wider mb-1">' + etikett + '</span><a href="' + url + '" target="_blank" title="Klikk for stor versjon"><img src="' + url + '" class="w-full h-40 sm:h-48 object-cover rounded-xl border border-slate-700 shadow-lg hover:opacity-90 transition cursor-pointer"></a></div>';
-        if (item.kategori !== 'plante' && (k.cover || k.bakside || k.imdb)) {
+        const ekstraBilde = item.kategori === 'tegneserie' ? k.ekstra : '';
+        if (item.kategori !== 'plante' && (k.cover || k.bakside || k.imdb || ekstraBilde)) {
             lokalHtml += '<div class="col-span-2 flex gap-3 overflow-x-auto pb-2">';
             if (k.cover) lokalHtml += bildeKort(k.cover, 'Cover');
             if (k.bakside) lokalHtml += bildeKort(k.bakside, 'Bakside');
+            if (ekstraBilde) lokalHtml += bildeKort(ekstraBilde, 'Extra bilde');
             if (k.imdb) lokalHtml += bildeKort(k.imdb, 'IMDb');
             lokalHtml += '</div>';
         }
-        
+
+        const flis = (etikett, verdi, farge = 'text-slate-300', span2 = false) => '<div class="' + (span2 ? 'col-span-2 ' : '') + 'bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">' + etikett + '</span><span class="font-bold ' + farge + '">' + esc(verdi) + '</span></div>';
+        const datoTekst = d => { if (!d) return ''; const t = new Date(d); return isNaN(t) ? d : t.toLocaleDateString('no-NO'); };
+
         if (item.kategori === 'plante') {
-            // (Plante-html er skjult her for å spare plass, den fungerer som den skal fra tidligere)
+            if (item.tittel_orig) lokalHtml += flis('Vitenskapelig navn', item.tittel_orig, 'text-emerald-300 italic');
+            if (item.tittel_eng) lokalHtml += flis('Engelsk navn', item.tittel_eng);
+            const taksonomi = [['Divisjon', item.divisjon], ['Klasse', item.klasse], ['Orden', item.orden], ['Familie', item.sjanger], ['Underfamilie', item.underfamilie]].filter(([, v]) => v);
+            if (taksonomi.length) lokalHtml += flis('Taksonomi', taksonomi.map(([e, v]) => e + ': ' + v).join(' › '), 'text-indigo-300', true);
+            if (item.plassering) lokalHtml += flis('Plassering', item.plassering, 'text-emerald-300');
+            if (item.hardforhet) lokalHtml += flis('Klimasone / kulde', item.hardforhet, 'text-emerald-500');
+            if (item.vanning) lokalHtml += flis('💧 Vanning', item.vanning, 'text-sky-400');
+            if (item.sollys) lokalHtml += flis('☀️ Sollys', item.sollys, 'text-amber-400');
+            if (item.opprinnelse) lokalHtml += flis('Opprinnelse', item.opprinnelse);
+            if (item.blomstring) lokalHtml += flis('🌸 Blomstring', item.blomstring, 'text-rose-400');
+            if (item.formering) lokalHtml += flis('Formering', item.formering);
+            if (item.giftig) lokalHtml += flis('☠️ Giftig?', item.giftig, 'text-rose-500');
+            if (item.dele_selge) lokalHtml += flis('Dele / selge?', item.dele_selge, 'text-purple-400');
+            if (item.spiredato) lokalHtml += flis('Spiredato', datoTekst(item.spiredato));
+            if (item.eid_fra) lokalHtml += flis('Eid fra', datoTekst(item.eid_fra));
+            lokalHtml += flis('Tilstand', item.tilstand || 'Ok', 'text-amber-400');
+        } else if (item.kategori === 'tegneserie') {
+            lokalHtml += flis('Bladserie', item.bladserie || '-', 'text-amber-400');
+            lokalHtml += flis('Nummer', item.nr || '-', 'text-amber-400');
+            lokalHtml += flis('Format & Tilstand', (item.format && item.format.length > 0 ? item.format.join(', ') : 'Ikke oppgitt') + ' • ' + (item.tilstand || 'Ok'));
+            lokalHtml += flis('Utgivelsesår', item.aar || '-');
+            if (item.forfatter) lokalHtml += flis('✍️ Skrevet av', item.forfatter, 'text-slate-200', true);
+            if (item.oversatt_av) lokalHtml += flis('Oversatt av', item.oversatt_av);
+            if (item.forlag) lokalHtml += flis('Utgiver / forlag', item.forlag, 'text-sky-300');
+            if (item.opplag) lokalHtml += flis('Opplag', item.opplag);
+            if (item.spraak || item.land) lokalHtml += flis('Språk / land', [item.spraak, item.land].filter(Boolean).join(' • '));
+            if (item.antall_sider) lokalHtml += flis('Antall sider', item.antall_sider);
+            if (item.cover_pris) lokalHtml += flis('Cover-pris', item.cover_pris + ' kr');
+            if (item.kjopt_dato) lokalHtml += flis('Kjøpt', datoTekst(item.kjopt_dato));
+            lokalHtml += flis('Strekkode (EAN)', item.strekkode || '-', 'font-mono text-slate-400');
         } else if (item.kategori === 'film') {
-            const flis = (etikett, verdi, farge = 'text-slate-300', span2 = false) => '<div class="' + (span2 ? 'col-span-2 ' : '') + 'bg-slate-950 p-3 rounded border border-slate-800"><span class="block text-[10px] text-slate-500 uppercase tracking-wider">' + etikett + '</span><span class="font-bold ' + farge + '">' + esc(verdi) + '</span></div>';
             lokalHtml += flis('Cover tittel', item.tittel || '-', 'text-amber-400');
             lokalHtml += flis('IMDb-tittel', item.imdb_tittel || 'Ikke koblet', 'text-sky-300');
             lokalHtml += flis('Type', item.mediatype === 'Serie' ? '📺 Serie' : '🎬 Film');
@@ -4497,8 +4768,17 @@
             metaTekst = filmType + ' | ' + (item.sjanger || 'Ukjent') + ' | År: ' + (item.aar || '-') + ' | ' + filmFormat + filmUtgave + filmBildeformat + ' | ' + filmRating + ' | ' + filmStatus + ' | ' + filmLagret;
         } else if (item.kategori === 'plante') {
             metaTekst = (item.sjanger || 'Ukjent plante'); 
+        } else if (item.kategori === 'tegneserie') {
+            const deler = ['📚 ' + (item.bladserie || '-') + (item.nr ? ' #' + item.nr : ''), 'År: ' + (item.aar || '-')];
+            if (item.format && item.format.length > 0) deler.push(Array.isArray(item.format) ? item.format.join(' + ') : item.format);
+            if (item.forfatter) deler.push('✍️ ' + item.forfatter);
+            if (item.forlag) deler.push('🏢 ' + item.forlag);
+            if (item.opplag) deler.push(item.opplag);
+            deler.push(item.status === 'Har ikke' ? '📝 Ønskeliste' : '✅ I samling');
+            deler.push(item.lagret ? '📦 ' + item.lagret : '📦 Uspesifisert plass');
+            metaTekst = esc(deler.join(' | '));
         } else {
-            metaTekst = 'Serie: ' + (item.bladserie || '-') + ' | År: ' + (item.aar || '-');
+            metaTekst = esc('År: ' + (item.aar || '-') + (item.lagret ? ' | 📦 ' + item.lagret : ''));
         }
 
         let pakkeMerke = '';
@@ -4693,7 +4973,7 @@
             if (filt === 'min_har' && item.status !== 'Har') return false;
             if (filt === 'min_mangler' && item.status !== 'Har ikke') return false;
         }
-        const fritekst = ((item.tittel||'') + ' ' + (item.skuespillere||'') + ' ' + (item.regissor||'') + ' ' + (item.produksjonsland||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.eier||'')).toLowerCase();
+        const fritekst = ((item.tittel||'') + ' ' + (item.skuespillere||'') + ' ' + (item.regissor||'') + ' ' + (item.produksjonsland||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.forfatter||'') + ' ' + (item.oversatt_av||'') + ' ' + (item.forlag||'') + ' ' + (item.eier||'')).toLowerCase();
         return fritekst.includes(q);
       });
 
