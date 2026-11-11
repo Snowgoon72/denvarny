@@ -38,13 +38,39 @@ Returner ALLTID et JSON-objekt med disse feltene:
 - "titler": er det en SAMLEBOKS, en LISTE med ALLE filmtitlene som står oppført på baksiden, i rekkefølge (f.eks. ["Dr. No","From Russia with Love","Goldfinger"]). Maks 50. Står det disknummer, skriv det som "Disk 3: Goldfinger". Er det bare én film, returner [].
 VIKTIG: Ikke gjett. Ta bare med det som faktisk står på bildet.`;
 
+// Tegneserier: samme felt for forside, bakside og "extra bilde" (typisk siden med utgivelsesinfo / kolofon).
+const SIDEBESKRIVELSE = {
+    forside: 'FORSIDEN (coveret)',
+    bakside: 'BAKSIDEN',
+    ekstra: 'en INNSIDE-side med utgivelsesinformasjon (kolofon/impressum, ofte innsiden av coveret eller første side)'
+};
+const promptTegneserie = (bildeType) => `Du er en ekspert på tegneserier og tegneserieblader, særlig norske og nordiske utgivelser.
+Bildet viser ${SIDEBESKRIVELSE[bildeType] || SIDEBESKRIVELSE.forside} av en tegneserie.
+Returner ALLTID et JSON-objekt med disse feltene:
+- "tittel": tittelen slik den står på coveret (bare hvis det er forsiden), ellers "".
+- "bladserie": navnet på bladet/serien, f.eks. "Donald Duck & Co", "Fantomet", "Tex Willer", "Asterix". Ellers "".
+- "nr": nummeret i serien, f.eks. "12" eller "12/1987" (bare nummeret hvis året står separat). Ellers "".
+- "aar": utgivelsesåret for DETTE bladet/boka (4 siffer), ellers "".
+- "opplag": opplag hvis det står, f.eks. "1. opplag", "2. opplag 1991". Ellers "".
+- "forfatter": hvem som har skrevet (manus/tekst). Står både manus og tegner, ta med begge slik: "Manus: X, Tegner: Y". Ellers "".
+- "oversatt_av": oversetter, f.eks. fra "Oversatt av", "Oversettelse", "Norsk tekst", "Översättning". Ellers "".
+- "forlag": utgiveren/forlaget, f.eks. "Egmont", "Hjemmet", "Semic", "Bladkompaniet", "Serieforlaget", "Cappelen Damm". Ellers "".
+- "spraak": språket bladet er skrevet på, på norsk, f.eks. "Norsk", "Svensk", "Engelsk".
+- "land": landet bladet er gitt ut i, på norsk, f.eks. "Norge", "Sverige", "USA". Bruk forlagets adresse eller pris-valuta (kr/NOK = Norge) hvis det ikke står direkte. Ellers "".
+- "format": f.eks. "Norsk hefte", "Julehefte", "Pocket", "Album", "Hardcover", "Manga", hvis det tydelig fremgår. Ellers "".
+- "pris": kun tall hvis du ser en cover-pris, ellers "".
+- "antall_sider": antall sider hvis det står, ellers "".
+VIKTIG: Ikke gjett navn. Ta bare med det som faktisk står på bildet (unntak: språk og land kan utledes av teksten og prisen).`;
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Kun POST er tillatt' });
 
-    const { bildeBase64, erBakside } = req.body;
+    const { bildeBase64, erBakside, kategori, bildeType } = req.body;
     if (!bildeBase64) return res.status(400).json({ error: 'Mangler bilde' });
 
-    const aiPrompt = erBakside ? PROMPT_BAKSIDE : PROMPT_FORSIDE;
+    const aiPrompt = kategori === 'tegneserie'
+        ? promptTegneserie(bildeType || (erBakside ? 'bakside' : 'forside'))
+        : (erBakside ? PROMPT_BAKSIDE : PROMPT_FORSIDE);
 
     try {
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
