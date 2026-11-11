@@ -815,6 +815,9 @@
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Språk</label><input type="text" id="wizSpraak" list="spraakListe" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
                   <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1">Utgitt i land</label><input type="text" id="wizLand" list="landListe" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none"></div>
               </div>
+              <button type="button" onclick="wizSokTegneserieInfo()" class="w-full mt-3 bg-sky-600/20 border border-sky-500/50 text-sky-200 hover:bg-sky-600/40 py-2.5 rounded-lg font-bold text-sm transition">🔎 Søk opp info (Nasjonalbiblioteket / GCD)</button>
+              <p id="wizSokInfoResultat" class="text-sky-300 text-xs font-bold mt-2 whitespace-pre-line"></p>
+              <p class="text-[10px] text-slate-500 mt-1">Data fra Grand Comics Database (comics.org) er lisensiert CC BY-SA 4.0.</p>
           </div>
           
           <div id="wizSeksjonFilm" class="hidden">
@@ -1445,6 +1448,51 @@
         sett(prefiks === 'wiz' ? 'wizSider' : prefiks + 'AntallSider', parseInt(data.antall_sider, 10) > 0 ? parseInt(data.antall_sider, 10) : '', 'Sider');
         sett(prefiks + 'Bladserie', data.bladserie, 'Bladserie');
         return funnet;
+    }
+
+    // Slår opp i Nasjonalbiblioteket + Grand Comics Database via /api/tegneserie.
+    // body = { strekkode } eller { sokeord, nr, aar }. Returnerer null hvis ingenting ble funnet.
+    async function hentTegneserieInfo(body) {
+        try {
+            const r = await fetch('/api/tegneserie', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (!r.ok) return null;
+            const d = await r.json();
+            return d && d.funnet ? d : null;
+        } catch (e) {
+            console.warn('Tegneserie-oppslag feilet:', e);
+            return null;
+        }
+    }
+
+    // Google Books på ISBN – returnerer felt i samme format som /api/tegneserie
+    async function googleBooksIsbn(kode) {
+        try {
+            const r = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + encodeURIComponent(kode));
+            const d = await r.json();
+            if (!d.items || !d.items.length) return null;
+            const b = d.items[0].volumeInfo;
+            const spraakKoder = { no: 'Norsk', nb: 'Norsk', nn: 'Nynorsk', sv: 'Svensk', da: 'Dansk', en: 'Engelsk', de: 'Tysk', fr: 'Fransk', it: 'Italiensk', ja: 'Japansk', fi: 'Finsk' };
+            return {
+                tittel: b.title || '',
+                aar: b.publishedDate ? b.publishedDate.substring(0, 4) : '',
+                antall_sider: b.pageCount || '',
+                forfatter: Array.isArray(b.authors) ? b.authors.join(', ') : '',
+                forlag: b.publisher || '',
+                spraak: spraakKoder[b.language] || ''
+            };
+        } catch (e) { return null; }
+    }
+
+    // Knapp i veiviseren: søk på bladserie + nummer når feltene er fylt ut
+    async function wizSokTegneserieInfo() {
+        const serie = document.getElementById('wizBladserie').value.trim() || document.getElementById('wizTittel').value.trim();
+        const res = document.getElementById('wizSokInfoResultat');
+        if (!serie) { res.innerText = 'Skriv inn bladserie først.'; return; }
+        res.innerText = 'Søker i Nasjonalbiblioteket og GCD...';
+        const info = await hentTegneserieInfo({ sokeord: serie, nr: document.getElementById('wizNummer').value.trim(), aar: document.getElementById('wizAar').value.trim() });
+        if (!info) { res.innerText = 'Fant ingenting. Prøv uten nummer, eller ta et extra bilde av utgivelsesinfoen.'; return; }
+        const funnet = fyllTegneserieFraAi(info, 'wiz');
+        res.innerText = '✅ ' + info.kilder.join(' + ') + (funnet.length ? '\n' + funnet.join(' · ') : '\n(alle felt var allerede fylt ut)');
     }
     function hovedBilde(item) {
         const b = bildeKilder(item);
@@ -3500,6 +3548,7 @@
         document.getElementById('wizEkstraPreviewBoks').classList.add('hidden');
         document.getElementById('wizEkstraPreview').removeAttribute('src');
         document.getElementById('wizEkstraResultat').innerText = '';
+        document.getElementById('wizSokInfoResultat').innerText = '';
         document.getElementById('wizEkstraSeksjon').classList.toggle('hidden', aktivKategori !== 'tegneserie');
         document.getElementById('wizBaksideHjelp').innerText = aktivKategori === 'tegneserie'
             ? 'Baksiden kan gi pris, strekkode, forlag og nummer.'
@@ -3899,21 +3948,24 @@
                     if (wizTmdbDetaljer) treffNavn = rT + "\nIMDb: " + imdbTittelFra(wizTmdbDetaljer) + (wizTmdbDetaljer.aar ? " (" + wizTmdbDetaljer.aar + ")" : "");
                 }
             } else {
-                const gbRes = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + strekkode);
-                const gbData = await gbRes.json();
-                if (gbData.items && gbData.items.length > 0) {
-                    const bok = gbData.items[0].volumeInfo;
-                    if(!document.getElementById('wizTittel').value) {
-                        document.getElementById('wizTittel').value = bok.title || "";
-                        document.getElementById('wizTittelEng').value = bok.title || "";
-                        document.getElementById('wizBladserie').value = (bok.title || "").split(/[#\-]/)[0].trim();
+                // 1) Nasjonalbiblioteket / GCD via /api/tegneserie (ISBN og blad-EAN med ISSN)
+                const info = await hentTegneserieInfo({ strekkode });
+                if (info) {
+                    if (!document.getElementById('wizTittel').value) document.getElementById('wizTittel').value = info.tittel || info.bladserie || '';
+                    fyllTegneserieFraAi(info, 'wiz');
+                    treffNavn = (info.tittel || info.bladserie || '') + '\n📚 ' + info.kilder.join(' + ');
+                }
+                // 2) Google Books fyller hullene (mest for ISBN)
+                const gb = await googleBooksIsbn(strekkode);
+                if (gb) {
+                    if (!document.getElementById('wizTittel').value) {
+                        document.getElementById('wizTittel').value = gb.tittel;
+                        document.getElementById('wizTittelEng').value = gb.tittel;
                     }
-                    if (bok.publishedDate) {
-                        document.getElementById('wizAar').value = bok.publishedDate.substring(0, 4);
-                        document.getElementById('wizAarFilm').value = bok.publishedDate.substring(0, 4);
-                    }
-                    if (bok.pageCount) document.getElementById('wizSider').value = bok.pageCount;
-                    treffNavn = bok.title || '';
+                    if (!document.getElementById('wizBladserie').value) document.getElementById('wizBladserie').value = gb.tittel.split(/[#\-]/)[0].trim();
+                    if (gb.aar && !document.getElementById('wizAarFilm').value) document.getElementById('wizAarFilm').value = gb.aar;
+                    fyllTegneserieFraAi(gb, 'wiz');
+                    if (!treffNavn) treffNavn = gb.tittel + '\n📚 Google Books';
                 }
             }
             wizEtterStrekkode(treffNavn);
@@ -4120,33 +4172,42 @@
                     if (bekreft && bekreft.trim() !== "") simulerApiOppslag(bekreft.trim());
                 }
             } else {
-                let funnetTittel = "", funnetAar = "", funnetForfatter = "";
-                const gbRes = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:" + strekkode);
-                const gbData = await gbRes.json();
-                if (gbData.items && gbData.items.length > 0) {
-                    const bok = gbData.items[0].volumeInfo;
-                    funnetTittel = bok.title || "";
-                    if (bok.publishedDate) funnetAar = bok.publishedDate.substring(0, 4);
-                    if (bok.authors) funnetForfatter = bok.authors.join(", ");
-                } else {
+                // 1) Nasjonalbiblioteket / GCD, 2) Google Books, 3) UPCitemdb
+                const kilder = [];
+                const info = await hentTegneserieInfo({ strekkode });
+                if (info) {
+                    kilder.push(...info.kilder);
+                    if (!document.getElementById('feltTittel').value) document.getElementById('feltTittel').value = info.tittel || info.bladserie || '';
+                    fyllTegneserieFraAi(info, 'felt');
+                }
+                const gb = await googleBooksIsbn(strekkode);
+                if (gb) {
+                    kilder.push('Google Books');
+                    if (!document.getElementById('feltTittel').value) document.getElementById('feltTittel').value = gb.tittel;
+                    if (!document.getElementById('feltBladserie').value) document.getElementById('feltBladserie').value = gb.tittel.split(/[#\-]/)[0].trim();
+                    fyllTegneserieFraAi(gb, 'felt');
+                }
+                if (!kilder.length) {
                     const upcRes = await fetch("https://api.upcitemdb.com/prod/trial/lookup?upc=" + strekkode);
                     const upcData = await upcRes.json();
-                    if (upcData.items && upcData.items.length > 0) funnetTittel = upcData.items[0].title;
+                    if (upcData.items && upcData.items.length > 0) {
+                        kilder.push('UPCitemdb');
+                        document.getElementById('feltTittel').value = upcData.items[0].title;
+                        document.getElementById('feltBladserie').value = upcData.items[0].title;
+                    }
                 }
-                if (funnetTittel) {
+                if (kilder.length) {
                     funnetTreff = true;
                     if (overlay) overlay.classList.add('hidden');
-                    document.getElementById('feltBladserie').value = funnetTittel;
-                    if (funnetAar) document.getElementById('feltAar').value = funnetAar;
-                    if (funnetForfatter) document.getElementById('feltKommentar').value = "Forfatter: " + funnetForfatter;
-                    alert("Fant treff globalt! 🎉\n\nTittel: " + funnetTittel);
+                    alert("Fant treff! 🎉\n\nTittel: " + (document.getElementById('feltTittel').value || document.getElementById('feltBladserie').value) +
+                          "\nKilde: " + [...new Set(kilder)].join(' + '));
                 }
             }
         } catch (error) { console.log("Globalt søk feilet."); }
         
-        if (!funnetTreff) {
+        if (!funnetTreff && aktivKategori === 'film') {   // tegneserier bruker /api/tegneserie i stedet for å lese Outland via proxy
             try {
-                let butikkSokUrl = aktivKategori === 'film' ? "https://www.platekompaniet.no/search?q=" + strekkode : "https://www.outland.no/search?q=" + strekkode;
+                let butikkSokUrl =aktivKategori === 'film' ? "https://www.platekompaniet.no/search?q=" + strekkode : "https://www.outland.no/search?q=" + strekkode;
                 const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(butikkSokUrl);
                 const butikkRes = await fetch(proxyUrl);
                 const butikkData = await butikkRes.json();
@@ -4239,6 +4300,14 @@
       if (aktivKategori === 'tegneserie') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
           try {
+              // Nasjonalbiblioteket / GCD først – Google Books bare hvis de ikke fant noe
+              const info = await hentTegneserieInfo({ sokeord: sokeord, nr: document.getElementById('feltNummer').value.trim(), aar: document.getElementById('feltAar').value.trim() });
+              if (info) {
+                  if (!document.getElementById('feltTittel').value.trim()) document.getElementById('feltTittel').value = info.tittel || sokeord;
+                  fyllTegneserieFraAi(info, 'felt');
+                  document.getElementById('loadingOverlay').classList.add('hidden');
+                  return;
+              }
               let funnetTreff = false;
               const gbRes = await fetch("https://www.googleapis.com/books/v1/volumes?q=" + encodeURIComponent(sokeord + " comic OR tegneserie"));
               const gbData = await gbRes.json();
