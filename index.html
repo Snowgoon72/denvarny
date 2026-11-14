@@ -952,6 +952,10 @@
             <option value="">💿 Alle typer</option>
           </select>
 
+          <select id="plassFilter" onchange="utforSok()" title="Vis bare én lagringsplass" class="hidden w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-indigo-500/50 text-indigo-300 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+            <option value="">📦 Alle plasser</option>
+          </select>
+
           <select id="eieFilter" onchange="utforSok()" title="Filtrer på status" class="w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
             <optgroup label="Status">
               <option value="min_alle">Vis alt</option>
@@ -5063,13 +5067,34 @@
         sel.classList.toggle('hidden', typer.length < 2 && !sel.value);
     }
 
+    // ---------- Lagringsplass ----------
+    function plassFor(item) { return (item.lagret || '').trim() || 'Ikke oppgitt'; }
+    // Naturlig rekkefølge: «Hylle 2» før «Hylle 10»
+    const naturligSortering = new Intl.Collator('no', { numeric: true, sensitivity: 'base' });
+    function byggPlassFilter(grunnlag) {
+        const sel = document.getElementById('plassFilter');
+        const valgt = sel.value;
+        // «Hylle 2» og «hylle 2» regnes som samme plass; vanligste skrivemåte vises
+        const antall = {}, skrivemaater = {};
+        grunnlag.forEach(i => {
+            const p = plassFor(i), k = p.toLowerCase();
+            antall[k] = (antall[k] || 0) + 1;
+            (skrivemaater[k] = skrivemaater[k] || {})[p] = (skrivemaater[k][p] || 0) + 1;
+        });
+        const navn = k => Object.entries(skrivemaater[k]).sort((a, b) => b[1] - a[1])[0][0];
+        const plasser = Object.keys(antall).sort((a, b) => a === 'ikke oppgitt' ? 1 : b === 'ikke oppgitt' ? -1 : naturligSortering.compare(a, b));
+        sel.innerHTML = '<option value="">📦 Alle plasser</option>' + plasser.map(k => '<option value="' + esc(k) + '">📦 ' + esc(navn(k)) + ' (' + antall[k] + ')</option>').join('');
+        sel.value = plasser.includes(valgt) ? valgt : '';
+        sel.classList.toggle('hidden', plasser.length < 2 && !sel.value);
+    }
+
     function utforSok() {
       if(!innloggetBruker) return;
       ugyldiggjorPakkeIndeks();
       // Ny søk/filter → start på første side. Etter lagring o.l. beholdes antallet du har bladd frem.
       const signatur = [aktivKategori, document.getElementById('sokeFelt').value, document.getElementById('eieFilter').value,
                         document.getElementById('sorteringFilt').value, (document.getElementById('samlingVisning') || {}).value,
-                        document.getElementById('typeFilter').value].join('|');
+                        document.getElementById('typeFilter').value, document.getElementById('plassFilter').value].join('|');
       if (signatur !== sisteSokSignatur) { visGrense = sideStorrelse(); sisteSokSignatur = signatur; }
       if (samlingVisningKat !== aktivKategori || document.getElementById('samlingVisning').options.length <= 1) byggSamlingVisning();
       const q = document.getElementById('sokeFelt').value.toLowerCase();
@@ -5099,6 +5124,13 @@
         return fritekst.includes(q);
       });
 
+      byggPlassFilter(filtrert);
+      const aktivPlass = document.getElementById('plassFilter').value;
+      if (aktivPlass) {
+          filtrert = filtrert.filter(i => plassFor(i).toLowerCase() === aktivPlass);
+          const plassSel = document.getElementById('plassFilter');
+          filterTekstFelt.innerText += ' · ' + plassSel.options[plassSel.selectedIndex].text.replace(/\s*\(\d+\)$/, '');
+      }
       byggTypeFilter(filtrert);
       const aktivType = document.getElementById('typeFilter').value;
       if (aktivType) {
@@ -5111,7 +5143,11 @@
         
         let valA = '', valB = '';
         if (sortFilt === 'tittel') { valA = (a.tittel||'').toLowerCase(); valB = (b.tittel||'').toLowerCase(); } 
-        else if (sortFilt === 'lagret') { valA = (a.lagret||'').toLowerCase(); valB = (b.lagret||'').toLowerCase(); } 
+        else if (sortFilt === 'lagret') {
+            const pa = (a.lagret || '').trim(), pb = (b.lagret || '').trim();
+            if (!pa !== !pb) return pa ? -1 : 1;   // uten lagringsplass havner sist
+            return naturligSortering.compare(pa, pb) || naturligSortering.compare(a.tittel || '', b.tittel || '');
+        } 
         else if (sortFilt === 'eier') { valA = (a.eier||'').toLowerCase(); valB = (b.eier||'').toLowerCase(); } 
         else if (sortFilt === 'verdi_hoy') { return (Number(b.verdi) || 0) - (Number(a.verdi) || 0); } 
         else if (sortFilt === 'rating') { return (Number(b.rating) || 0) - (Number(a.rating) || 0); }
