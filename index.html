@@ -25,7 +25,7 @@
     }
     /* (1)(3) Alle vinduer kan rulles. Innholdet står midt på når det er plass,
        og starter øverst (i stedet for å kuttes) når skjermen er for lav eller tastaturet er oppe. */
-    #loginModal, #profilModal, #endreModal, #detaljerModal, #planteValgModal, #samlingModal, #usikreModal, #filmValgModal, #adminModal, #flyttModal, #hylleModal, #wizardModal {
+    #loginModal, #profilModal, #endreModal, #detaljerModal, #planteValgModal, #samlingModal, #usikreModal, #filmValgModal, #adminModal, #flyttModal, #hylleModal, #wizardModal, #pakkeSjekkModal {
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -33,7 +33,7 @@
       padding-top: max(1rem, env(safe-area-inset-top)) !important;
       padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
     }
-    #loginModal > div:first-child, #profilModal > div:first-child, #endreModal > div:first-child, #detaljerModal > div:first-child, #planteValgModal > div:first-child, #samlingModal > div:first-child, #usikreModal > div:first-child, #filmValgModal > div:first-child, #adminModal > div:first-child, #flyttModal > div:first-child, #hylleModal > div:first-child, #wizardModal > div:first-child {
+    #loginModal > div:first-child, #profilModal > div:first-child, #endreModal > div:first-child, #detaljerModal > div:first-child, #planteValgModal > div:first-child, #samlingModal > div:first-child, #usikreModal > div:first-child, #filmValgModal > div:first-child, #adminModal > div:first-child, #flyttModal > div:first-child, #hylleModal > div:first-child, #wizardModal > div:first-child, #pakkeSjekkModal > div:first-child {
       margin-top: auto !important;
       margin-bottom: auto !important;
       flex-shrink: 0;
@@ -286,6 +286,7 @@
         <div id="endrePakkeSeksjon" class="hidden bg-indigo-500/10 border border-indigo-500/40 rounded-lg p-3">
             <div class="flex justify-between items-center mb-2 gap-2">
                 <span class="text-xs font-black text-indigo-300 uppercase tracking-wider">📦 Samleboks <span id="endrePakkeAntall" class="text-indigo-200 normal-case font-bold"></span></span>
+                <button type="button" id="btnSjekkPakke" onclick="apnePakkeSjekk()" class="hidden text-[10px] bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 px-2 py-1 rounded border border-emerald-500/50 font-bold transition">📋 Sjekk filmene</button>
                 <button type="button" id="btnLeggTilPakke" onclick="leggTilFilmIPakke()" class="text-[10px] bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 px-2 py-1 rounded border border-indigo-500/50 font-bold transition">➕ Legg til film i boksen</button>
             </div>
             <div id="endrePakkeFelter" class="hidden grid grid-cols-3 gap-2 mb-2">
@@ -649,6 +650,19 @@
         <button type="button" onclick="lukkUsikre(false)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-lg border border-slate-700 font-bold transition">Hopp over alle (uten IMDb)</button>
         <button type="button" onclick="lukkUsikre(true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm py-2.5 rounded-lg font-black transition">✓ Lagre med valgene</button>
       </div>
+    </div>
+  </div>
+
+  <div id="pakkeSjekkModal" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur z-[235] flex flex-col items-center justify-center p-4">
+    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-700 max-w-lg w-full shadow-2xl">
+      <div class="flex justify-between items-start gap-2 mb-1">
+        <h2 id="pakkeSjekkTittel" class="text-lg font-black text-indigo-300">📦 Sjekk filmene i boksen</h2>
+        <button type="button" onclick="lukkPakkeSjekk()" class="text-slate-400 hover:text-white font-black text-xl px-2">✕</button>
+      </div>
+      <p class="text-xs text-slate-400 mb-3">Sammenlign med coveret. Stemmer ikke en film, trykk <b class="text-amber-300">🔄 Bytt film</b> og velg riktig fra IMDb.</p>
+      <div id="pakkeSjekkCover" class="hidden flex gap-2 mb-3"></div>
+      <div id="pakkeSjekkListe" class="space-y-2 overflow-y-auto max-h-[60vh] pr-1"></div>
+      <button type="button" onclick="lukkPakkeSjekk()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black transition">✓ Ferdig</button>
     </div>
   </div>
 
@@ -2721,6 +2735,7 @@
         // Vis seksjonen hvis filmen er i en pakke, eller som "legg til" for egne filmer
         seksjon.classList.toggle('hidden', !medl.length && !erMin);
         document.getElementById('btnLeggTilPakke').classList.toggle('hidden', !erMin || medl.length >= MAKS_PAKKE);
+        document.getElementById('btnSjekkPakke').classList.toggle('hidden', medl.length < 2);
         document.getElementById('endrePakkeInfo').classList.toggle('hidden', !medl.length);
         const liste = document.getElementById('endrePakkeListe');
         document.getElementById('endrePakkeFelter').classList.toggle('hidden', !medl.length);
@@ -2748,6 +2763,110 @@
         const q = document.getElementById('endrePakkeSok').value.toLowerCase().trim();
         document.querySelectorAll('#endrePakkeListe [data-pakkesok]').forEach(b => b.classList.toggle('hidden', !!q && !b.dataset.pakkesok.includes(q)));
     }
+    // ==========================================
+    // SJEKK FILMENE I EN SAMLEBOKS (med mer info) OG BYTT FEIL FILM
+    // ==========================================
+    let pakkeSjekkId = null;
+    function apnePakkeSjekk(pakkeId) {
+        if (!pakkeId) {
+            const item = database.find(i => i.id === Number(document.getElementById('endreId').value));
+            pakkeId = item && item.pakke_id;
+        }
+        if (!pakkeId) return;
+        pakkeSjekkId = pakkeId;
+        tegnPakkeSjekk();
+        document.getElementById('pakkeSjekkModal').classList.remove('hidden');
+        document.getElementById('pakkeSjekkListe').scrollTop = 0;
+        suppleringAvPakkeInfo(pakkeId);
+    }
+    function lukkPakkeSjekk() {
+        document.getElementById('pakkeSjekkModal').classList.add('hidden');
+        // Oppdater Endre-vinduet hvis det er åpent
+        const id = Number(document.getElementById('endreId').value);
+        if (id && !document.getElementById('endreModal').classList.contains('hidden') && database.some(i => i.id === id)) apneEndreModal(id, !!endreNyRegistreringId);
+    }
+    function tegnPakkeSjekk() {
+        const medl = pakkeMedlemmer(pakkeSjekkId);
+        if (!medl.length) { lukkPakkeSjekk(); return; }
+        const erMin = medl[0].eier === innloggetBruker;
+        const navn = erAutoPakkeNavn(medl[0].pakke_navn) ? 'Samleboks' : medl[0].pakke_navn;
+        document.getElementById('pakkeSjekkTittel').innerText = '📦 ' + navn + ' (' + medl.length + ' filmer)';
+        // Boksens egne bilder øverst, til sammenligning
+        const k = bildeKilder(medl[0]);
+        const coverBoks = document.getElementById('pakkeSjekkCover');
+        coverBoks.innerHTML = [[k.cover, 'Cover'], [k.bakside, 'Bakside']].filter(x => x[0]).map(([url, et]) =>
+            '<div class="text-center"><img src="' + url + '" class="w-16 h-24 object-cover rounded border border-slate-700"><span class="block text-[9px] text-slate-500 uppercase mt-0.5">' + et + '</span></div>').join('');
+        coverBoks.classList.toggle('hidden', !k.cover && !k.bakside);
+
+        document.getElementById('pakkeSjekkListe').innerHTML = medl.map((m, i) => {
+            const plakat = bildeKilder(m).imdb;
+            const koblet = !!(m.imdb || m.imdb_tittel);
+            const skuesp = (m.skuespillere || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, 3).join(', ');
+            const linje = (ikon, tekst) => tekst ? '<p class="text-[11px] text-slate-300 truncate">' + ikon + ' ' + esc(tekst) + '</p>' : '';
+            return '<div id="pakkeSjekkKort_' + m.id + '" class="bg-slate-950 p-2.5 rounded-lg border ' + (koblet ? 'border-slate-800' : 'border-amber-600/60') + ' flex gap-3">' +
+                (plakat ? '<img src="' + plakat + '" class="w-16 h-24 object-cover rounded border border-slate-700 shrink-0">' : '<div class="w-16 h-24 bg-slate-800 rounded border border-slate-700 flex items-center justify-center text-2xl shrink-0">🎬</div>') +
+                '<div class="flex-1 min-w-0">' +
+                  '<p class="text-[10px] font-black text-indigo-300 uppercase">' + (m.disk_nr ? 'Disk ' + esc(m.disk_nr) : 'Film ' + (i + 1)) + (koblet ? '' : ' · <span class="text-amber-400">ikke koblet til IMDb</span>') + '</p>' +
+                  '<p class="font-bold text-white text-sm leading-tight truncate">' + esc(m.tittel || 'Uten tittel') + '</p>' +
+                  (m.imdb_tittel && normaliserNavn(m.imdb_tittel) !== normaliserNavn(m.tittel) ? '<p class="text-[11px] text-sky-300 truncate">IMDb: ' + esc(m.imdb_tittel) + '</p>' : '') +
+                  '<p class="text-[11px] text-slate-400">' + (m.aar || 'Ukjent år') + ' · ⭐ ' + (m.rating || '-') + (m.sjanger ? ' · ' + esc(m.sjanger) : '') + '</p>' +
+                  linje('🎬', m.regissor) + linje('🎭', skuesp) + linje('🌍', m.produksjonsland) +
+                  '<div class="flex flex-wrap gap-1.5 mt-1.5">' +
+                    (erMin ? '<button type="button" onclick="byttPakkeFilm(' + m.id + ')" class="text-[11px] bg-amber-500/20 hover:bg-amber-500/40 text-amber-200 px-2 py-1 rounded border border-amber-500/50 font-bold transition">🔄 Bytt film</button>' : '') +
+                    (erMin ? '<button type="button" onclick="lukkPakkeSjekk(); byttTilPakkeFilm(' + m.id + ')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 font-bold transition">✏️ Endre</button>' : '') +
+                    (m.imdb ? '<a href="' + esc(m.imdb) + '" target="_blank" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded border border-slate-700 font-bold">IMDb ↗</a>' : '') +
+                  '</div>' +
+                '</div></div>';
+        }).join('');
+    }
+    // Filmer som mangler regissør/skuespillere (f.eks. lagret før de feltene fantes) hentes på nytt via IMDb-lenken
+    async function suppleringAvPakkeInfo(pakkeId) {
+        const mangler = pakkeMedlemmer(pakkeId).filter(m => m.imdb && (!m.regissor || !m.skuespillere) && m.eier === innloggetBruker);
+        for (const m of mangler) {
+            try {
+                const treff = await tmdbIdFraImdb(m.imdb);
+                if (!treff) continue;
+                const d = await tmdbDetaljer(treff.id, treff.type);
+                ['skuespillere', 'regissor', 'produsent', 'produksjonsland', 'sjanger'].forEach(k => { if (d[k] && !m[k]) m[k] = d[k]; });
+                if (!m.imdb_bilde && d.poster) m.imdb_bilde = d.poster;
+                await supabaseDb.from('samlerbase_data').update({ skuespillere: m.skuespillere, regissor: m.regissor, produsent: m.produsent,
+                    produksjonsland: m.produksjonsland, sjanger: m.sjanger, imdb_bilde: m.imdb_bilde }).eq('id', m.id);
+                if (pakkeSjekkId === pakkeId && !document.getElementById('pakkeSjekkModal').classList.contains('hidden')) tegnPakkeSjekk();
+            } catch (e) { console.error(e); }
+        }
+    }
+    // Erstatter én film i boksen med riktig film fra IMDb/TMDb
+    async function byttPakkeFilm(id) {
+        const m = database.find(i => i.id === id);
+        if (!m || m.eier !== innloggetBruker) return;
+        const sok = (prompt("Søk etter riktig film for «" + m.tittel + "».\nRett gjerne tittelen hvis den er lest feil:", m.tittel || m.imdb_tittel || '') || '').trim();
+        if (!sok) return;
+        try {
+            visLaster("Søker i TMDb/IMDb...", sok);
+            const valg = await finnTmdbTreff(sok, '', m.mediatype || 'Film', true);
+            if (!valg) { skjulLaster(); return; }
+            visLaster("Henter detaljer...", valg.tittel || '');
+            const d = await tmdbDetaljer(valg.id, valg.type);
+            skjulLaster();
+            // Cover-tittelen: behold den, eller bytt hvis den var feil lest
+            let nyTittel = m.tittel;
+            const forslag = d.tittelNo || imdbTittelFra(d);
+            if (forslag && normaliserNavn(forslag) !== normaliserNavn(m.tittel) &&
+                confirm("Filmen byttes til «" + forslag + "» (" + (d.aar || '?') + ").\n\nSkal cover-tittelen også endres fra «" + m.tittel + "» til «" + forslag + "»?\n(Avbryt = behold cover-tittelen slik den står på boksen)")) nyTittel = forslag;
+            // Fjern alt fra den gamle (feile) filmen før den nye legges inn
+            Object.assign(m, { tittel: nyTittel, tittel_eng: '', tittel_orig: '', imdb_tittel: '', imdb: '', imdb_bilde: '', sjanger: '', rating: '', aar: '',
+                skuespillere: '', regissor: '', produsent: '', produksjonsland: '', episoder: '' });
+            brukTmdbPaaItem(m, d);
+            const { error } = await supabaseDb.from('samlerbase_data').update(m).eq('id', m.id);
+            if (error) { alert("🚨 Kunne ikke lagre: " + supabaseFeil(error)); return; }
+            await ryddPakke(m.pakke_id);   // oppdaterer automatisk boksnavn med ny tittel
+            tegnPakkeSjekk();
+            utforSok();
+            const kort = document.getElementById('pakkeSjekkKort_' + m.id);
+            if (kort) { kort.scrollIntoView({ block: 'nearest' }); kort.classList.add('ring-2', 'ring-emerald-500'); }
+        } catch (e) { console.error(e); skjulLaster(); alert("Kunne ikke bytte film: " + (e.message || e)); }
+    }
+
     function byttTilPakkeFilm(id) {
         const varNy = !!endreNyRegistreringId;
         apneEndreModal(id, varNy);
@@ -4088,6 +4207,7 @@
         document.getElementById('eieFilter').value = 'min_alle'; sikreMinSamlingVises();
         utforSok();
         apneEndreModal(alle[0].id, true);
+        if (alle.length > 1) apnePakkeSjekk(alle[0].pakke_id);
     }
 
     // Viser/skjuler det manuelle skjemaet. vis=null bytter mellom åpen og lukket.
@@ -4714,6 +4834,7 @@
             if (item.pakke_id && pakkeMedlemmer(item.pakke_id).length > 1) {
                 const medl = pakkeMedlemmer(item.pakke_id);
                 lokalHtml += flis('📦 Samleboks', (erAutoPakkeNavn(item.pakke_navn) ? 'Samleboks' : item.pakke_navn) + ' (' + medl.length + ' filmer)', 'text-indigo-300', true);
+                lokalHtml += '<button type="button" onclick="apnePakkeSjekk(\'' + item.pakke_id + '\')" class="col-span-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-200 text-xs font-bold py-2 rounded border border-indigo-500/50 transition">📋 Se alle filmene i boksen med info</button>';
                 lokalHtml += flis('Disk nr.', item.disk_nr || 'Ikke oppgitt', 'text-indigo-200');
                 lokalHtml += flis('Pris for boksen', item.pakke_pris ? item.pakke_pris + ' kr' : 'Ikke oppgitt', 'text-emerald-400');
             }
