@@ -948,6 +948,10 @@
             <option value="meg">👤 Min samling</option>
           </select>
 
+          <select id="typeFilter" onchange="utforSok()" title="Vis bare én type (f.eks. DVD) – kombipakker vises under alle typene sine" class="hidden w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-emerald-500/50 text-emerald-300 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
+            <option value="">💿 Alle typer</option>
+          </select>
+
           <select id="eieFilter" onchange="utforSok()" title="Filtrer på status" class="w-full min-w-0 sm:w-auto sm:flex-none truncate bg-slate-900 border border-amber-500/50 text-amber-400 rounded-lg px-2 py-2 text-sm focus:outline-none font-semibold cursor-pointer">
             <optgroup label="Status">
               <option value="min_alle">Vis alt</option>
@@ -986,6 +990,7 @@
             <button type="button" onclick="startAutoRegistrering('manuell')" class="bg-purple-600/20 border border-purple-500/50 text-purple-400 hover:bg-purple-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">✨</span> Smart Veiviser</button>
             <button type="button" id="btnMenyStrekkode" onclick="startAutoRegistrering('strekkode')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded flex flex-col items-center gap-1"><span class="text-base">📷</span> Strekkode</button>
             <button type="button" onclick="startDiktering()" class="bg-rose-600/20 border border-rose-500/50 text-rose-400 hover:bg-rose-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">🎤</span> Diktering</button>
+            <button type="button" id="btnManueltSkjema" onclick="visManueltSkjema()" class="bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">✍️</span> <span id="btnManueltSkjemaTekst">Manuelt skjema</span></button>
             <button type="button" onclick="startAutoRegistrering('csv')" class="bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded flex flex-col items-center gap-1 transition"><span class="text-base">📄</span> Fil-import</button>
           </div>
 
@@ -994,6 +999,7 @@
           <input type="file" id="hylleInput" accept="image/*" capture="environment" class="hidden" onchange="simulerHylleAnalyse()" />
           <input type="file" id="csvInput" accept=".csv" multiple class="hidden" onchange="importerCSV(event)" />
 
+          <div id="manueltSkjemaBoks" class="hidden">
           <form id="hovedSkjema" onsubmit="lagreNyttElement(event)" class="space-y-3 text-xs border-t border-slate-800 pt-4 mt-2">
             <input type="hidden" id="feltCover" />
             <input type="hidden" id="feltBrukerBilde" />
@@ -1002,7 +1008,7 @@
             <input type="hidden" id="feltImdbBilde" />
 
             <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-slate-300 uppercase tracking-wider">Manuelt Skjema</h3>
+                <h3 class="font-bold text-slate-300 uppercase tracking-wider">Manuelt Skjema <button type="button" onclick="visManueltSkjema(false)" class="ml-1 text-slate-500 hover:text-white font-black" title="Skjul skjemaet">✕</button></h3>
                 <button type="button" onclick="document.getElementById('bildeInput').click()" class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400 hover:text-white border border-slate-700">📷 Legg til bilde</button>
             </div>
             <div class="mb-3 bg-amber-500/10 border border-amber-500/40 text-amber-300 rounded-lg px-3 py-2 text-xs font-bold text-center">
@@ -1272,6 +1278,7 @@
             
             <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-lg mt-4 transition">Lagre på min profil</button>
           </form>
+          </div>
         </section>
       </div>
 
@@ -4046,6 +4053,7 @@
         }
 
         if (!document.getElementById('feltTittel').value.trim()) {
+            visManueltSkjema(true);
             alert("Mangler cover-tittel, så registreringen ble ikke lagret.\nSkjemaet er fylt ut – skriv inn tittel og trykk «Lagre på min profil».");
             return;
         }
@@ -4065,6 +4073,7 @@
         skjulLaster();
         if (error) {
             console.error("Klarte ikke lagre:", error);
+            visManueltSkjema(true);
             alert("🚨 Kunne ikke lagre: " + supabaseFeil(error) + "\n\nSkjemaet er fylt ut – sjekk og trykk «Lagre på min profil».");
             return;
         }
@@ -4077,6 +4086,16 @@
         apneEndreModal(alle[0].id, true);
     }
 
+    // Viser/skjuler det manuelle skjemaet. vis=null bytter mellom åpen og lukket.
+    function visManueltSkjema(vis = null, rull = true) {
+        const boks = document.getElementById('manueltSkjemaBoks');
+        const aapen = vis === null ? boks.classList.contains('hidden') : !!vis;
+        boks.classList.toggle('hidden', !aapen);
+        document.getElementById('btnManueltSkjemaTekst').innerText = aapen ? 'Skjul skjema' : 'Manuelt skjema';
+        document.getElementById('btnManueltSkjema').classList.toggle('ring-2', aapen);
+        if (aapen && rull) setTimeout(() => boks.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    }
+
     function startAutoRegistrering(metode, slettSkjema = true) {
       if (metode === 'manuell' && (aktivKategori === 'tegneserie' || aktivKategori === 'film')) {
           startWizard();
@@ -4086,6 +4105,7 @@
       if (slettSkjema) {
           nullstillHovedSkjema();
       }
+      if (metode === 'manuell') { visManueltSkjema(true); return; }
       
       if (metode === 'strekkode') {
         document.getElementById('skannerModal').classList.remove('hidden'); 
@@ -4150,6 +4170,7 @@
     }
 
     async function handterStrekkode(strekkode) {
+      visManueltSkjema(true);
         document.getElementById('feltStrekkode').value = strekkode; 
         const overlay = document.getElementById('loadingOverlay');
         const tittelFelt = overlay ? overlay.querySelector('h2') : null;
@@ -4245,6 +4266,7 @@
     }
 
     async function simulerApiOppslag(sokeord, fraAI = false, knownYear = "") {
+      visManueltSkjema(true, false);
       if (aktivKategori === 'plante') {
           document.getElementById('loadingOverlay').classList.remove('hidden');
           try {
@@ -5013,12 +5035,41 @@
         sokTimer = setTimeout(utforSok, 250);
     }
 
+    // ---------- Hovedtype (første format), f.eks. DVD / Blu-ray / Hardcover ----------
+    function hovedtypeFor(item) {
+        const f = item.format;
+        if (Array.isArray(f)) return (f[0] || '').trim();
+        return String(f || '').split(/\s*[\/,+]\s*/)[0].trim();
+    }
+    // Alle typer en gjenstand har (f.eks. «Blu-ray + DVD» → ['Blu-ray', 'DVD'])
+    function typerFor(item) {
+        const f = item.format;
+        const liste = Array.isArray(f) ? f : String(f || '').split(/\s*[\/,+]\s*/);
+        const unike = [...new Set(liste.map(t => String(t || '').trim()).filter(Boolean))];
+        return unike.length ? unike : ['Ikke oppgitt'];
+    }
+    // Bygger valgene ut fra typene som finnes i det du ser på nå (med antall).
+    // En kombipakke telles under hver av typene sine.
+    function byggTypeFilter(grunnlag) {
+        const sel = document.getElementById('typeFilter');
+        const valgt = sel.value;
+        const antall = {};
+        grunnlag.forEach(i => typerFor(i).forEach(t => { antall[t] = (antall[t] || 0) + 1; }));
+        const typer = Object.keys(antall).sort((a, b) => a === 'Ikke oppgitt' ? 1 : b === 'Ikke oppgitt' ? -1 : antall[b] - antall[a]);
+        sel.innerHTML = '<option value="">💿 Alle typer</option>' + typer.map(t => '<option value="' + esc(t) + '">💿 ' + esc(t) + ' (' + antall[t] + ')</option>').join('');
+        // Behold valget hvis typen fortsatt finnes
+        sel.value = typer.includes(valgt) ? valgt : '';
+        // Vis filteret bare når det er noe å velge mellom
+        sel.classList.toggle('hidden', typer.length < 2 && !sel.value);
+    }
+
     function utforSok() {
       if(!innloggetBruker) return;
       ugyldiggjorPakkeIndeks();
       // Ny søk/filter → start på første side. Etter lagring o.l. beholdes antallet du har bladd frem.
       const signatur = [aktivKategori, document.getElementById('sokeFelt').value, document.getElementById('eieFilter').value,
-                        document.getElementById('sorteringFilt').value, (document.getElementById('samlingVisning') || {}).value].join('|');
+                        document.getElementById('sorteringFilt').value, (document.getElementById('samlingVisning') || {}).value,
+                        document.getElementById('typeFilter').value].join('|');
       if (signatur !== sisteSokSignatur) { visGrense = sideStorrelse(); sisteSokSignatur = signatur; }
       if (samlingVisningKat !== aktivKategori || document.getElementById('samlingVisning').options.length <= 1) byggSamlingVisning();
       const q = document.getElementById('sokeFelt').value.toLowerCase();
@@ -5031,6 +5082,8 @@
       const statusTekst = { min_alle: 'Vis alt', min_har: 'Kun eide', min_mangler: 'Ønskeliste', plante_marked: '🌱 Plante-marked' }[filt] || '';
       filterTekstFelt.innerText = filt === 'plante_marked' ? '- 🌱 Plante-marked (alle som deler)' : '- ' + visTekst + ' · ' + statusTekst;
 
+      // Først alt som ellers ville vises (uten typefilter) – brukes til valgene i typefilteret
+      const typeValg = document.getElementById('typeFilter').value;
       let filtrert = database.filter(item => {
                 if (item.kategori !== aktivKategori) return false;
         if (!erSynligForMeg(item)) return false;   // andres private gjenstander vises aldri
@@ -5042,9 +5095,16 @@
             if (filt === 'min_har' && item.status !== 'Har') return false;
             if (filt === 'min_mangler' && item.status !== 'Har ikke') return false;
         }
-        const fritekst = ((item.tittel||'') + ' ' + (item.skuespillere||'') + ' ' + (item.regissor||'') + ' ' + (item.produksjonsland||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.forfatter||'') + ' ' + (item.oversatt_av||'') + ' ' + (item.forlag||'') + ' ' + (item.eier||'')).toLowerCase();
+        const fritekst = ((item.tittel||'') + ' ' + typerFor(item).join(' ') + ' ' + (item.skuespillere||'') + ' ' + (item.regissor||'') + ' ' + (item.produksjonsland||'') + ' ' + (item.pakke_navn||'') + ' ' + (item.imdb_tittel||'') + ' ' + (item.utgave||'') + ' ' + (item.kommentar||'') + ' ' + (item.tittel_eng||'') + ' ' + (item.tittel_orig||'') + ' ' + (item.sjanger||'') + ' ' + (item.bladserie||'') + ' ' + (item.forfatter||'') + ' ' + (item.oversatt_av||'') + ' ' + (item.forlag||'') + ' ' + (item.eier||'')).toLowerCase();
         return fritekst.includes(q);
       });
+
+      byggTypeFilter(filtrert);
+      const aktivType = document.getElementById('typeFilter').value;
+      if (aktivType) {
+          filtrert = filtrert.filter(i => typerFor(i).includes(aktivType));   // kombipakker vises under alle typene sine
+          filterTekstFelt.innerText += ' · 💿 ' + aktivType;
+      }
 
       filtrert.sort((a, b) => {
         if (sortFilt === 'nyeste') return b.id - a.id;
