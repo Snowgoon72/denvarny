@@ -6,8 +6,6 @@
   <meta name="theme-color" content="#0f172a" />
   <title>Samlerregister - Skyversjon (Supabase)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <!-- SUPABASE BIBLIOTEK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -90,8 +88,7 @@
   </div>
 
   <!-- CROPPER.JS FOR Å KUTTE BILDER -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <!-- Cropper.js, strekkodeskanner og CSV-leser lastes først når de trengs (se lastBibliotek) -->
 
   <!-- DATALIST FOR LAGRINGSPLASSER (Auto-utfylling) -->
   <datalist id="lagringsPlasserListe"></datalist>
@@ -260,6 +257,7 @@
       </form>
       <div class="mt-4 pt-4 border-t border-rose-900/50 space-y-2">
         <h3 class="font-bold text-rose-500 text-xs uppercase tracking-wider mb-2 flex items-center gap-1">⚠️ Faresone</h3>
+        <button type="button" onclick="document.getElementById('profilModal').classList.add('hidden'); flyttMineBilder(false)" class="w-full bg-sky-900/40 hover:bg-sky-900/70 text-sky-300 border border-sky-800/60 text-xs font-bold py-2.5 rounded-lg transition mb-2">⚡ Flytt bildene mine til rask lagring</button>
         <button type="button" onclick="slettMinSamling()" class="w-full bg-slate-900 hover:bg-rose-950 text-rose-400 border border-rose-900/50 text-xs font-bold py-2.5 rounded-lg transition">Slett hele min samling</button>
         <button type="button" onclick="slettMinProfil()" class="w-full bg-slate-900 hover:bg-rose-900 text-rose-500 border border-rose-800 text-xs font-bold py-2.5 rounded-lg transition">Slett min profil & samling</button>
       </div>
@@ -1343,6 +1341,186 @@
     const supabaseDb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // ==========================================
+    // (D) BIBLIOTEKER SOM LASTES VED BEHOV
+    // ==========================================
+    const BIBLIOTEKER = {
+        cropper: { js: 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js', css: 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css', klar: () => typeof Cropper !== 'undefined' },
+        qr:      { js: 'https://unpkg.com/html5-qrcode', klar: () => typeof Html5Qrcode !== 'undefined' },
+        papa:    { js: 'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js', klar: () => typeof Papa !== 'undefined' }
+    };
+    const bibliotekLasting = {};
+    function lastBibliotek(navn) {
+        const b = BIBLIOTEKER[navn];
+        if (b.klar()) return Promise.resolve();
+        if (bibliotekLasting[navn]) return bibliotekLasting[navn];
+        if (b.css) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = b.css; document.head.appendChild(l); }
+        bibliotekLasting[navn] = new Promise((ok, feil) => {
+            const sk = document.createElement('script'); sk.src = b.js; sk.async = true;
+            sk.onload = () => ok(); sk.onerror = () => { delete bibliotekLasting[navn]; feil(new Error('Kunne ikke laste ' + navn)); };
+            document.head.appendChild(sk);
+        });
+        return bibliotekLasting[navn];
+    }
+    // Kjører funksjonen når biblioteket er lastet (viser laste-skjerm hvis det tar tid)
+    function medBibliotek(navn, fn) {
+        if (BIBLIOTEKER[navn].klar()) return false;
+        visLaster("Laster verktøy...");
+        lastBibliotek(navn).then(() => { skjulLaster(); fn(); }).catch(e => { skjulLaster(); alert("Kunne ikke laste et nødvendig verktøy. Sjekk nettforbindelsen og prøv igjen."); });
+        return true;
+    }
+
+    // ==========================================
+    // (A) BILDER I SUPABASE STORAGE
+    // Nye bilder lastes opp automatisk; databasen lagrer bare lenken.
+    // Virker også før Storage er satt opp (da lagres bildet som før).
+    // ==========================================
+    const BILDE_BUCKET = 'samlerbilder';
+    const BILDEFELT = ['cover', 'bruker_bilde', 'bakside_bilde', 'ekstra_bilde'];
+    const bildeUrlCache = new Map();
+    let storageVirker = null;   // null = ukjent, true/false etter første forsøk
+    const erDataBilde = v => typeof v === 'string' && v.startsWith('data:image');
+    function dataUrlTilBlob(dataUrl) {
+        const [hode, b64] = dataUrl.split(',');
+        const type = (hode.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+        const bin = atob(b64); const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        return new Blob([arr], { type });
+    }
+    async function lastOppBilde(dataUrl, felt) {
+        if (!erDataBilde(dataUrl) || storageVirker === false || !minBrukerId) return dataUrl;
+        if (bildeUrlCache.has(dataUrl)) return bildeUrlCache.get(dataUrl);
+        const blob = dataUrlTilBlob(dataUrl);
+        const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
+        const sti = minBrukerId + '/' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8) + '-' + felt + '.' + ext;
+        const { error } = await supabaseDb.storage.from(BILDE_BUCKET).upload(sti, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false });
+        if (error) {
+            console.warn("Bildeopplasting feilet (bildet lagres i databasen i stedet):", error.message);
+            if (/bucket|not found|row-level|security|unauthorized|403|400/i.test(error.message)) storageVirker = false;
+            return dataUrl;
+        }
+        storageVirker = true;
+        const url = supabaseDb.storage.from(BILDE_BUCKET).getPublicUrl(sti).data.publicUrl;
+        bildeUrlCache.set(dataUrl, url);
+        return url;
+    }
+    async function flyttBilderIRad(rad) {
+        for (const f of BILDEFELT) if (erDataBilde(rad[f])) rad[f] = await lastOppBilde(rad[f], f);
+        return rad;
+    }
+    // Alle lagringer i samlerbase_data går via denne: bilder lastes opp først, så lagres raden.
+    function utsattSporring(bygg, verdier) {
+        const kjede = []; let lovnad = null;
+        const kjor = () => lovnad || (lovnad = (async () => {
+            const liste = Array.isArray(verdier) ? verdier : [verdier];
+            for (const r of liste) if (r && typeof r === 'object') await flyttBilderIRad(r);
+            let q = bygg(verdier);
+            for (const [metode, args] of kjede) q = q[metode](...args);
+            return await q;
+        })());
+        const proxy = new Proxy({}, { get(_, prop) {
+            if (prop === 'then') return (a, b) => kjor().then(a, b);
+            if (prop === 'catch') return b => kjor().catch(b);
+            if (prop === 'finally') return f => kjor().finally(f);
+            return (...args) => { kjede.push([prop, args]); return proxy; };
+        } });
+        return proxy;
+    }
+    const _opprinneligFrom = supabaseDb.from.bind(supabaseDb);
+    supabaseDb.from = function (tabell) {
+        const qb = _opprinneligFrom(tabell);
+        if (tabell !== 'samlerbase_data') return qb;
+        ['insert', 'update', 'upsert'].forEach(m => { if (typeof qb[m] !== 'function') return; const orig = qb[m].bind(qb); qb[m] = (verdier, ...rest) => utsattSporring(v => orig(v, ...rest), verdier); });
+        return qb;
+    };
+
+    // Flytter bilder som fortsatt ligger i databasen over til Storage (én gang per bruker)
+    const DATA_BILDE_FILTER = BILDEFELT.map(f => f + '.like.data:image*').join(',');
+    let bildeFlyttPagaar = false;
+    async function tellBilderAaFlytte() {
+        const { count, error } = await _opprinneligFrom('samlerbase_data').select('id', { count: 'exact', head: true }).eq('eier_id', minBrukerId).or(DATA_BILDE_FILTER);
+        return error ? 0 : (count || 0);
+    }
+    function visBildeStatus(tekst) {
+        let el = document.getElementById('bildeFlyttStatus');
+        if (!el) {
+            el = document.createElement('div'); el.id = 'bildeFlyttStatus';
+            el.className = 'fixed z-[90] bg-slate-900 border border-sky-500/60 text-sky-200 text-xs font-bold px-3 py-2 rounded-lg shadow-2xl';
+            el.style.left = 'max(0.75rem, env(safe-area-inset-left))'; el.style.bottom = 'max(0.75rem, env(safe-area-inset-bottom))';
+            document.body.appendChild(el);
+        }
+        el.innerText = tekst; el.classList.toggle('hidden', !tekst);
+    }
+    async function flyttMineBilder(sporFoerst = true) {
+        if (bildeFlyttPagaar || !minBrukerId) return;
+        const antall = await tellBilderAaFlytte();
+        if (!antall) { if (!sporFoerst) alert("✅ Alle bildene dine ligger allerede i rask lagring."); return; }
+        if (sporFoerst) {
+            const nokkel = 'samler_bildeflytt_spurt_' + minBrukerId;
+            try { if (localStorage.getItem(nokkel) === new Date().toISOString().slice(0, 10)) return; localStorage.setItem(nokkel, new Date().toISOString().slice(0, 10)); } catch (e) {}
+            if (!confirm("⚡ Gjør appen raskere\n\n" + antall + " av gjenstandene dine har bilder lagret direkte i databasen, og det gjør oppstarten treg.\n\nVil du flytte dem til rask bildelagring nå? Det skjer i bakgrunnen mens du bruker appen (bør gjøres på wifi).")) return;
+        }
+        bildeFlyttPagaar = true;
+        let ferdig = 0, feil = 0;
+        try {
+            while (true) {
+                const { data, error } = await _opprinneligFrom('samlerbase_data').select('id,' + BILDEFELT.join(',')).eq('eier_id', minBrukerId).or(DATA_BILDE_FILTER).limit(10);
+                if (error) throw error;
+                if (!data || !data.length) break;
+                for (const rad of data) {
+                    visBildeStatus('📤 Flytter bilder… ' + (ferdig + 1) + ' av ' + antall);
+                    const endring = {};
+                    for (const f of BILDEFELT) if (erDataBilde(rad[f])) endring[f] = await lastOppBilde(rad[f], f);
+                    if (storageVirker === false) throw new Error('STORAGE');
+                    const u = await _opprinneligFrom('samlerbase_data').update(endring).eq('id', rad.id);
+                    if (u.error) { feil++; continue; }
+                    const lokal = database.find(i => i.id === rad.id);
+                    if (lokal) BILDEFELT.forEach(f => { if (lokal[f] !== undefined && endring[f]) lokal[f] = endring[f]; });
+                    ferdig++;
+                }
+                if (feil > 20) break;
+            }
+            visBildeStatus('');
+            if (ferdig) alert("✅ Ferdig! " + ferdig + " gjenstander har fått bildene flyttet. Neste oppstart blir raskere." + (feil ? "\n(" + feil + " feilet – prøv igjen senere.)" : ""));
+        } catch (e) {
+            visBildeStatus('');
+            if (e.message === 'STORAGE') alert("Rask bildelagring er ikke satt opp ennå.\nKjør storage_oppsett.sql i Supabase (SQL Editor), og prøv igjen via ⚙️ Profil.");
+            else alert("Flytting av bilder stoppet: " + supabaseFeil(e));
+        } finally { bildeFlyttPagaar = false; }
+    }
+
+    // ==========================================
+    // (B) LISTEN LASTES UTEN TUNGE FELT – RESTEN HENTES NÅR DU ÅPNER EN GJENSTAND
+    // ==========================================
+    const TUNGE_FELT = ['bakside_bilde', 'ekstra_bilde', 'bruker_bilde', 'episoder'];
+    const delviseRader = new WeakSet();
+    let listeKolonner = null;   // kolonnene i tabellen minus de tunge
+    async function finnListeKolonner() {
+        if (listeKolonner !== null) return listeKolonner;
+        const { data, error } = await _opprinneligFrom('samlerbase_data').select('*').limit(1);
+        if (error || !data || !data.length) return (listeKolonner = '*');
+        const alle = Object.keys(data[0]);
+        const lette = alle.filter(k => !TUNGE_FELT.includes(k));
+        return (listeKolonner = lette.length === alle.length ? '*' : lette.join(','));
+    }
+    async function hentFulleRader(rader) {
+        const mangler = rader.filter(r => r && delviseRader.has(r));
+        for (let i = 0; i < mangler.length; i += 100) {
+            const bit = mangler.slice(i, i + 100);
+            const { data, error } = await _opprinneligFrom('samlerbase_data').select('*').in('id', bit.map(r => r.id));
+            if (error) { console.error(error); continue; }
+            (data || []).forEach(full => { const r = bit.find(x => x.id === full.id); if (r) { Object.assign(r, full); delviseRader.delete(r); } });
+        }
+    }
+    const hentFullRad = rad => hentFulleRader([rad]);
+    // Åpner noe som trenger hele raden: henter den først (vises raskt hvis den allerede er hentet)
+    function medFullRad(rad, fn) {
+        if (!rad || !delviseRader.has(rad)) return false;
+        visLaster("Henter detaljer...");
+        hentFullRad(rad).then(() => { skjulLaster(); fn(); }).catch(() => { skjulLaster(); fn(); });
+        return true;
+    }
+
+    // ==========================================
     // SMÅ HJELPERE (laste-skjerm, escaping)
     // ==========================================
     function visLaster(tittel, under = '') {
@@ -1980,22 +2158,26 @@
     }
 
     async function hentAlleFraSkyen(tabell) {
-        let altInnhold = [];
-        let start = 0;
-        let step = 999;
-        let merData = true;
-
-        while (merData) {
-            // Profiler: bare offentlige felt (e-post og passord er skjult av sikkerhetsreglene)
-            let spoerring = supabaseDb.from(tabell).select(tabell === 'samlerbase_profiler' ? PROFIL_FELT : '*');
-            if (tabell === 'samlerbase_data') spoerring = spoerring.order('id', { ascending: false });
-            spoerring = spoerring.range(start, start + step);
-            const { data, error } = await spoerring;
-            if (error) { console.error("Feil ved henting fra " + tabell, error); break; }
-            if (data && data.length > 0) { altInnhold = altInnhold.concat(data); start += step + 1; }
-            if (!data || data.length <= step) { merData = false; }
+        const STEG = 1000;   // Supabase gir maks 1000 rader per forespørsel
+        const erData = tabell === 'samlerbase_data';
+        const kolonner = tabell === 'samlerbase_profiler' ? PROFIL_FELT : erData ? await finnListeKolonner() : '*';
+        const side = (fra, medAntall) => {
+            let q = _opprinneligFrom(tabell).select(kolonner, medAntall ? { count: 'exact' } : undefined);
+            if (erData) q = q.order('id', { ascending: false });
+            return q.range(fra, fra + STEG - 1);
+        };
+        // Første side + totalt antall, deretter resten parallelt
+        const forste = await side(0, true);
+        if (forste.error) { console.error("Feil ved henting fra " + tabell, forste.error); return []; }
+        let alt = forste.data || [];
+        const totalt = forste.count || alt.length;
+        if (totalt > STEG && alt.length === STEG) {
+            const fra = []; for (let f = STEG; f < totalt; f += STEG) fra.push(f);
+            const resten = await Promise.all(fra.map(f => side(f, false)));
+            resten.forEach(r => { if (r.error) console.error(r.error); else alt = alt.concat(r.data || []); });
         }
-        return altInnhold;
+        if (erData && kolonner !== '*') alt.forEach(r => delviseRader.add(r));
+        return alt;
     }
 
     const PROFIL_FELT = 'user_id,brukernavn,land,spraak,info,standardSynlighet,kategorier,godkjent';
@@ -2061,11 +2243,16 @@
           await loggUt(true); return false;
       }
       innloggetBruker = minProfil.brukernavn;
-      database = await hentAlleFraSkyen('samlerbase_data');
-      await hentTilganger();
+      const [data] = await Promise.all([hentAlleFraSkyen('samlerbase_data'), hentTilganger()]);
+      database = data;
       skjulLaster();
       samlingVisningKat = null;
       sjekkInnlogging();
+      // Når appen er klar: forhåndslast verktøy i bakgrunnen og tilby å flytte bilder til rask lagring
+      setTimeout(() => {
+          ['cropper', 'qr', 'papa'].forEach(n => lastBibliotek(n).catch(() => {}));
+          flyttMineBilder(true).catch(e => console.warn(e));
+      }, 2500);
       return true;
     }
 
@@ -2447,10 +2634,14 @@
     // ==========================================
     // (7) CSV-BACKUP MED ALLE FELT
     // ==========================================
-    function eksporterTilCSV() {
+    async function eksporterTilCSV() {
       if (!innloggetBruker) return;
       const mineData = database.filter(item => item.eier === innloggetBruker);
       if (mineData.length === 0) { alert("Ingen gjenstander å eksportere."); return; }
+      visLaster("Forbereder backup...", mineData.length + " gjenstander");
+      try { await Promise.all([lastBibliotek('papa'), hentFulleRader(mineData)]); }
+      catch (e) { skjulLaster(); alert("Kunne ikke forberede backupen: " + (e.message || e)); return; }
+      skjulLaster();
       const harEgneBilder = mineData.some(i => ['cover', 'bruker_bilde', 'bakside_bilde', 'ekstra_bilde'].some(k => String(i[k] || '').startsWith('data:')));
       const medBilder = harEgneBilder ? confirm("Ta med dine egne bilder (cover/bakside) i backupen?\n\nOK = komplett backup (stor fil – bildene lagres som tekst)\nAvbryt = uten egne bilder (mindre fil som åpnes fint i Excel)") : true;
 
@@ -2773,6 +2964,12 @@
             pakkeId = item && item.pakke_id;
         }
         if (!pakkeId) return;
+        const medlemmer = pakkeMedlemmer(pakkeId);
+        if (medlemmer.some(m => delviseRader.has(m))) {
+            visLaster("Henter detaljer...");
+            hentFulleRader(medlemmer).then(() => { skjulLaster(); apnePakkeSjekk(pakkeId); });
+            return;
+        }
         pakkeSjekkId = pakkeId;
         tegnPakkeSjekk();
         document.getElementById('pakkeSjekkModal').classList.remove('hidden');
@@ -2876,6 +3073,7 @@
         const id = Number(document.getElementById('endreId').value);
         const item = database.find(i => i.id === id);
         if (!item) return;
+        await hentFullRad(item);
         let medl = pakkeMedlemmer(item.pakke_id);
         if (medl.length >= MAKS_PAKKE) { alert("En boks kan ha maks " + MAKS_PAKKE + " filmer."); return; }
         const tittel = (prompt("Cover-tittel på filmen som ligger i samme boks som «" + item.tittel + "»:") || '').trim();
@@ -2910,6 +3108,7 @@
     function apneEndreModal(id, nyRegistrering = false) {
       const item = database.find(i => i.id === id);
       if (!item) return;
+      if (medFullRad(item, () => apneEndreModal(id, nyRegistrering))) return;
       endreNyRegistreringId = nyRegistrering ? id : null;
 
       const erMin = item.eier === innloggetBruker;
@@ -3222,6 +3421,7 @@
     function lastInnEndreBilde(event, ekstra = false) {
         const input = event.target;
         if (!input.files || input.files.length === 0) return;
+        if (medBibliotek('cropper', () => lastInnEndreBilde(event, ekstra))) return;
         const fil = input.files[0];
         erEndreEkstra = ekstra;
 
@@ -3235,6 +3435,7 @@
     function startBildeCrop(event) {
         const input = event.target;
         if (!input.files || input.files.length === 0) return;
+        if (medBibliotek('cropper', () => startBildeCrop(event))) return;
         document.getElementById('cropImage').src = URL.createObjectURL(input.files[0]);
         document.getElementById('cropModal').classList.remove('hidden');
         if (cropperInstans) cropperInstans.destroy();
@@ -3755,6 +3956,7 @@
     function wizardBildeAnalyse(event, erBakside = false, erEkstra = false) {
         const input = event.target;
         if (!input.files || input.files.length === 0) return;
+        if (medBibliotek('cropper', () => wizardBildeAnalyse(event, erBakside, erEkstra))) return;
 
         erVeiviserCrop = true;
         erVeiviserBakside = erBakside;
@@ -3918,6 +4120,7 @@
     }
 
     function startWizardScanner() {
+        if (medBibliotek('qr', startWizardScanner)) return;
         document.getElementById('skannerModal').classList.remove('hidden'); 
         skannerInstans = new Html5Qrcode("scannerReader");
         skannerInstans.start(
@@ -4022,6 +4225,7 @@
         if (egetTreff) {
             const erEgen = egetTreff.eier === innloggetBruker;
             const pakke = pakkeMedlemmer(egetTreff.pakke_id);
+            await hentFulleRader(pakke.length ? pakke : [egetTreff]);   // bilder og alle detaljer
             if (aktivKategori === 'film' && pakke.length > 1) {
                 pakke.forEach(m => { const d = detaljerFraItem(m); if (d) wizKjenteDetaljer[normaliserNavn(m.tittel)] = d; });
                 settWizPakke(pakke.map(m => (m.disk_nr ? 'Disk ' + m.disk_nr + ': ' : '') + m.tittel), erAutoPakkeNavn(pakke[0].pakke_navn) ? '' : pakke[0].pakke_navn);
@@ -4232,6 +4436,7 @@
       if (metode === 'manuell') { visManueltSkjema(true); return; }
       
       if (metode === 'strekkode') {
+        if (medBibliotek('qr', () => startAutoRegistrering('strekkode', false))) return;
         document.getElementById('skannerModal').classList.remove('hidden'); 
         skannerInstans = new Html5Qrcode("scannerReader");
         skannerInstans.start(
@@ -4619,9 +4824,10 @@
       alert(melding);
     }
 
-    function importerCSV(event) {
-      const filer = event.target.files; 
+        function importerCSV(event) {
+      const filer = event.target.files;
       if (!filer.length) return;
+      if (medBibliotek('papa', () => importerCSV(event))) return;
       document.getElementById('loadingOverlay').classList.remove('hidden');
       document.querySelector('#loadingInnhold h2').innerText = "Leser filen din...";
       let nyeItemsArray = [], filAntall = filer.length, fullførteFiler = 0, baseId = Date.now();
@@ -4751,6 +4957,7 @@
     function apneDetaljerModal(id) {
         const item = database.find(i => i.id === id);
         if (!item) return;
+        if (medFullRad(item, () => apneDetaljerModal(id))) return;
         detaljerAktivId = id;
 
         document.getElementById('detTittel').innerText = item.tittel || 'Uten tittel';
