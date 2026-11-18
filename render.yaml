@@ -1,0 +1,42 @@
+# Oppsett for Render (render.com). Velg «New → Blueprint» og pek på GitHub-repoet,
+# så lages tjenesten med disse innstillingene. Hemmelige verdier fyller du inn i Render.
+services:
+  - type: web
+    name: gaveplanlegger
+    runtime: node
+    region: frankfurt
+    plan: starter
+    buildCommand: npm install       # appen har ingen eksterne pakker, så dette går fort
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: BASE_URL
+        value: https://gaveplanlegger.no
+      - key: DB_FILE
+        value: /var/data/gaveliste.db
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_EMAILS
+        sync: false                # fyll inn din e-post i Render
+      - key: CONTACT_EMAIL
+        sync: false
+      # E-post: enten egen e-postkonto (SMTP_*) eller Resend (RESEND_API_KEY)
+      - key: SMTP_HOST
+        sync: false                # f.eks. mail.gaveplanlegger.no
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false                # hele e-postadressen
+      - key: SMTP_PASS
+        sync: false                # passordet til e-postkontoen
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false                # f.eks. Gaveplanlegger <jorn@gaveplanlegger.no> – må være samme adresse som SMTP_USER
+      - key: ADSENSE_CLIENT
+        sync: false
